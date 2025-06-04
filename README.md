@@ -14,7 +14,8 @@ Avoid using undefined values - try to use checks or default values when necessar
 
 1. Figure out types for fantasy teams, matchdays
 2. Create types
-3. Create simple DB and backend 
+3. Create simple DB by initializing the PG data tables. Use the types as basis for the tables.
+3. Check with the DB and setup backend routes in this order:
 3. Managing content:
   a. Creating pickable players.
   b. Creating clubs.
