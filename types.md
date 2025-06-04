@@ -39,3 +39,6 @@ Wins: Number
 Club:
 name: Name
 (all stats should default to 0)
+
+
+Each of the types should have also id

@@ -5,7 +5,8 @@ Backend: Node JS Express backend
 DB: PostgreSQL with proper migrations
 
 First scope is MVP product with ability to manage fantasy team on
-local computer for a single person.
+localhost on a single computer for a single person.
+Management means, updating teams, updating player stats and calculating teams points. Stats and score should be calculated on a matchday basis
 
 Plan is to use proper best practices for development to create maintainable, updatable and testable code base.
 Avoid using undefined values - try to use checks or default values when necessary, eg. when creating or fetching data

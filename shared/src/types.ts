@@ -1,0 +1,58 @@
+/**
+ * Water Polo Fantasy League Types
+ */
+
+// Enums for better type safety
+export enum PlayerPosition {
+    FIELD = 'field',
+    GOALKEEPER = 'goalkeeper'
+}
+
+// Core Stats interface
+export interface Stats {
+    id: string
+    goals: number;
+    assists: number;
+    blocks: number;
+    steals: number;
+    pfDrawn: number; // PF drawn
+    pf: number; // PF
+    ballsLost: number;
+    contraFouls: number;
+    shots: number;
+    swimOffs: number;
+    brutality: number;
+    saves: number;
+    wins: number;
+}
+
+// Club interface
+export interface Club {
+    id: string;
+    name: string;
+}
+
+// MatchDay interface
+export interface MatchDay {
+    id: string;
+    title: string;
+}
+
+// Player interface
+export interface Player {
+    id: string;
+    name: string;
+    position: PlayerPosition;
+    club: Club;
+    statsHistory: Map<MatchDay, Stats>; // matchday -> stats
+    scoreHistory: Map<MatchDay, number>; // matchday -> score
+}
+
+// Team interface
+export interface Team {
+    id: string;
+    teamName: string;
+    players: Player[];
+    teamCaptain: Player;
+    scoreHistory: Map<MatchDay, number>; // matchday -> team score
+}
