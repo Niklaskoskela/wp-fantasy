@@ -16,15 +16,15 @@ Avoid using undefined values - try to use checks or default values when necessar
 1. Figure out types for fantasy teams, matchdays
 2. Create types
 3. Create simple DB by initializing the PG data tables. Use the types as basis for the tables.
-3. Check with the DB and setup backend routes in this order:
-3. Managing content:
+4. Setup backend routes and connect it to DB. Create tests for these actions.
+5. Managing content:
   a. Creating pickable players.
   b. Creating clubs.
-4. Managing teams: the option to update the water polo players in each of the fantasy teams
-5. Manage match days:
-  a. update stats of the players for a match day
-  b. then calculate points for all of the teams
-6. Option to view the Fantasy League's all teams total results
+6. Managing teams: the option to update the water polo players in each of the fantasy teams
+7. Manage match days:
+  a. update stats of the each player for a match day
+  b. calculate points for all of the teams
+8. Option to view the Fantasy League's all teams total results
 
 ## Testing Plan
 
