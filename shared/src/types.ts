@@ -38,17 +38,16 @@ export interface MatchDay {
     title: string;
 }
 
-// Player interface
+// Player interface, many teams can use the same player as it does not have any team-specific data
 export interface Player {
     id: string;
     name: string;
     position: PlayerPosition;
     club: Club;
     statsHistory: Map<MatchDay, Stats>; // matchday -> stats
-    scoreHistory: Map<MatchDay, number>; // matchday -> score
 }
 
-// Team interface
+// Team interface, team contains all team specific data.
 export interface Team {
     id: string;
     teamName: string;
