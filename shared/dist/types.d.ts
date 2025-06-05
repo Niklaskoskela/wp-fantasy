@@ -37,6 +37,6 @@ export interface Team {
     id: string;
     teamName: string;
     players: Player[];
-    teamCaptain: Player;
+    teamCaptain?: Player;
     scoreHistory: Map<MatchDay, number>;
 }
