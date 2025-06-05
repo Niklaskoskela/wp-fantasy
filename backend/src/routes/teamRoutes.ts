@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createTeam, addPlayerToTeam, removePlayerFromTeam, setTeamCaptain, getTeams } from '../controllers/teamController';
+import { createTeam, addPlayerToTeam, removePlayerFromTeam, setTeamCaptain, getTeams, getTeamsWithScores } from '../controllers/teamController';
 
 const router = Router();
 
@@ -15,6 +15,7 @@ router.post('/teams/add-player', asyncHandler(addPlayerToTeam));
 router.post('/teams/remove-player', asyncHandler(removePlayerFromTeam));
 router.post('/teams/set-captain', asyncHandler(setTeamCaptain));
 router.get('/teams', asyncHandler(getTeams));
-router.get('/league/teams', asyncHandler(getTeams));
+router.get('/teams/with-scores', asyncHandler(getTeamsWithScores));
+router.get('/league/teams', asyncHandler(getTeamsWithScores));
 
 export default router;

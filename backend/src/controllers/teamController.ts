@@ -56,3 +56,7 @@ export function setTeamCaptain(req: Request, res: Response) {
 export function getTeams(_req: Request, res: Response) {
     return res.json(teamService.getTeams());
 }
+
+export function getTeamsWithScores(_req: Request, res: Response) {
+    return res.json(teamService.getTeamsWithScores());
+}

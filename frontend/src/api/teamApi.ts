@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { Team, Player } from '../../../shared/dist/types';
+import { Team, Player, TeamWithScores } from '../../../shared/dist/types';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
@@ -10,6 +10,10 @@ export const teamApi = createApi({
   endpoints: (builder) => ({
     getTeams: builder.query<Team[], void>({
       query: () => '/teams',
+      providesTags: ['Team'],
+    }),
+    getTeamsWithScores: builder.query<TeamWithScores[], void>({
+      query: () => '/teams/with-scores',
       providesTags: ['Team'],
     }),
     createTeam: builder.mutation<Team, { teamName: string }>({
@@ -41,6 +45,7 @@ export const teamApi = createApi({
 
 export const {
   useGetTeamsQuery,
+  useGetTeamsWithScoresQuery,
   useCreateTeamMutation,
   useAddPlayerToTeamMutation,
   useRemovePlayerFromTeamMutation,

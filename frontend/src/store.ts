@@ -3,14 +3,20 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { contentApi } from './api/contentApi';
 import { teamApi } from './api/teamApi';
+import { matchDayApi } from './api/matchDayApi';
 
 export const store = configureStore({
   reducer: {
     [contentApi.reducerPath]: contentApi.reducer,
     [teamApi.reducerPath]: teamApi.reducer,
+    [matchDayApi.reducerPath]: matchDayApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(contentApi.middleware, teamApi.middleware),
+    getDefaultMiddleware().concat(
+      contentApi.middleware, 
+      teamApi.middleware,
+      matchDayApi.middleware
+    ),
 });
 
 setupListeners(store.dispatch);

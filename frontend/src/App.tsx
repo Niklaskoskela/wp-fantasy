@@ -5,6 +5,7 @@ import { PlayersManager } from './components/PlayersManager';
 import { ClubsList } from './components/ClubsList';
 import { PlayersList } from './components/PlayersList';
 import { TeamsManager } from './components/TeamManager/TeamsManager';
+import { MatchDaysManager } from './components/MatchDaysManager';
 import {
   AppBar,
   Toolbar,
@@ -27,6 +28,7 @@ const navItems = [
   { label: 'Clubs', path: '/clubs' },
   { label: 'Players', path: '/players' },
   { label: 'Teams', path: '/teams' },
+  { label: 'Match Days', path: '/matchdays' },
 ];
 
 function HomePage() {
@@ -121,6 +123,14 @@ function App() {
             element={
               <PageLayout>
                 <TeamsManager />
+              </PageLayout>
+            }
+          />
+          <Route
+            path='/matchdays'
+            element={
+              <PageLayout>
+                <MatchDaysManager />
               </PageLayout>
             }
           />

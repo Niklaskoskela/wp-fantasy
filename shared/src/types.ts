@@ -55,3 +55,13 @@ export interface Team {
     teamCaptain?: Player;
     scoreHistory: Map<MatchDay, number>; // matchday -> team score
 }
+
+// Enhanced team interface with calculated scores for league display
+export interface TeamWithScores extends Team {
+    totalPoints: number;
+    matchDayScores: {
+        matchDayId: string;
+        matchDayTitle: string;
+        points: number;
+    }[];
+}

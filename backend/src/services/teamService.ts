@@ -49,3 +49,33 @@ export function setTeamCaptain(teamId: string, playerId: string): Team | null {
 export function getTeams(): Team[] {
     return teams;
 }
+
+export function getTeamsWithScores(): any[] {
+    const { getMatchDays, calculatePoints } = require('./matchDayService');
+    const allMatchDays = getMatchDays();
+    
+    return teams.map(team => {
+        let totalPoints = 0;
+        const matchDayScores: { matchDayId: string; matchDayTitle: string; points: number }[] = [];
+        
+        // Calculate points for each match day
+        for (const matchDay of allMatchDays) {
+            const matchDayResults: { teamId: string; points: number }[] = calculatePoints(matchDay.id);
+            const teamResult = matchDayResults.find((result: { teamId: string; points: number }) => result.teamId === team.id);
+            const points = teamResult ? teamResult.points : 0;
+            
+            totalPoints += points;
+            matchDayScores.push({
+                matchDayId: matchDay.id,
+                matchDayTitle: matchDay.title,
+                points
+            });
+        }
+        
+        return {
+            ...team,
+            totalPoints,
+            matchDayScores
+        };
+    });
+}

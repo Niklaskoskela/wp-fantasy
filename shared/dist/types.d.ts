@@ -40,3 +40,11 @@ export interface Team {
     teamCaptain?: Player;
     scoreHistory: Map<MatchDay, number>;
 }
+export interface TeamWithScores extends Team {
+    totalPoints: number;
+    matchDayScores: {
+        matchDayId: string;
+        matchDayTitle: string;
+        points: number;
+    }[];
+}

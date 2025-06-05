@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Button, TextField, Typography, List, Box, Stack } from '@mui/material';
+import { Button, TextField, Typography, List, Box, Stack, Tabs, Tab, Paper } from '@mui/material';
 import { Player, PlayerPosition } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
 import {
   useGetTeamsQuery,
+  useGetTeamsWithScoresQuery,
   useCreateTeamMutation,
   useAddPlayerToTeamMutation,
   useRemovePlayerFromTeamMutation,
@@ -12,6 +13,7 @@ import {
 import { PlayerPickerModal } from './PlayerPickerModal';
 import { ErrorNotification } from './ErrorNotification';
 import { TeamCard } from './TeamCard';
+import { LeagueStandings } from './LeagueStandings';
 
 export function TeamsManager() {
   const { data: teams = [], refetch } = useGetTeamsQuery();
@@ -21,6 +23,7 @@ export function TeamsManager() {
   const [removePlayerFromTeam] = useRemovePlayerFromTeamMutation();
   const [setTeamCaptain] = useSetTeamCaptainMutation();
 
+  const [activeTab, setActiveTab] = useState(0);
   const [newTeamName, setNewTeamName] = useState('');
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -202,14 +205,31 @@ export function TeamsManager() {
     }
   };
 
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant='h4' gutterBottom>
-        Teams Manager
+        Teams
       </Typography>
 
-      {/* Create Team Section */}
-      <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
+      <Paper sx={{ mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
+        >
+          <Tab label="Team Manager" />
+          <Tab label="League Standings" />
+        </Tabs>
+      </Paper>
+
+      {activeTab === 0 && (
+        <Box>
+          {/* Create Team Section */}
+          <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
         <Typography variant='h6' gutterBottom>
           Create New Team
         </Typography>
@@ -297,6 +317,12 @@ export function TeamsManager() {
         }
         requiredPosition={pickerSlot?.position}
       />
+        </Box>
+      )}
+
+      {activeTab === 1 && (
+        <LeagueStandings />
+      )}
 
       {/* Error/Success Notifications */}
       <ErrorNotification
