@@ -23,7 +23,8 @@
     "express": "^5.1.0",
     "node-pg-migrate": "^8.0.1",
     "pg": "^8.16.0",
-    "shared": "file:../shared"
+    "shared": "file:../shared",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",

@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import router from './routes/contentRoutes';
+import teamRoutes from './routes/teamRoutes';
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api', router);
+app.use('/api', teamRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
