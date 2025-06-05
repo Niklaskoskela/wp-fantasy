@@ -14,9 +14,11 @@ function asyncHandler(fn: any) {
 // Club routes
 router.post('/clubs', asyncHandler(ClubController.createClub));
 router.get('/clubs', asyncHandler(ClubController.getAllClubs));
+router.get('/clubs/:id', asyncHandler(ClubController.getClub));
 
 // Player routes
 router.post('/players', asyncHandler(PlayerController.createPlayer));
 router.get('/players', asyncHandler(PlayerController.getAllPlayers));
+router.get('/players/:id', asyncHandler(PlayerController.getPlayer));
 
 export default router;

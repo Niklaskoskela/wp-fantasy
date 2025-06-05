@@ -1,10 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import { contentApi } from './api/contentApi';
 
-// Placeholder for future API slices
 export const store = configureStore({
-  reducer: {},
+  reducer: {
+    [contentApi.reducerPath]: contentApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(contentApi.middleware),
 });
 
 setupListeners(store.dispatch);

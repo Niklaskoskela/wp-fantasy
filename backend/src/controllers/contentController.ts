@@ -27,6 +27,19 @@ export class ClubController {
       res.status(500).json({ error: 'Failed to fetch clubs' });
     }
   }
+
+  static async getClub(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ error: 'Club id is required' });
+      const club = await ClubService.getClubById(id);
+      if (!club) return res.status(404).json({ error: 'Club not found' });
+      res.json(club);
+    } catch (error) {
+      console.error('Error in getClub:', error);
+      res.status(500).json({ error: 'Failed to fetch club' });
+    }
+  }
 }
 
 export class PlayerController {
@@ -51,6 +64,19 @@ export class PlayerController {
     } catch (error) {
       console.error('Error in getAllPlayers:', error);
       res.status(500).json({ error: 'Failed to fetch players' });
+    }
+  }
+
+  static async getPlayer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ error: 'Player id is required' });
+      const player = await PlayerService.getPlayerById(id);
+      if (!player) return res.status(404).json({ error: 'Player not found' });
+      res.json(player);
+    } catch (error) {
+      console.error('Error in getPlayer:', error);
+      res.status(500).json({ error: 'Failed to fetch player' });
     }
   }
 }

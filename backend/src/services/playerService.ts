@@ -33,4 +33,16 @@ export class PlayerService {
       statsHistory: new Map()
     }));
   }
+
+  static async getPlayerById(id: string) {
+    const result = await pool.query('SELECT id, name, position, club_id FROM players WHERE id = $1', [id]);
+    if (result.rows.length === 0) return null;
+    return {
+      id: result.rows[0].id.toString(),
+      name: result.rows[0].name,
+      position: result.rows[0].position,
+      club: { id: result.rows[0].club_id.toString(), name: '' },
+      statsHistory: new Map()
+    };
+  }
 }
