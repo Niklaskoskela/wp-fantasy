@@ -19,6 +19,10 @@ export function addPlayerToTeam(req: Request, res: Response) {
         const team = teamService.addPlayerToTeam(teamId, player);
         return res.json(team);
     } catch (e: any) {
+        // Use 409 Conflict for business logic errors (e.g., too many goalkeepers)
+        if (e.message && (e.message.includes('goalkeeper') || e.message.includes('6 players'))) {
+            return res.status(409).json({ error: e.message });
+        }
         return res.status(400).json({ error: e.message });
     }
 }
@@ -41,6 +45,10 @@ export function setTeamCaptain(req: Request, res: Response) {
         const team = teamService.setTeamCaptain(teamId, playerId);
         return res.json(team);
     } catch (e: any) {
+        // Use 409 Conflict for business logic errors (e.g., player not in team)
+        if (e.message && e.message.includes('Player not in team')) {
+            return res.status(409).json({ error: e.message });
+        }
         return res.status(400).json({ error: e.message });
     }
 }

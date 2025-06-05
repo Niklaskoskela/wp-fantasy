@@ -35,11 +35,12 @@ Use existing backend endpoints and shared types. Create tools for these:
   b. Creating players.
   c. Viewing list of clubs and a single club
   d. Viewing list of players and a single player
-2. Managing teams: Creating a fantasy team. Browsing players while being able to pick or change players for the teams and select a captain. Team consists of 6 players, 1 goal keeper, 1 of these is the captain.
+2. Managing teams: Creating a fantasy team by setting a title. Browsing players while being able to pick or change players for the teams and select a captain. Team consists of at most 6 players, 1 goal keeper, 1 of these is the captain.
 3. Manage match days:
   a. creating a match day with a title
-  b. update player stats for a given match day in a table view
-  c. calculate points for all of the teams for the match day. (get request with match day id)
+  b. when selecting a match day: update player stats for a given match day in a table view
+  c. while viewing player, these stats should be shown
+  d. when selecting a match day, option to calculate points for all of the teams for the match day. (get request with match day id).
 4. Seeing the results of the league. Get all of the teams, calculate total points and rank the teams 
 
 

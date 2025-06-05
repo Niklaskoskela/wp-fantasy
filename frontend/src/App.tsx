@@ -4,6 +4,7 @@ import { ClubsManager } from './components/ClubsManager';
 import { PlayersManager } from './components/PlayersManager';
 import { ClubsList } from './components/ClubsList';
 import { PlayersList } from './components/PlayersList';
+import { TeamsManager } from './components/TeamManager/TeamsManager';
 import {
   AppBar,
   Toolbar,
@@ -19,12 +20,13 @@ import {
   IconButton,
 } from '@mui/material';
 import { Menu } from '@mui/icons-material';
-import { PageLayout } from 'components/PageLayout';
+import { PageLayout } from './components/PageLayout';
 
 const navItems = [
   { label: 'Home', path: '/' },
   { label: 'Clubs', path: '/clubs' },
   { label: 'Players', path: '/players' },
+  { label: 'Teams', path: '/teams' },
 ];
 
 function HomePage() {
@@ -111,6 +113,14 @@ function App() {
               <PageLayout>
                 <PlayersManager />
                 <PlayersList />
+              </PageLayout>
+            }
+          />
+          <Route
+            path='/teams'
+            element={
+              <PageLayout>
+                <TeamsManager />
               </PageLayout>
             }
           />
