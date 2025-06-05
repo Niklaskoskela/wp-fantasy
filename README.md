@@ -20,7 +20,7 @@ Avoid using undefined values - try to use checks or default values when necessar
 5. Managing content:
   a. Creating clubs.
   b. Creating players. 
-6. Managing teams: the tool to pick or change players for the teams and select a captain.
+6. Managing teams: Creating a team. Then being able to pick or change players for the teams and select a captain. Team consists of 6 players, 1 goal keeper, 1 of these is the captain.
 7. Manage match days:
   a. update stats of the each player for a match day
   b. calculate points for all of the teams
