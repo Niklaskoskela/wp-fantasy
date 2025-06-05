@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Button,
-  TextField,
-  Typography,
-  List,
-  Box,
-  Stack,
-} from '@mui/material';
+import { Button, TextField, Typography, List, Box, Stack } from '@mui/material';
 import { Player, PlayerPosition } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
 import {
