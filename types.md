@@ -9,7 +9,7 @@ score_history: MatchDay -> Number map
 
 MatchDay:
 
-number: Number
+title: string
 multiplier: Number
 
 Player:

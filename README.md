@@ -22,8 +22,9 @@ Avoid using undefined values - try to use checks or default values when necessar
   b. Creating players. 
 6. Managing teams: Creating a team. Then being able to pick or change players for the teams and select a captain. Team consists of 6 players, 1 goal keeper, 1 of these is the captain.
 7. Manage match days:
-  a. update stats of the each player for a match day
-  b. calculate points for all of the teams
+  a. creating a match day with a title (post request with a title)
+  b. update player stats for a given match day. (post request with match day id and updated stats)
+  c. calculate points for all of the teams for the match day. (get request with match day id)
 8. Option to get the Fantasy League's all teams and their total score
 
 ## Testing Plan

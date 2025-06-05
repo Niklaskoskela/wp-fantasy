@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import dotenv from 'dotenv';
 import contentRoutes from '../routes/contentRoutes';
+import matchDayRoutes from '../routes/matchDayRoutes';
 import { pool } from '../services/clubService'; // Adjust path if needed
 
 dotenv.config();
@@ -10,6 +11,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use('/api', contentRoutes);
+app.use('/api', matchDayRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -65,6 +67,47 @@ describe('Content API', () => {
       .expect(200);
     expect(Array.isArray(getRes.body)).toBe(true);
     expect(getRes.body.some((p: any) => p.name === playerData.name)).toBe(true);
+  });
+});
+
+describe('MatchDay API', () => {
+  test('POST /api/matchdays creates a match day', async () => {
+    const title = `Match Day ${Date.now()}`;
+    const res = await request(app)
+      .post('/api/matchdays')
+      .send({ title })
+      .expect(201);
+    expect(res.body).toHaveProperty('id');
+    expect(res.body.title).toBe(title);
+  });
+
+  test('POST /api/matchdays/:id/player-stats updates player stats', async () => {
+    // Create match day
+    const matchDayRes = await request(app)
+      .post('/api/matchdays')
+      .send({ title: 'Stats Day' });
+    const matchDayId = matchDayRes.body.id;
+    // Fake player and stats
+    const playerId = 'player-1';
+    const stats = { id: 'stats-1', goals: 2, assists: 1, blocks: 0, steals: 0, pfDrawn: 0, pf: 0, ballsLost: 0, contraFouls: 0, shots: 0, swimOffs: 0, brutality: 0, saves: 0, wins: 0 };
+    const res = await request(app)
+      .post(`/api/matchdays/${matchDayId}/player-stats`)
+      .send({ playerId, stats })
+      .expect(200);
+    expect(res.body.goals).toBe(2);
+  });
+
+  test('GET /api/matchdays/:id/calculate-points returns points', async () => {
+    // Create match day
+    const matchDayRes = await request(app)
+      .post('/api/matchdays')
+      .send({ title: 'Points Day' });
+    const matchDayId = matchDayRes.body.id;
+    // Should return array (empty teams)
+    const res = await request(app)
+      .get(`/api/matchdays/${matchDayId}/calculate-points`)
+      .expect(200);
+    expect(Array.isArray(res.body)).toBe(true);
   });
 });
 
