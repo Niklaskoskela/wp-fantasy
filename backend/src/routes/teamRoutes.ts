@@ -15,5 +15,6 @@ router.post('/teams/add-player', asyncHandler(addPlayerToTeam));
 router.post('/teams/remove-player', asyncHandler(removePlayerFromTeam));
 router.post('/teams/set-captain', asyncHandler(setTeamCaptain));
 router.get('/teams', asyncHandler(getTeams));
+router.get('/league/teams', asyncHandler(getTeams));
 
 export default router;

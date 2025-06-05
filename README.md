@@ -25,7 +25,8 @@ Avoid using undefined values - try to use checks or default values when necessar
   a. creating a match day with a title (post request with a title)
   b. update player stats for a given match day. (post request with match day id and updated stats)
   c. calculate points for all of the teams for the match day. (get request with match day id)
-8. Option to get the Fantasy League's all teams and their total score
+8. Seeing the results of the league: get endpoint to get all of the teams of the league. 
+Create also a solid system wide test that creates teams -> creates two matchdays -> updates stats for match days -> calculates points based on these -> 
 
 ## Testing Plan
 
