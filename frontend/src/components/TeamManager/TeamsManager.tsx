@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Button, TextField, Typography, List, Box, Stack, Tabs, Tab, Paper } from '@mui/material';
+import {
+  Button,
+  TextField,
+  Typography,
+  List,
+  Box,
+  Stack,
+  Tabs,
+  Tab,
+  Paper,
+} from '@mui/material';
 import { Player, PlayerPosition } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
 import {
@@ -210,7 +220,7 @@ export function TeamsManager() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Typography variant='h4' gutterBottom>
         Teams
       </Typography>
@@ -221,108 +231,113 @@ export function TeamsManager() {
           onChange={handleTabChange}
           sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
         >
-          <Tab label="Team Manager" />
-          <Tab label="League Standings" />
+          <Tab label='Team Manager' />
+          <Tab label='League Standings' />
         </Tabs>
       </Paper>
 
       {activeTab === 0 && (
         <Box>
           {/* Create Team Section */}
-          <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
-        <Typography variant='h6' gutterBottom>
-          Create New Team
-        </Typography>
-        <Stack direction='row' spacing={2} alignItems='center'>
-          <TextField
-            label='Team Name'
-            value={newTeamName}
-            onChange={(e) => setNewTeamName(e.target.value)}
-            size='small'
-            sx={{ minWidth: 200 }}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') handleCreateTeam();
-            }}
-          />
-          <Button
-            variant='contained'
-            onClick={handleCreateTeam}
-            disabled={!newTeamName.trim()}
+          <Box
+            sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}
           >
-            Create Team
-          </Button>
-        </Stack>
-      </Box>
-
-      {/* Teams List */}
-      <Box>
-        <Typography variant='h6' gutterBottom>
-          Your Teams ({teams.length})
-        </Typography>
-
-        {teams.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography color='text.secondary'>
-              No teams created yet. Create your first team above!
+            <Typography variant='h6' gutterBottom>
+              Create New Team
             </Typography>
+            <Stack direction='row' spacing={2} alignItems='center'>
+              <TextField
+                label='Team Name'
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                size='small'
+                sx={{ minWidth: 200 }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleCreateTeam();
+                }}
+              />
+              <Button
+                variant='contained'
+                onClick={handleCreateTeam}
+                disabled={!newTeamName.trim()}
+              >
+                Create Team
+              </Button>
+            </Stack>
           </Box>
-        ) : (
-          <List sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}>
-            {teams.map((team) => {
-              const slots = pendingPlayers[team.id] || [
-                ...team.players,
-                ...Array(6 - team.players.length).fill(null),
-              ];
-              const captainId = pendingCaptain[team.id] ?? team.teamCaptain?.id;
 
-              return (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  expanded={expandedTeamId === team.id}
-                  slots={slots}
-                  captainId={captainId}
-                  onToggleExpand={() => handleExpand(team.id)}
-                  onPickPlayer={(slot, position) =>
-                    handleOpenPicker(team.id, slot, position)
-                  }
-                  onRemovePlayer={(slot) => handleRemovePlayer(team.id, slot)}
-                  onSetCaptain={(playerId) =>
-                    handleSetCaptain(team.id, playerId)
-                  }
-                  onSave={() => handleSave(team.id)}
-                  isSaving={savingTeamId === team.id}
-                />
-              );
-            })}
-          </List>
-        )}
-      </Box>
+          {/* Teams List */}
+          <Box>
+            <Typography variant='h6' gutterBottom>
+              Your Teams ({teams.length})
+            </Typography>
 
-      {/* Player Picker Modal */}
-      <PlayerPickerModal
-        open={pickerOpen}
-        onClose={() => {
-          setPickerOpen(false);
-          setPickerSlot(null);
-        }}
-        onPick={handlePickPlayer}
-        players={players}
-        alreadyPickedIds={
-          pickerSlot && pendingPlayers[pickerSlot.teamId]
-            ? pendingPlayers[pickerSlot.teamId]
-                .filter(Boolean)
-                .map((p) => (p as Player).id)
-            : []
-        }
-        requiredPosition={pickerSlot?.position}
-      />
+            {teams.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography color='text.secondary'>
+                  No teams created yet. Create your first team above!
+                </Typography>
+              </Box>
+            ) : (
+              <List
+                sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}
+              >
+                {teams.map((team) => {
+                  const slots = pendingPlayers[team.id] || [
+                    ...team.players,
+                    ...Array(6 - team.players.length).fill(null),
+                  ];
+                  const captainId =
+                    pendingCaptain[team.id] ?? team.teamCaptain?.id;
+
+                  return (
+                    <TeamCard
+                      key={team.id}
+                      team={team}
+                      expanded={expandedTeamId === team.id}
+                      slots={slots}
+                      captainId={captainId}
+                      onToggleExpand={() => handleExpand(team.id)}
+                      onPickPlayer={(slot, position) =>
+                        handleOpenPicker(team.id, slot, position)
+                      }
+                      onRemovePlayer={(slot) =>
+                        handleRemovePlayer(team.id, slot)
+                      }
+                      onSetCaptain={(playerId) =>
+                        handleSetCaptain(team.id, playerId)
+                      }
+                      onSave={() => handleSave(team.id)}
+                      isSaving={savingTeamId === team.id}
+                    />
+                  );
+                })}
+              </List>
+            )}
+          </Box>
+
+          {/* Player Picker Modal */}
+          <PlayerPickerModal
+            open={pickerOpen}
+            onClose={() => {
+              setPickerOpen(false);
+              setPickerSlot(null);
+            }}
+            onPick={handlePickPlayer}
+            players={players}
+            alreadyPickedIds={
+              pickerSlot && pendingPlayers[pickerSlot.teamId]
+                ? pendingPlayers[pickerSlot.teamId]
+                    .filter(Boolean)
+                    .map((p) => (p as Player).id)
+                : []
+            }
+            requiredPosition={pickerSlot?.position}
+          />
         </Box>
       )}
 
-      {activeTab === 1 && (
-        <LeagueStandings />
-      )}
+      {activeTab === 1 && <LeagueStandings />}
 
       {/* Error/Success Notifications */}
       <ErrorNotification

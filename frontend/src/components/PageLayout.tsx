@@ -1,10 +1,12 @@
 import React from 'react';
-import { Stack, StackProps } from '@mui/material';
+import { Card, Stack, StackProps } from '@mui/material';
 
 export function PageLayout({ children, ...props }: StackProps) {
   return (
-    <Stack spacing={2} {...props}>
-      {children}
-    </Stack>
+    <Card>
+      <Stack p={3} spacing={3} {...props}>
+        {children}
+      </Stack>
+    </Card>
   );
 }

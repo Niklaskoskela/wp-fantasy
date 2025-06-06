@@ -1,35 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ClubsManager } from './components/ClubsManager';
 import { PlayersManager } from './components/PlayersManager';
 import { ClubsList } from './components/ClubsList';
 import { PlayersList } from './components/PlayersList';
 import { TeamsManager } from './components/TeamManager/TeamsManager';
 import { MatchDaysManager } from './components/MatchDaysManager';
-import {
-  AppBar,
-  Toolbar,
-  Button,
-  Container,
-  Typography,
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  IconButton,
-} from '@mui/material';
-import { Menu } from '@mui/icons-material';
+import { NavigationBar } from './components/NavigationBar';
+import { Container, Typography, Box } from '@mui/material';
 import { PageLayout } from './components/PageLayout';
-
-const navItems = [
-  { label: 'Home', path: '/' },
-  { label: 'Clubs', path: '/clubs' },
-  { label: 'Players', path: '/players' },
-  { label: 'Teams', path: '/teams' },
-  { label: 'Match Days', path: '/matchdays' },
-];
 
 function HomePage() {
   return (
@@ -46,58 +25,9 @@ function HomePage() {
 }
 
 function App() {
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
-
-  const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
-
   return (
     <Router>
-      <AppBar position='static'>
-        <Toolbar>
-          <IconButton
-            color='inherit'
-            edge='start'
-            sx={{ mr: 2, display: { sm: 'none' } }}
-            onClick={handleDrawerToggle}
-          >
-            <Menu />
-          </IconButton>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' } }}>
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                color='inherit'
-                component={Link}
-                to={item.path}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Box>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        anchor='left'
-        open={drawerOpen}
-        onClose={handleDrawerToggle}
-        sx={{ display: { sm: 'none' } }}
-      >
-        <Box
-          sx={{ width: 200 }}
-          role='presentation'
-          onClick={handleDrawerToggle}
-        >
-          <List>
-            {navItems.map((item) => (
-              <ListItem key={item.path} disablePadding>
-                <ListItemButton component={Link} to={item.path}>
-                  <ListItemText primary={item.label} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
+      <NavigationBar />
       <Container sx={{ mt: 4 }}>
         <Routes>
           <Route

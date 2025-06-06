@@ -13,7 +13,7 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
-      contentApi.middleware, 
+      contentApi.middleware,
       teamApi.middleware,
       matchDayApi.middleware
     ),

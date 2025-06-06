@@ -21,9 +21,13 @@ interface PointsCalculatorProps {
   matchDayTitle: string;
 }
 
-export function PointsCalculator({ matchDayId, matchDayTitle }: PointsCalculatorProps) {
+export function PointsCalculator({
+  matchDayId,
+  matchDayTitle,
+}: PointsCalculatorProps) {
   const { data: teams = [] } = useGetTeamsQuery();
-  const [calculatePoints, { data: pointsData, isLoading, error, isSuccess }] = useLazyCalculatePointsQuery();
+  const [calculatePoints, { data: pointsData, isLoading, error, isSuccess }] =
+    useLazyCalculatePointsQuery();
 
   const handleCalculatePoints = () => {
     calculatePoints(matchDayId);
@@ -32,7 +36,7 @@ export function PointsCalculator({ matchDayId, matchDayTitle }: PointsCalculator
   // Create a map of team IDs to team names for display
   const teamMap = React.useMemo(() => {
     const map: { [teamId: string]: string } = {};
-    teams.forEach(team => {
+    teams.forEach((team) => {
       map[team.id] = team.teamName;
     });
     return map;
@@ -46,13 +50,18 @@ export function PointsCalculator({ matchDayId, matchDayTitle }: PointsCalculator
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">
-          Calculate Points - {matchDayTitle}
-        </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Typography variant='h6'>Calculate Points - {matchDayTitle}</Typography>
         <Button
-          variant="contained"
-          color="secondary"
+          variant='contained'
+          color='secondary'
           onClick={handleCalculatePoints}
           disabled={isLoading}
           startIcon={isLoading ? <CircularProgress size={20} /> : null}
@@ -62,19 +71,19 @@ export function PointsCalculator({ matchDayId, matchDayTitle }: PointsCalculator
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity='error' sx={{ mb: 2 }}>
           Failed to calculate points for this match day
         </Alert>
       )}
 
       {isSuccess && pointsData && (
         <Box>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant='subtitle1' gutterBottom>
             Points Results for {matchDayTitle}
           </Typography>
-          
+
           {sortedPointsData.length === 0 ? (
-            <Alert severity="info">
+            <Alert severity='info'>
               No teams found or no stats recorded for this match day
             </Alert>
           ) : (
@@ -84,20 +93,21 @@ export function PointsCalculator({ matchDayId, matchDayTitle }: PointsCalculator
                   <TableRow>
                     <TableCell>Rank</TableCell>
                     <TableCell>Team Name</TableCell>
-                    <TableCell align="right">Points</TableCell>
+                    <TableCell align='right'>Points</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {sortedPointsData.map((teamPoints, index) => (
                     <TableRow key={teamPoints.teamId}>
-                      <TableCell component="th" scope="row">
+                      <TableCell component='th' scope='row'>
                         {index + 1}
                       </TableCell>
                       <TableCell>
-                        {teamMap[teamPoints.teamId] || `Team ${teamPoints.teamId}`}
+                        {teamMap[teamPoints.teamId] ||
+                          `Team ${teamPoints.teamId}`}
                       </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="h6" color="primary">
+                      <TableCell align='right'>
+                        <Typography variant='h6' color='primary'>
                           {teamPoints.points}
                         </Typography>
                       </TableCell>
@@ -109,8 +119,9 @@ export function PointsCalculator({ matchDayId, matchDayTitle }: PointsCalculator
           )}
 
           <Box sx={{ mt: 2 }}>
-            <Typography variant="caption" color="text.secondary">
-              Scoring: Goals (5 pts), Assists (3 pts), Blocks (2 pts), Steals (2 pts) | Captain gets double points
+            <Typography variant='caption' color='text.secondary'>
+              Scoring: Goals (5 pts), Assists (3 pts), Blocks (2 pts), Steals (2
+              pts) | Captain gets double points
             </Typography>
           </Box>
         </Box>

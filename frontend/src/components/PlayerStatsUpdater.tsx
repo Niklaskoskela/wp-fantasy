@@ -48,40 +48,53 @@ const defaultStats: Omit<Stats, 'id'> = {
   wins: 0,
 };
 
-export function PlayerStatsUpdater({ matchDayId, matchDayTitle }: PlayerStatsUpdaterProps) {
+export function PlayerStatsUpdater({
+  matchDayId,
+  matchDayTitle,
+}: PlayerStatsUpdaterProps) {
   const { data: players = [], isLoading, error } = useGetPlayersQuery();
-  const [updatePlayerStats, { isLoading: isUpdating }] = useUpdatePlayerStatsMutation();
-  const [playerStats, setPlayerStats] = useState<{ [playerId: string]: Stats }>({});
-  const [updateResults, setUpdateResults] = useState<{ success: string[]; errors: string[] }>({
+  const [updatePlayerStats, { isLoading: isUpdating }] =
+    useUpdatePlayerStatsMutation();
+  const [playerStats, setPlayerStats] = useState<{ [playerId: string]: Stats }>(
+    {}
+  );
+  const [updateResults, setUpdateResults] = useState<{
+    success: string[];
+    errors: string[];
+  }>({
     success: [],
-    errors: []
+    errors: [],
   });
 
   // Initialize stats for all players if not already set
   React.useEffect(() => {
     if (players.length > 0) {
       const initialStats: { [playerId: string]: Stats } = {};
-      players.forEach(player => {
+      players.forEach((player) => {
         if (!playerStats[player.id]) {
           initialStats[player.id] = {
             id: uuidv4(),
-            ...defaultStats
+            ...defaultStats,
           };
         }
       });
       if (Object.keys(initialStats).length > 0) {
-        setPlayerStats(prev => ({ ...prev, ...initialStats }));
+        setPlayerStats((prev) => ({ ...prev, ...initialStats }));
       }
     }
   }, [players, playerStats]);
 
-  const handleStatChange = (playerId: string, statKey: keyof Omit<Stats, 'id'>, value: number) => {
-    setPlayerStats(prev => ({
+  const handleStatChange = (
+    playerId: string,
+    statKey: keyof Omit<Stats, 'id'>,
+    value: number
+  ) => {
+    setPlayerStats((prev) => ({
       ...prev,
       [playerId]: {
         ...prev[playerId],
-        [statKey]: value
-      }
+        [statKey]: value,
+      },
     }));
   };
 
@@ -91,38 +104,38 @@ export function PlayerStatsUpdater({ matchDayId, matchDayTitle }: PlayerStatsUpd
       await updatePlayerStats({
         matchDayId,
         playerId,
-        stats
+        stats,
       }).unwrap();
-      
-      setUpdateResults(prev => ({
+
+      setUpdateResults((prev) => ({
         ...prev,
-        success: [...prev.success.filter(id => id !== playerId), playerId],
-        errors: prev.errors.filter(id => id !== playerId)
+        success: [...prev.success.filter((id) => id !== playerId), playerId],
+        errors: prev.errors.filter((id) => id !== playerId),
       }));
     } catch (err) {
       console.error('Failed to update player stats:', err);
-      setUpdateResults(prev => ({
+      setUpdateResults((prev) => ({
         ...prev,
-        errors: [...prev.errors.filter(id => id !== playerId), playerId],
-        success: prev.success.filter(id => id !== playerId)
+        errors: [...prev.errors.filter((id) => id !== playerId), playerId],
+        success: prev.success.filter((id) => id !== playerId),
       }));
     }
   };
 
   const handleUpdateAllStats = async () => {
-    const promises = players.map(player => 
+    const promises = players.map((player) =>
       updatePlayerStats({
         matchDayId,
         playerId: player.id,
-        stats: playerStats[player.id]
+        stats: playerStats[player.id],
       }).unwrap()
     );
 
     try {
       await Promise.all(promises);
       setUpdateResults({
-        success: players.map(p => p.id),
-        errors: []
+        success: players.map((p) => p.id),
+        errors: [],
       });
     } catch (err) {
       console.error('Failed to update some player stats:', err);
@@ -130,7 +143,7 @@ export function PlayerStatsUpdater({ matchDayId, matchDayTitle }: PlayerStatsUpd
   };
 
   if (isLoading) return <Typography>Loading players...</Typography>;
-  if (error) return <Alert severity="error">Failed to load players</Alert>;
+  if (error) return <Alert severity='error'>Failed to load players</Alert>;
 
   const statsFields: Array<{
     key: keyof Omit<Stats, 'id'>;
@@ -154,13 +167,20 @@ export function PlayerStatsUpdater({ matchDayId, matchDayTitle }: PlayerStatsUpd
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Typography variant='h6'>
           Update Player Stats - {matchDayTitle}
         </Typography>
         <Button
-          variant="contained"
-          color="primary"
+          variant='contained'
+          color='primary'
           onClick={handleUpdateAllStats}
           disabled={isUpdating}
         >
@@ -169,65 +189,73 @@ export function PlayerStatsUpdater({ matchDayId, matchDayTitle }: PlayerStatsUpd
       </Box>
 
       {updateResults.success.length > 0 && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+        <Alert severity='success' sx={{ mb: 2 }}>
           Successfully updated stats for {updateResults.success.length} players
         </Alert>
       )}
 
       {updateResults.errors.length > 0 && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity='error' sx={{ mb: 2 }}>
           Failed to update stats for {updateResults.errors.length} players
         </Alert>
       )}
 
       <TableContainer sx={{ maxHeight: 600 }}>
-        <Table stickyHeader size="small">
+        <Table stickyHeader size='small'>
           <TableHead>
             <TableRow>
               <TableCell>Player</TableCell>
               <TableCell>Position</TableCell>
               <TableCell>Club</TableCell>
-              {statsFields.map(field => (
-                <TableCell key={field.key} align="center">
+              {statsFields.map((field) => (
+                <TableCell key={field.key} align='center'>
                   {field.label}
                 </TableCell>
               ))}
-              <TableCell align="center">Actions</TableCell>
+              <TableCell align='center'>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {players.map((player) => (
               <TableRow key={player.id}>
-                <TableCell component="th" scope="row">
+                <TableCell component='th' scope='row'>
                   {player.name}
                 </TableCell>
                 <TableCell>{player.position}</TableCell>
                 <TableCell>{player.club.name}</TableCell>
-                {statsFields.map(field => (
-                  <TableCell key={field.key} align="center">
+                {statsFields.map((field) => (
+                  <TableCell key={field.key} align='center'>
                     <TextField
-                      type="number"
-                      size="small"
+                      type='number'
+                      size='small'
                       value={playerStats[player.id]?.[field.key] || 0}
-                      onChange={(e) => handleStatChange(
-                        player.id,
-                        field.key,
-                        Math.max(field.min, parseInt(e.target.value) || 0)
-                      )}
+                      onChange={(e) =>
+                        handleStatChange(
+                          player.id,
+                          field.key,
+                          Math.max(field.min, parseInt(e.target.value) || 0)
+                        )
+                      }
                       inputProps={{ min: field.min, step: 1 }}
                       sx={{ width: 70 }}
                     />
                   </TableCell>
                 ))}
-                <TableCell align="center">
+                <TableCell align='center'>
                   <Button
-                    size="small"
-                    variant="outlined"
+                    size='small'
+                    variant='outlined'
                     onClick={() => handleUpdatePlayerStats(player.id)}
                     disabled={isUpdating}
-                    color={updateResults.success.includes(player.id) ? 'success' : 'primary'}
+                    color={
+                      updateResults.success.includes(player.id)
+                        ? 'success'
+                        : 'primary'
+                    }
                   >
-                    {updateResults.success.includes(player.id) ? 'Updated' : 'Update'}
+                    {updateResults.success.includes(player.id)
+                      ? 'Updated'
+                      : 'Update'}
                   </Button>
                 </TableCell>
               </TableRow>
