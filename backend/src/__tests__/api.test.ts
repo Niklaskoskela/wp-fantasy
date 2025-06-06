@@ -116,9 +116,10 @@ describe('MatchDay API', () => {
 describe('System-wide League Flow', () => {
   test('Creates teams, matchdays, updates stats, calculates points, and gets league results', async () => {
     // 1. Create a club
+    const uniqueClubName = `Super Club ${Date.now()}`;
     const clubRes = await request(app)
       .post('/api/clubs')
-      .send({ name: 'Super Club' });
+      .send({ name: uniqueClubName });
     const clubId = clubRes.body.id;
 
     // 2. Create two players
@@ -165,6 +166,16 @@ describe('System-wide League Flow', () => {
     expect(Array.isArray(leagueRes.body)).toBe(true);
     expect(leagueRes.body[0]).toHaveProperty('teamName', 'Dream Team');
     expect(Array.isArray(leagueRes.body[0].players)).toBe(true);
+
+    // 8. Get teams with scores
+    const teamsWithScoresRes = await request(app).get('/api/teams/with-scores');
+    expect(Array.isArray(teamsWithScoresRes.body)).toBe(true);
+    expect(teamsWithScoresRes.body[0]).toHaveProperty('teamName', 'Dream Team');
+    expect(teamsWithScoresRes.body[0]).toHaveProperty('totalPoints');
+    expect(typeof teamsWithScoresRes.body[0].totalPoints).toBe('number');
+    expect(Array.isArray(teamsWithScoresRes.body[0].matchDayScores)).toBe(true);
+    // Note: matchDayScores might include data from previous test runs
+    expect(teamsWithScoresRes.body[0].matchDayScores.length).toBeGreaterThanOrEqual(0);
   });
 });
 

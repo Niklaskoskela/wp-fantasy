@@ -22,16 +22,19 @@ export function updatePlayerStats(matchDayId: string, playerId: string, stats: S
 export function calculatePoints(matchDayId: string): { teamId: string; points: number }[] {
     const teams = getTeams();
     const results: { teamId: string; points: number }[] = [];
+    
     for (const team of teams) {
         let total = 0;
+        
         for (const player of team.players) {
             const stats = playerStats[matchDayId]?.[player.id];
             if (stats) {
                 // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
-                total += stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2;
+                const basePoints = stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2;
+                total += basePoints;
                 // Captain gets double points
                 if (team.teamCaptain && team.teamCaptain.id === player.id) {
-                    total += (stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2);
+                    total += basePoints;
                 }
             }
         }
