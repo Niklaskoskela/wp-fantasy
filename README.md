@@ -1,6 +1,6 @@
 # Water Polo Fantasy League management SPA react app.
 
-Tech: Typescript, React, React Router, Material UI
+Frontend: Vite, Typescript, React, React Router, Material UI
 Backend: Node JS Express backend
 DB: PostgreSQL with proper migrations
 

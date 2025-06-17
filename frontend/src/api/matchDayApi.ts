@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { MatchDay, Stats } from '../../../shared/dist/types';
-
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+import { API_URL } from '../config';
 
 export const matchDayApi = createApi({
   reducerPath: 'matchDayApi',

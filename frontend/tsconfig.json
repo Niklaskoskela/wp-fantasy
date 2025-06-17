@@ -20,10 +20,15 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "baseUrl": "src"
+    "baseUrl": "src",
+    "paths": {
+      "shared": ["../shared/src"],
+      "shared/*": ["../shared/src/*"]
+    }
   },
   "include": [
-    "src"
+    "src",
+    "../shared/src"
   ],
   "exclude": [
     "node_modules"

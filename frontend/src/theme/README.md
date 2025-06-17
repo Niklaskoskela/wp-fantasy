@@ -94,6 +94,7 @@ function PlayerCard() {
 The theme includes predefined width constraints for consistent layout:
 
 ### Width Constants
+
 ```typescript
 // Maximum width for navigation bar content
 export const navMaxWidth = 1300;
@@ -103,7 +104,9 @@ export const contentMaxWidth = 1100;
 ```
 
 ### Usage
+
 These constants are automatically applied:
+
 - **Navigation Bar**: Uses `navMaxWidth` (1300px) to constrain the toolbar content
 - **Main Container**: Uses `contentMaxWidth` (1100px) via MUI Container theme override
 - **Custom Hook**: Available via `useAppLayout()` hook for manual application
@@ -113,7 +116,7 @@ import { useAppLayout } from '../theme';
 
 function MyComponent() {
   const { contentMaxWidth, navMaxWidth, pageContainerSx } = useAppLayout();
-  
+
   return (
     <Box sx={pageContainerSx}>
       {/* Content automatically constrained to contentMaxWidth */}
