@@ -15,58 +15,153 @@
    psql postgres
    
    # Create database and user
-   CREATE DATABASE wp_fantasy;
-   CREATE USER wp_fantasy_user WITH PASSWORD 'your_password_here';
-   GRANT ALL PRIVILEGES ON DATABASE wp_fantasy TO wp_fantasy_user;
+   CREATE DATABASE wpfantasy;
+   CREATE USER wpfantasy_user WITH PASSWORD 'your_password_here';
+   GRANT ALL PRIVILEGES ON DATABASE wpfantasy TO wpfantasy_user;
    \q
    ```
 
-3. **Set environment variables** (create `.env` file in backend directory)
-   ```
-   DATABASE_URL=postgresql://wp_fantasy_user:your_password_here@localhost:5432/wp_fantasy
+3. **Set environment variables**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env with your actual database credentials
+   # DATABASE_URL=postgresql://wpfantasy_user:your_password@localhost:5432/wpfantasy
    ```
 
-## Running Migrations
+## Migration Management with node-pg-migrate
 
-### Manual Migration Execution
-Run migrations in order:
+We use [node-pg-migrate](https://github.com/salsita/node-pg-migrate) for robust database migration management.
+
+### Running Migrations
 
 ```bash
-# Connect to your database
-psql wp_fantasy
+# Run all pending migrations (production)
+npm run migrate:up
 
-# Run initial schema
-\i migrations/001_init.sql
+# Run migrations in development
+npm run migrate:dev
 
-# Run subsequent migrations
-\i migrations/002_add_matchday_times.sql
+# Rollback the last migration
+npm run migrate:down
+npm run migrate:dev:down  # for development
 
-\q
+# Check migration status
+npm run migrate
 ```
 
-### Migration Tracking (Recommended Future Enhancement)
-Consider implementing a migration tracking system that:
-- Tracks which migrations have been applied
-- Provides rollback capabilities
-- Validates migration order
-- Supports both development and production environments
+### Creating New Migrations
 
-Example migration tracking table:
-```sql
-CREATE TABLE schema_migrations (
-    version VARCHAR(255) PRIMARY KEY,
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+```bash
+# Create a new migration file
+npm run migrate:create add_user_table
+
+# For development environment
+npm run migrate:dev:create add_user_preferences
 ```
+
+This will create a new migration file in the `migrations/` directory with the format:
+`[timestamp]_add_user_table.js`
+
+### Migration File Structure
+
+```javascript
+/* eslint-disable camelcase */
+
+exports.shorthands = undefined;
+
+exports.up = pgm => {
+  // Forward migration - what should happen when applying this migration
+  pgm.createTable('users', {
+    id: 'id',
+    email: { type: 'varchar(255)', notNull: true, unique: true },
+    created_at: { type: 'timestamp', default: pgm.func('current_timestamp') },
+  });
+};
+
+exports.down = pgm => {
+  // Rollback migration - how to undo this migration
+  pgm.dropTable('users');
+};
+```
+
+### Migration Best Practices
+
+1. **Always provide rollback**: Every `up` migration should have a corresponding `down` migration
+2. **Test rollbacks**: Test that your rollback actually works
+3. **Small, focused changes**: Keep migrations small and focused on one logical change
+4. **No breaking changes in production**: Be careful with column drops, renames, etc.
+5. **Use transactions**: node-pg-migrate runs each migration in a transaction by default
 
 ## Current Schema Status
 
-- ✅ **001_init.sql**: Basic schema with clubs, players, teams, stats
-- 🆕 **002_add_matchday_times.sql**: Adds start_time and end_time to matchdays table
+- ✅ **1734566400000_initial-schema.js**: Complete schema with all tables and constraints
+  - Includes start_time and end_time columns in matchdays table
+  - All foreign key relationships
+  - Proper constraints and defaults
 
 ## Development Workflow
 
-1. **Before making schema changes**: Create a new migration file
-2. **Naming convention**: `XXX_descriptive_name.sql` (e.g., `003_add_player_positions.sql`)
-3. **Test migrations**: Always test on a copy of production data
-4. **Document changes**: Update this file when adding new migrations
+1. **Making schema changes**:
+   ```bash
+   npm run migrate:dev:create descriptive_change_name
+   # Edit the generated migration file
+   npm run migrate:dev
+   ```
+
+2. **Testing migrations**:
+   ```bash
+   # Apply migration
+   npm run migrate:dev
+   
+   # Test rollback
+   npm run migrate:dev:down
+   
+   # Re-apply to confirm
+   npm run migrate:dev
+   ```
+
+3. **Production deployment**:
+   ```bash
+   # Set production DATABASE_URL
+   export DATABASE_URL="postgresql://user:pass@host:port/dbname"
+   npm run migrate:up
+   ```
+
+## Migration Table
+
+node-pg-migrate automatically creates a `pgmigrations` table to track applied migrations:
+
+```sql
+-- View migration history
+SELECT * FROM pgmigrations ORDER BY run_on;
+
+-- Check if a specific migration was applied
+SELECT * FROM pgmigrations WHERE name = '1734566400000_initial-schema.js';
+```
+
+## Troubleshooting
+
+### Reset Database (Development Only)
+```bash
+# Drop and recreate database
+psql postgres -c "DROP DATABASE IF EXISTS wpfantasy;"
+psql postgres -c "CREATE DATABASE wpfantasy;"
+psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE wpfantasy TO wpfantasy_user;"
+
+# Run all migrations
+npm run migrate:dev
+```
+
+### Manual Migration Fixes
+If you need to manually mark a migration as applied/unapplied:
+
+```sql
+-- Mark migration as applied
+INSERT INTO pgmigrations (id, name, run_on) 
+VALUES (1, '1734566400000_initial-schema.js', NOW());
+
+-- Mark migration as not applied
+DELETE FROM pgmigrations WHERE name = '1734566400000_initial-schema.js';
+```
