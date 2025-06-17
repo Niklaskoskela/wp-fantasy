@@ -11,6 +11,7 @@ import {
   ListItemButton,
   Alert,
   Divider,
+  Stack,
 } from '@mui/material';
 import {
   useGetMatchDaysQuery,
@@ -42,19 +43,23 @@ export function MatchDaysList({
         </Typography>
       ) : (
         <List>
+          <Typography variant='subtitle1'>Select Match Day:</Typography>
+            <Divider orientation='vertical' flexItem />
+          <Stack direction='row' spacing={1} >
+
           {matchDays.map((matchDay) => (
-            <ListItem key={matchDay.id} disablePadding>
+            <ListItem key={matchDay.id} disablePadding sx={{ maxWidth: 200}}>
               <ListItemButton
                 selected={selectedMatchDayId === matchDay.id}
                 onClick={() => onSelectMatchDay(matchDay.id, matchDay.title)}
               >
                 <ListItemText
                   primary={matchDay.title}
-                  secondary={`ID: ${matchDay.id}`}
                 />
               </ListItemButton>
             </ListItem>
           ))}
+          </Stack>
         </List>
       )}
     </Paper>

@@ -54,3 +54,21 @@ Setup react-router, RTK query and MUI (with a theme)
 
 
 
+### Users
+
+Each user has username, email, role, password and a SINGLE team that is associated with it.
+
+Management such as creating players, clubs and managing matchdays is done by admin level users
+
+
+### Future development
+
+Create user handling
+
+Match
+
+Improve handling player data
+
+Improve visuals
+
+

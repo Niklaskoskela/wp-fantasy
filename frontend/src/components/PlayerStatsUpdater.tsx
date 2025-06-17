@@ -12,7 +12,6 @@ import {
   TextField,
   Button,
   Alert,
-  InputAdornment,
 } from '@mui/material';
 import { useGetPlayersQuery } from '../api/contentApi';
 import { useUpdatePlayerStatsMutation } from '../api/matchDayApi';
@@ -22,14 +21,6 @@ import { v4 as uuidv4 } from 'uuid';
 interface PlayerStatsUpdaterProps {
   matchDayId: string;
   matchDayTitle: string;
-}
-
-interface PlayerStatsRow {
-  playerId: string;
-  playerName: string;
-  position: string;
-  clubName: string;
-  stats: Stats;
 }
 
 const defaultStats: Omit<Stats, 'id'> = {

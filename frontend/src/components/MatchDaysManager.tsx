@@ -48,7 +48,7 @@ export function MatchDaysManager() {
         sx={{
           display: 'flex',
           gap: 3,
-          flexDirection: { xs: 'column', md: 'row' },
+          flexDirection: 'column',
         }}
       >
         <Box sx={{ flex: { xs: 1, md: '0 0 33%' } }}>

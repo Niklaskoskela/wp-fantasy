@@ -1,5 +1,5 @@
 export const navMaxWidth = 1300;
-export const contentMaxWidth = 1100;
+export const contentMaxWidth = 2000;
 
 // Common spacing values
 export const spacing = {
