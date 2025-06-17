@@ -46,3 +46,7 @@ export function calculatePoints(matchDayId: string): { teamId: string; points: n
 export function getMatchDays(): MatchDay[] {
     return matchDays;
 }
+
+export function getPlayerStats(matchDayId: string): { [playerId: string]: Stats } {
+    return playerStats[matchDayId] || {};
+}

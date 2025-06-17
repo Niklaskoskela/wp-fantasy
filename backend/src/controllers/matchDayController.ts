@@ -26,3 +26,9 @@ export function calculatePoints(req: Request, res: Response) {
 export function getMatchDays(_req: Request, res: Response) {
     return res.json(matchDayService.getMatchDays());
 }
+
+export function getPlayerStats(req: Request, res: Response) {
+    const { id: matchDayId } = req.params;
+    const stats = matchDayService.getPlayerStats(matchDayId);
+    return res.json(stats);
+}

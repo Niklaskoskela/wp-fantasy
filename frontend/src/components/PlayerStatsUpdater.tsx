@@ -14,7 +14,7 @@ import {
   Alert,
 } from '@mui/material';
 import { useGetPlayersQuery } from '../api/contentApi';
-import { useUpdatePlayerStatsMutation } from '../api/matchDayApi';
+import { useUpdatePlayerStatsMutation, useGetPlayerStatsQuery } from '../api/matchDayApi';
 import { Stats } from '../../../shared/dist/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -44,6 +44,7 @@ export function PlayerStatsUpdater({
   matchDayTitle,
 }: PlayerStatsUpdaterProps) {
   const { data: players = [], isLoading, error } = useGetPlayersQuery();
+  const { data: existingStats = {}, isLoading: isLoadingStats } = useGetPlayerStatsQuery(matchDayId);
   const [updatePlayerStats, { isLoading: isUpdating }] =
     useUpdatePlayerStatsMutation();
   const [playerStats, setPlayerStats] = useState<{ [playerId: string]: Stats }>(
@@ -59,11 +60,13 @@ export function PlayerStatsUpdater({
 
   // Initialize stats for all players if not already set
   React.useEffect(() => {
-    if (players.length > 0) {
+    if (players.length > 0 && !isLoadingStats) {
       const initialStats: { [playerId: string]: Stats } = {};
       players.forEach((player) => {
         if (!playerStats[player.id]) {
-          initialStats[player.id] = {
+          // Use existing stats from API if available, otherwise use defaults
+          const existingPlayerStats = existingStats[player.id];
+          initialStats[player.id] = existingPlayerStats || {
             id: uuidv4(),
             ...defaultStats,
           };
@@ -73,7 +76,7 @@ export function PlayerStatsUpdater({
         setPlayerStats((prev) => ({ ...prev, ...initialStats }));
       }
     }
-  }, [players, playerStats]);
+  }, [players, existingStats, isLoadingStats, playerStats]);
 
   const handleStatChange = (
     playerId: string,
@@ -133,7 +136,7 @@ export function PlayerStatsUpdater({
     }
   };
 
-  if (isLoading) return <Typography>Loading players...</Typography>;
+  if (isLoading || isLoadingStats) return <Typography>Loading players and stats...</Typography>;
   if (error) return <Alert severity='error'>Failed to load players</Alert>;
 
   const statsFields: Array<{
@@ -207,11 +210,27 @@ export function PlayerStatsUpdater({
             </TableRow>
           </TableHead>
           <TableBody>
-            {players.map((player) => (
-              <TableRow key={player.id}>
-                <TableCell component='th' scope='row'>
-                  {player.name}
-                </TableCell>
+            {players.map((player) => {
+              const hasExistingStats = existingStats[player.id] !== undefined;
+              return (
+                <TableRow 
+                  key={player.id}
+                  sx={{
+                    backgroundColor: hasExistingStats ? 'action.hover' : 'transparent',
+                  }}
+                >
+                  <TableCell component='th' scope='row'>
+                    {player.name}
+                    {hasExistingStats && (
+                      <Typography 
+                        variant='caption' 
+                        color='primary' 
+                        sx={{ display: 'block', fontStyle: 'italic' }}
+                      >
+                        Has saved stats
+                      </Typography>
+                    )}
+                  </TableCell>
                 <TableCell>{player.position}</TableCell>
                 <TableCell>{player.club.name}</TableCell>
                 {statsFields.map((field) => (
@@ -250,7 +269,8 @@ export function PlayerStatsUpdater({
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
+            );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

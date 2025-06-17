@@ -24,7 +24,19 @@ export const matchDayApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['PlayerStats'],
+      invalidatesTags: (_result, _err, { matchDayId }) => [
+        'PlayerStats',
+        { type: 'PlayerStats', id: matchDayId },
+      ],
+    }),
+    getPlayerStats: builder.query<
+      { [playerId: string]: Stats },
+      string
+    >({
+      query: (matchDayId) => `/matchdays/${matchDayId}/player-stats`,
+      providesTags: (_result, _err, matchDayId) => [
+        { type: 'PlayerStats', id: matchDayId },
+      ],
     }),
     calculatePoints: builder.query<
       { teamId: string; points: number }[],
@@ -42,6 +54,7 @@ export const {
   useGetMatchDaysQuery,
   useCreateMatchDayMutation,
   useUpdatePlayerStatsMutation,
+  useGetPlayerStatsQuery,
   useCalculatePointsQuery,
   useLazyCalculatePointsQuery,
 } = matchDayApi;
