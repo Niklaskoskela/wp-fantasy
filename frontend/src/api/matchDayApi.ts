@@ -11,7 +11,7 @@ export const matchDayApi = createApi({
       query: () => '/matchdays',
       providesTags: ['MatchDay'],
     }),
-    createMatchDay: builder.mutation<MatchDay, { title: string }>({
+    createMatchDay: builder.mutation<MatchDay, { title: string; startTime: string; endTime: string }>({
       query: (body) => ({ url: '/matchdays', method: 'POST', body }),
       invalidatesTags: ['MatchDay'],
     }),

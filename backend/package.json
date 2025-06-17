@@ -11,7 +11,14 @@
     "format": "prettier --write src/**/*.{js,ts,json}",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "migrate": "node-pg-migrate",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate:create": "node-pg-migrate create",
+    "migrate:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node-pg-migrate up",
+    "migrate:dev:down": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node-pg-migrate down",
+    "migrate:dev:create": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node-pg-migrate create"
   },
   "keywords": [],
   "author": "",

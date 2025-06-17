@@ -2,9 +2,11 @@ import { Request, Response } from 'express';
 import * as matchDayService from '../services/matchDayService';
 
 export function createMatchDay(req: Request, res: Response) {
-    const { title } = req.body;
-    if (!title) return res.status(400).json({ error: 'title required' });
-    const matchDay = matchDayService.createMatchDay(title);
+    const { title, startTime, endTime } = req.body;
+    if (!title || !startTime || !endTime) {
+        return res.status(400).json({ error: 'title, startTime, and endTime are required' });
+    }
+    const matchDay = matchDayService.createMatchDay(title, new Date(startTime), new Date(endTime));
     return res.status(201).json(matchDay);
 }
 

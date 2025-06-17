@@ -10,8 +10,6 @@ import {
   ListItemText,
   ListItemButton,
   Alert,
-  Divider,
-  Stack,
 } from '@mui/material';
 import {
   useGetMatchDaysQuery,
@@ -43,23 +41,66 @@ export function MatchDaysList({
         </Typography>
       ) : (
         <List>
-          <Typography variant='subtitle1'>Select Match Day:</Typography>
-            <Divider orientation='vertical' flexItem />
-          <Stack direction='row' spacing={1} >
+          <Typography variant='subtitle1' gutterBottom>Select Match Day:</Typography>
+          {matchDays.map((matchDay) => {
+            const now = new Date();
+            const startTime = new Date(matchDay.startTime);
+            const endTime = new Date(matchDay.endTime);
+            
+            let status = 'upcoming';
+            let statusColor = 'info.main';
+            
+            if (now >= startTime && now <= endTime) {
+              status = 'ongoing';
+              statusColor = 'success.main';
+            } else if (now > endTime) {
+              status = 'completed';
+              statusColor = 'text.secondary';
+            }
 
-          {matchDays.map((matchDay) => (
-            <ListItem key={matchDay.id} disablePadding sx={{ maxWidth: 200}}>
-              <ListItemButton
-                selected={selectedMatchDayId === matchDay.id}
-                onClick={() => onSelectMatchDay(matchDay.id, matchDay.title)}
-              >
-                <ListItemText
-                  primary={matchDay.title}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          </Stack>
+            return (
+              <ListItem key={matchDay.id} disablePadding>
+                <ListItemButton
+                  selected={selectedMatchDayId === matchDay.id}
+                  onClick={() => onSelectMatchDay(matchDay.id, matchDay.title)}
+                  sx={{ 
+                    borderRadius: 1,
+                    mb: 1,
+                    border: selectedMatchDayId === matchDay.id ? 2 : 1,
+                    borderColor: selectedMatchDayId === matchDay.id ? 'primary.main' : 'divider'
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant='subtitle1'>{matchDay.title}</Typography>
+                        <Typography 
+                          variant='caption' 
+                          sx={{ 
+                            color: statusColor,
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {status}
+                        </Typography>
+                      </Box>
+                    }
+                    secondary={
+                      <Box>
+                        <Typography variant='caption' display='block' color='text.secondary'>
+                          Start: {startTime.toLocaleString()}
+                        </Typography>
+                        <Typography variant='caption' display='block' color='text.secondary'>
+                          End: {endTime.toLocaleString()}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
         </List>
       )}
     </Paper>
@@ -68,15 +109,23 @@ export function MatchDaysList({
 
 export function CreateMatchDayForm() {
   const [title, setTitle] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [createMatchDay, { isLoading, error }] = useCreateMatchDayMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !startTime || !endTime) return;
 
     try {
-      await createMatchDay({ title: title.trim() }).unwrap();
+      await createMatchDay({ 
+        title: title.trim(),
+        startTime,
+        endTime
+      }).unwrap();
       setTitle('');
+      setStartTime('');
+      setEndTime('');
     } catch (err) {
       console.error('Failed to create match day:', err);
     }
@@ -88,7 +137,7 @@ export function CreateMatchDayForm() {
         Create New Match Day
       </Typography>
       <form onSubmit={handleSubmit}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
             label='Match Day Title'
             value={title}
@@ -97,17 +146,43 @@ export function CreateMatchDayForm() {
             fullWidth
             size='small'
           />
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label='Start Time'
+              type='datetime-local'
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              required
+              fullWidth
+              size='small'
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+            <TextField
+              label='End Time'
+              type='datetime-local'
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              required
+              fullWidth
+              size='small'
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Box>
           <Button
             type='submit'
             variant='contained'
-            disabled={isLoading || !title.trim()}
+            disabled={isLoading || !title.trim() || !startTime || !endTime}
           >
             {isLoading ? 'Creating...' : 'Create'}
           </Button>
         </Box>
         {error && (
           <Alert severity='error' sx={{ mt: 2 }}>
-            Failed to create match day
+            Failed to create match day. Please check all fields are filled correctly.
           </Alert>
         )}
       </form>

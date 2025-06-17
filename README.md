@@ -56,18 +56,27 @@ Setup react-router, RTK query and MUI (with a theme)
 
 ### Users
 
-Each user has username, email, role, password and a SINGLE team that is associated with it.
+Each user has 
+* username, 
+* email, 
+* role, 
+* password and a 
+* single team
 
 Management such as creating players, clubs and managing matchdays is done by admin level users
 
 
 ### Future development
 
-Create user handling
 
-Match
+Matchdays:
+1. Should have start and ending times.
+2. Team should have a match day specific roster. team selector should have option to select 
+3. Player selection for a team: players for a match day can be picked ONLY before match day start time.
 
-Improve handling player data
+
+----
+Improve importing player data
 
 Improve visuals
 

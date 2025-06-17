@@ -25,6 +25,8 @@ export interface Club {
 export interface MatchDay {
     id: string;
     title: string;
+    startTime: Date;
+    endTime: Date;
 }
 export interface Player {
     id: string;

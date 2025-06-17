@@ -36,6 +36,8 @@ export interface Club {
 export interface MatchDay {
     id: string;
     title: string;
+    startTime: Date;
+    endTime: Date;
 }
 
 // Player interface, many teams can use the same player as it does not have any team-specific data

@@ -6,8 +6,13 @@ import { getTeams } from './teamService';
 const matchDays: MatchDay[] = [];
 const playerStats: { [key: string]: { [playerId: string]: Stats } } = {}; // matchDayId -> playerId -> stats
 
-export function createMatchDay(title: string): MatchDay {
-    const matchDay: MatchDay = { id: uuidv4(), title };
+export function createMatchDay(title: string, startTime: Date, endTime: Date): MatchDay {
+    const matchDay: MatchDay = { 
+        id: uuidv4(), 
+        title,
+        startTime,
+        endTime
+    };
     matchDays.push(matchDay);
     playerStats[matchDay.id] = {};
     return matchDay;

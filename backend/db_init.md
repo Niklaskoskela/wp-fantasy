@@ -1,8 +1,5 @@
-Open your terminal and run:
+# Database Initialization
 
-psql postgres
-Then, in the psql prompt, run:
+⚠️ **DEPRECATED**: This file has been replaced by `db_setup.md` which provides comprehensive database setup instructions and migration management.
 
- 
-1 vulnerability
-Exit with \q.
+Please refer to `db_setup.md` for current database setup procedures.
