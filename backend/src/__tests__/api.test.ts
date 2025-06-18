@@ -75,19 +75,26 @@ describe('Content API', () => {
 describe('MatchDay API', () => {
   test('POST /api/matchdays creates a match day', async () => {
     const title = `Match Day ${Date.now()}`;
+    const startTime = new Date();
+    const endTime = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours later
     const res = await request(app)
       .post('/api/matchdays')
-      .send({ title })
+      .send({ title, startTime: startTime.toISOString(), endTime: endTime.toISOString() })
       .expect(201);
     expect(res.body).toHaveProperty('id');
     expect(res.body.title).toBe(title);
+    expect(res.body).toHaveProperty('startTime');
+    expect(res.body).toHaveProperty('endTime');
   });
 
   test('POST /api/matchdays/:id/player-stats updates player stats', async () => {
-    // Create match day
+    // Create match day with required fields
+    const title = 'Stats Day';
+    const startTime = new Date();
+    const endTime = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours later
     const matchDayRes = await request(app)
       .post('/api/matchdays')
-      .send({ title: 'Stats Day' });
+      .send({ title, startTime: startTime.toISOString(), endTime: endTime.toISOString() });
     const matchDayId = matchDayRes.body.id;
     // Fake player and stats
     const playerId = 'player-1';
@@ -100,16 +107,59 @@ describe('MatchDay API', () => {
   });
 
   test('GET /api/matchdays/:id/calculate-points returns points', async () => {
-    // Create match day
+    // Create match day with required fields
+    const title = 'Points Day';
+    const startTime = new Date();
+    const endTime = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours later
     const matchDayRes = await request(app)
       .post('/api/matchdays')
-      .send({ title: 'Points Day' });
+      .send({ title, startTime: startTime.toISOString(), endTime: endTime.toISOString() });
     const matchDayId = matchDayRes.body.id;
     // Should return array (empty teams)
     const res = await request(app)
       .get(`/api/matchdays/${matchDayId}/calculate-points`)
       .expect(200);
     expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/matchdays returns all matchdays', async () => {
+    // Create a matchday first
+    const title = `Test MD ${Date.now()}`;
+    const startTime = new Date();
+    const endTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    await request(app)
+      .post('/api/matchdays')
+      .send({ title, startTime: startTime.toISOString(), endTime: endTime.toISOString() });
+    
+    const res = await request(app)
+      .get('/api/matchdays')
+      .expect(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.some((md: any) => md.title === title)).toBe(true);
+  });
+
+  test('GET /api/matchdays/:id/player-stats returns player stats', async () => {
+    // Create match day and add some stats
+    const title = 'Player Stats Day';
+    const startTime = new Date();
+    const endTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    const matchDayRes = await request(app)
+      .post('/api/matchdays')
+      .send({ title, startTime: startTime.toISOString(), endTime: endTime.toISOString() });
+    const matchDayId = matchDayRes.body.id;
+    
+    const playerId = 'test-player';
+    const stats = { id: 'stats-1', goals: 1, assists: 2, blocks: 0, steals: 0, pfDrawn: 0, pf: 0, ballsLost: 0, contraFouls: 0, shots: 0, swimOffs: 0, brutality: 0, saves: 0, wins: 0 };
+    await request(app)
+      .post(`/api/matchdays/${matchDayId}/player-stats`)
+      .send({ playerId, stats });
+    
+    const res = await request(app)
+      .get(`/api/matchdays/${matchDayId}/player-stats`)
+      .expect(200);
+    expect(res.body).toHaveProperty(playerId);
+    expect(res.body[playerId].goals).toBe(1);
+    expect(res.body[playerId].assists).toBe(2);
   });
 });
 
@@ -142,8 +192,18 @@ describe('System-wide League Flow', () => {
     await request(app).post('/api/teams/set-captain').send({ teamId, playerId: player1.id });
 
     // 4. Create two matchdays
-    const md1 = (await request(app).post('/api/matchdays').send({ title: 'MD1' })).body;
-    const md2 = (await request(app).post('/api/matchdays').send({ title: 'MD2' })).body;
+    const startTime = new Date();
+    const endTime = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours later
+    const md1 = (await request(app).post('/api/matchdays').send({ 
+      title: 'MD1', 
+      startTime: startTime.toISOString(), 
+      endTime: endTime.toISOString() 
+    })).body;
+    const md2 = (await request(app).post('/api/matchdays').send({ 
+      title: 'MD2', 
+      startTime: startTime.toISOString(), 
+      endTime: endTime.toISOString() 
+    })).body;
 
     // 5. Update player stats for both matchdays
     const stats1 = { id: 's1', goals: 2, assists: 1, blocks: 0, steals: 0, pfDrawn: 0, pf: 0, ballsLost: 0, contraFouls: 0, shots: 0, swimOffs: 0, brutality: 0, saves: 0, wins: 0 };
