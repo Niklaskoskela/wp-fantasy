@@ -25,7 +25,9 @@
     "migrate:dev:status": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node migrate.js status",
     "migrate:dev:reset": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node migrate.js reset",
     "db:test": "node test-db.js",
-    "db:test:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node test-db.js"
+    "db:test:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node test-db.js",
+    "db:clean": "node clean-db.js",
+    "db:clean:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node clean-db.js"
   },
   "keywords": [],
   "author": "",
