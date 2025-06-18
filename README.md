@@ -65,19 +65,27 @@ Each user has
 
 Management such as creating players, clubs and managing matchdays is done by admin level users
 
+You will also need to create a usersession management. 
+
+Possibility for admin to reset password
+
 
 ### Future development
 
 
 Matchdays:
-1. Should have start and ending times.
-2. Team should have a match day specific roster. team selector should have option to select 
-3. Player selection for a team: players for a match day can be picked ONLY before match day start time.
+1. Should have start and ending times. 
+2. Roster history: In database add a roster history --> store roster for each match day. Do this by properly making migrations
+3. In backend: The active roster is added to the roster history, when the match day starts, for all the teams.
+3. Team selector shows the next upcoming matchday and its start time. (or no if one does not exist)
+4. Player selection for a team: players for a match day can be picked ONLY before match day start time.
 
 
 ----
 Improve importing player data
 
 Improve visuals
+
+Player view should show player stats as well as all the matches player has played, as well as future matches.
 
 
