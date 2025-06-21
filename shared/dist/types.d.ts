@@ -55,6 +55,56 @@ export interface Team {
     scoreHistory: Map<MatchDay, number>;
     rosterHistory?: Map<string, RosterHistory[]>;
 }
+export declare enum UserRole {
+    USER = "user",
+    ADMIN = "admin"
+}
+export interface User {
+    id: string;
+    username: string;
+    email: string;
+    role: UserRole;
+    teamId?: string;
+    createdAt: Date;
+    updatedAt: Date;
+    isActive: boolean;
+    lastLogin?: Date;
+}
+export interface UserSession {
+    id: string;
+    sessionToken: string;
+    userId: string;
+    expiresAt: Date;
+    createdAt: Date;
+    ipAddress?: string;
+    userAgent?: string;
+    isActive: boolean;
+}
+export interface LoginRequest {
+    username: string;
+    password: string;
+}
+export interface LoginResponse {
+    user: User;
+    token: string;
+    expiresAt: Date;
+}
+export interface RegisterRequest {
+    username: string;
+    email: string;
+    password: string;
+}
+export interface PasswordResetRequest {
+    email: string;
+}
+export interface PasswordResetConfirm {
+    token: string;
+    newPassword: string;
+}
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
 export interface TeamWithScores extends Team {
     totalPoints: number;
     matchDayScores: {

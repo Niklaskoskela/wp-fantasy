@@ -93,10 +93,11 @@ function hasRosterHistory(teamId, matchDayId) {
 /**
  * Snapshot all current team rosters for a matchday
  * This should be called when a matchday starts to freeze team compositions
+ * Only admin users can snapshot all teams, regular users can only snapshot their own team
  */
-function snapshotAllTeamRosters(matchDayId) {
+function snapshotAllTeamRosters(matchDayId, userId, userRole) {
     const { getTeams } = require('./teamService');
-    const teams = getTeams();
+    const teams = getTeams(userId, userRole);
     const allSnapshots = new Map();
     for (const team of teams) {
         // Convert current team roster to roster entries

@@ -1,10 +1,22 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { MatchDay, Stats } from '../../../shared/dist/types';
+import { MatchDay, Stats } from '../../../shared/src/types';
 import { API_URL } from '../config';
+
+// Get token from localStorage
+const getToken = () => localStorage.getItem('authToken');
 
 export const matchDayApi = createApi({
   reducerPath: 'matchDayApi',
-  baseQuery: fetchBaseQuery({ baseUrl: API_URL }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: API_URL,
+    prepareHeaders: (headers) => {
+      const token = getToken();
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['MatchDay', 'PlayerStats'],
   endpoints: (builder) => ({
     getMatchDays: builder.query<MatchDay[], void>({

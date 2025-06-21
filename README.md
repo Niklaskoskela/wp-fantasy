@@ -78,6 +78,49 @@ Login screen
 
 Possibility for admin to reset password of user
 
+#### Secure Authentication System ✅
+
+**Database Schema:**
+- Created `users` table with secure password hashing, role-based access, and account security
+- Created `user_sessions` table for session management
+- Created `password_reset_tokens` table for secure password resets
+- Added proper indexes, constraints, and triggers for data integrity
+
+**Security Features:**
+- ✅ Bcrypt password hashing with 12 salt rounds
+- ✅ JWT token-based authentication with secure settings
+- ✅ Session-based authentication as alternative
+- ✅ Rate limiting for auth endpoints (10 attempts/15min)
+- ✅ Account lockout after 5 failed login attempts
+- ✅ Secure password requirements (8+ chars, mixed case, numbers, symbols)
+- ✅ HELMET security headers
+- ✅ CORS configuration
+- ✅ Input validation and sanitization
+- ✅ Role-based authorization (USER/ADMIN)
+- ✅ Team ownership enforcement
+
+**Authentication Endpoints:**
+- `POST /api/auth/register` - User registration with validation
+- `POST /api/auth/login` - Secure login with rate limiting
+- `POST /api/auth/logout` - Session cleanup
+- `GET /api/auth/me` - Get current user info
+- `POST /api/auth/change-password` - Change password with current password verification
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with token
+- `GET /api/auth/users` - Admin: Get all users
+- `PUT /api/auth/users/:id/activate` - Admin: Activate user
+- `PUT /api/auth/users/:id/deactivate` - Admin: Deactivate user
+- `POST /api/auth/admin/reset-password/:id` - Admin: Reset user password
+
+**Access Control:**
+- Users can only manage their own team (one team per user)
+- Admin users can manage all content (players, clubs, matchdays)
+- Protected routes require authentication
+- Team ownership validation on all team operations
+- Content management requires admin role
+
+**Migration:** `1750533847960_add-users-and-sessions.js`
+
 
 ### Future development
 

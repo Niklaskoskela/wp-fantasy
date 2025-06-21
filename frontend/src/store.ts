@@ -5,6 +5,7 @@ import { contentApi } from './api/contentApi';
 import { teamApi } from './api/teamApi';
 import { matchDayApi } from './api/matchDayApi';
 import { rosterHistoryApi } from './api/rosterHistoryApi';
+import { authApi } from './api/authApi';
 
 export const store = configureStore({
   reducer: {
@@ -12,13 +13,15 @@ export const store = configureStore({
     [teamApi.reducerPath]: teamApi.reducer,
     [matchDayApi.reducerPath]: matchDayApi.reducer,
     [rosterHistoryApi.reducerPath]: rosterHistoryApi.reducer,
+    [authApi.reducerPath]: authApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       contentApi.middleware,
       teamApi.middleware,
       matchDayApi.middleware,
-      rosterHistoryApi.middleware
+      rosterHistoryApi.middleware,
+      authApi.middleware
     ),
 });
 

@@ -38,18 +38,21 @@ const globals_1 = require("@jest/globals");
 const rosterHistoryService = __importStar(require("../services/rosterHistoryService"));
 const teamService = __importStar(require("../services/teamService"));
 const matchDayService = __importStar(require("../services/matchDayService"));
+const types_1 = require("../../../shared/dist/types");
 (0, globals_1.describe)('Roster History Service', () => {
     let testTeam;
     let testMatchDay;
     let testPlayers;
+    let testUserId;
     (0, globals_1.beforeEach)(() => {
         // Reset the in-memory stores by clearing arrays
         rosterHistoryService.rosterHistories = [];
-        teamService.teams = [];
         matchDayService.matchDays = [];
         matchDayService.playerStats = {};
+        // Generate unique user ID for each test to avoid conflicts
+        testUserId = `test-user-${Date.now()}-${Math.random()}`;
         // Create test data
-        testTeam = teamService.createTeam('Test Team');
+        testTeam = teamService.createTeam('Test Team', testUserId);
         testMatchDay = matchDayService.createMatchDay('Test Match Day', new Date('2024-01-01T10:00:00Z'), new Date('2024-01-01T12:00:00Z'));
         // Mock players (in real implementation these would come from playerService)
         testPlayers = [
@@ -57,12 +60,12 @@ const matchDayService = __importStar(require("../services/matchDayService"));
             { id: 'player2', name: 'Player 2', position: 'goalkeeper' },
             { id: 'player3', name: 'Player 3', position: 'field' }
         ];
-        // Add players to team
+        // Add players to team (as the team owner)
         testPlayers.forEach(player => {
-            teamService.addPlayerToTeam(testTeam.id, player);
+            teamService.addPlayerToTeam(testTeam.id, player, testUserId, types_1.UserRole.USER);
         });
-        // Set captain
-        teamService.setTeamCaptain(testTeam.id, testPlayers[0].id);
+        // Set captain (as the team owner)
+        teamService.setTeamCaptain(testTeam.id, testPlayers[0].id, testUserId, types_1.UserRole.USER);
     });
     (0, globals_1.test)('should create roster history for a team', () => {
         const rosterEntries = [
@@ -89,7 +92,7 @@ const matchDayService = __importStar(require("../services/matchDayService"));
         (0, globals_1.expect)((_a = retrieved.find(r => r.playerId === 'player1')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
     });
     (0, globals_1.test)('should snapshot all team rosters for a matchday', () => {
-        const snapshots = rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id);
+        const snapshots = rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id, testUserId, types_1.UserRole.USER);
         (0, globals_1.expect)(snapshots.has(testTeam.id)).toBe(true);
         const teamSnapshot = snapshots.get(testTeam.id);
         (0, globals_1.expect)(teamSnapshot).toHaveLength(3); // 3 players in the team

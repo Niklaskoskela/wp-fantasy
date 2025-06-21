@@ -3,21 +3,25 @@ import { describe, expect, test, beforeEach } from '@jest/globals';
 import * as rosterHistoryService from '../services/rosterHistoryService';
 import * as teamService from '../services/teamService';
 import * as matchDayService from '../services/matchDayService';
+import { UserRole } from '../../../shared/dist/types';
 
 describe('Roster History Service', () => {
     let testTeam: any;
     let testMatchDay: any;
     let testPlayers: any[];
+    let testUserId: string;
 
     beforeEach(() => {
         // Reset the in-memory stores by clearing arrays
         (rosterHistoryService as any).rosterHistories = [];
-        (teamService as any).teams = [];
         (matchDayService as any).matchDays = [];
         (matchDayService as any).playerStats = {};
 
+        // Generate unique user ID for each test to avoid conflicts
+        testUserId = `test-user-${Date.now()}-${Math.random()}`;
+
         // Create test data
-        testTeam = teamService.createTeam('Test Team');
+        testTeam = teamService.createTeam('Test Team', testUserId);
         testMatchDay = matchDayService.createMatchDay(
             'Test Match Day',
             new Date('2024-01-01T10:00:00Z'),
@@ -31,13 +35,13 @@ describe('Roster History Service', () => {
             { id: 'player3', name: 'Player 3', position: 'field' }
         ];
 
-        // Add players to team
+        // Add players to team (as the team owner)
         testPlayers.forEach(player => {
-            teamService.addPlayerToTeam(testTeam.id, player);
+            teamService.addPlayerToTeam(testTeam.id, player, testUserId, UserRole.USER);
         });
 
-        // Set captain
-        teamService.setTeamCaptain(testTeam.id, testPlayers[0].id);
+        // Set captain (as the team owner)
+        teamService.setTeamCaptain(testTeam.id, testPlayers[0].id, testUserId, UserRole.USER);
     });
 
     test('should create roster history for a team', () => {
@@ -74,7 +78,7 @@ describe('Roster History Service', () => {
     });
 
     test('should snapshot all team rosters for a matchday', () => {
-        const snapshots = rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id);
+        const snapshots = rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id, testUserId, UserRole.USER);
 
         expect(snapshots.has(testTeam.id)).toBe(true);
         const teamSnapshot = snapshots.get(testTeam.id);

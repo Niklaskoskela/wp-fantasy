@@ -1,5 +1,5 @@
 // Service for managing roster history: track team compositions for each matchday
-import { RosterHistory, RosterEntry } from '../../../shared/dist/types';
+import { RosterHistory, RosterEntry, UserRole } from '../../../shared/dist/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // In-memory store for demo (replace with DB integration in production)
@@ -111,10 +111,11 @@ export function hasRosterHistory(teamId: string, matchDayId: string): boolean {
 /**
  * Snapshot all current team rosters for a matchday
  * This should be called when a matchday starts to freeze team compositions
+ * Only admin users can snapshot all teams, regular users can only snapshot their own team
  */
-export function snapshotAllTeamRosters(matchDayId: string): Map<string, RosterHistory[]> {
+export function snapshotAllTeamRosters(matchDayId: string, userId?: string, userRole?: UserRole): Map<string, RosterHistory[]> {
     const { getTeams } = require('./teamService');
-    const teams = getTeams();
+    const teams = getTeams(userId, userRole);
     const allSnapshots = new Map<string, RosterHistory[]>();
     
     for (const team of teams) {

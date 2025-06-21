@@ -1,10 +1,22 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { Club, Player } from '../../../shared/dist/types';
+import { Club, Player } from '../../../shared/src/types';
 import { API_URL } from '../config';
+
+// Get token from localStorage
+const getToken = () => localStorage.getItem('authToken');
 
 export const contentApi = createApi({
   reducerPath: 'contentApi',
-  baseQuery: fetchBaseQuery({ baseUrl: API_URL }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: API_URL,
+    prepareHeaders: (headers) => {
+      const token = getToken();
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['Club', 'Player'],
   endpoints: (builder) => ({
     getClubs: builder.query<Club[], void>({
