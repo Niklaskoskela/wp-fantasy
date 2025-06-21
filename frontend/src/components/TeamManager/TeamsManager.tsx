@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Button,
   TextField,
@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 import { Player, PlayerPosition } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
+import { useGetMatchDaysQuery } from '../../api/matchDayApi';
+import { useGetTeamRosterHistoryQuery } from '../../api/rosterHistoryApi';
 import {
   useGetTeamsQuery,
   useGetTeamsWithScoresQuery,
@@ -24,10 +26,37 @@ import { PlayerPickerModal } from './PlayerPickerModal';
 import { ErrorNotification } from './ErrorNotification';
 import { TeamCard } from './TeamCard';
 import { LeagueStandings } from './LeagueStandings';
+import { MatchDayInfo } from '../MatchDayInfo';
 
 export function TeamsManager() {
   const { data: teams = [], refetch } = useGetTeamsQuery();
   const { data: players = [] } = useGetPlayersQuery();
+  const { data: matchDays = [], isLoading: isLoadingMatchDays } = useGetMatchDaysQuery();
+  
+  // Find the first team to show roster history for (or could be user's selected team)
+  const firstTeam = teams[0];
+  
+  // Get roster history for the first team (in real app, this would be user's selected team)
+  const { data: teamRosterHistory, isLoading: isLoadingRoster } = useGetTeamRosterHistoryQuery(
+    firstTeam?.id || '', 
+    { skip: !firstTeam }
+  );
+  
+  // Find the last active matchday roster
+  const lastActiveRoster = useMemo(() => {
+    if (!teamRosterHistory || !matchDays.length) return null;
+    
+    const now = new Date();
+    const activeMatchDays = matchDays
+      .filter(md => new Date(md.startTime) <= now)
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    
+    const lastActiveMatchDay = activeMatchDays[0];
+    if (!lastActiveMatchDay) return null;
+    
+    return teamRosterHistory[lastActiveMatchDay.id] || null;
+  }, [teamRosterHistory, matchDays]);
+
   const [createTeam] = useCreateTeamMutation();
   const [addPlayerToTeam] = useAddPlayerToTeamMutation();
   const [removePlayerFromTeam] = useRemovePlayerFromTeamMutation();
@@ -238,6 +267,17 @@ export function TeamsManager() {
 
       {activeTab === 0 && (
         <Box>
+          {/* Match Day Information */}
+          <Box sx={{ mb: 4 }}>
+            <MatchDayInfo
+              matchDays={matchDays}
+              isLoadingMatchDays={isLoadingMatchDays}
+              lastActiveRoster={lastActiveRoster}
+              isLoadingRoster={isLoadingRoster}
+              teamName={firstTeam?.teamName}
+            />
+          </Box>
+
           {/* Create Team Section */}
           <Box
             sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}

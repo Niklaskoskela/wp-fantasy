@@ -9,6 +9,7 @@ function asyncHandler(fn) {
     };
 }
 router.post('/matchdays', asyncHandler(matchDayController_1.createMatchDay));
+router.post('/matchdays/:id/start', asyncHandler(matchDayController_1.startMatchDay));
 router.post('/matchdays/:id/player-stats', asyncHandler(matchDayController_1.updatePlayerStats));
 router.get('/matchdays/:id/player-stats', asyncHandler(matchDayController_1.getPlayerStats));
 router.get('/matchdays/:id/calculate-points', asyncHandler(matchDayController_1.calculatePoints));

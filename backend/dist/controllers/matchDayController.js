@@ -37,6 +37,7 @@ exports.createMatchDay = createMatchDay;
 exports.updatePlayerStats = updatePlayerStats;
 exports.calculatePoints = calculatePoints;
 exports.getMatchDays = getMatchDays;
+exports.startMatchDay = startMatchDay;
 exports.getPlayerStats = getPlayerStats;
 const matchDayService = __importStar(require("../services/matchDayService"));
 function createMatchDay(req, res) {
@@ -64,6 +65,23 @@ function calculatePoints(req, res) {
 }
 function getMatchDays(_req, res) {
     return res.json(matchDayService.getMatchDays());
+}
+function startMatchDay(req, res) {
+    const { id: matchDayId } = req.params;
+    try {
+        const result = matchDayService.startMatchDay(matchDayId);
+        if (!result) {
+            return res.status(404).json({ error: 'MatchDay not found' });
+        }
+        return res.json({ message: 'MatchDay started successfully', matchDayId });
+    }
+    catch (error) {
+        console.error('Error starting matchday:', error);
+        if (error instanceof Error) {
+            return res.status(400).json({ error: error.message });
+        }
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 }
 function getPlayerStats(req, res) {
     const { id: matchDayId } = req.params;

@@ -29,6 +29,23 @@ export function getMatchDays(_req: Request, res: Response) {
     return res.json(matchDayService.getMatchDays());
 }
 
+export function startMatchDay(req: Request, res: Response) {
+    const { id: matchDayId } = req.params;
+    try {
+        const result = matchDayService.startMatchDay(matchDayId);
+        if (!result) {
+            return res.status(404).json({ error: 'MatchDay not found' });
+        }
+        return res.json({ message: 'MatchDay started successfully', matchDayId });
+    } catch (error) {
+        console.error('Error starting matchday:', error);
+        if (error instanceof Error) {
+            return res.status(400).json({ error: error.message });
+        }
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 export function getPlayerStats(req: Request, res: Response) {
     const { id: matchDayId } = req.params;
     const stats = matchDayService.getPlayerStats(matchDayId);

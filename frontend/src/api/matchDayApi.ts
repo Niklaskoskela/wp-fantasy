@@ -47,6 +47,16 @@ export const matchDayApi = createApi({
         { type: 'PlayerStats', id: matchDayId },
       ],
     }),
+    startMatchDay: builder.mutation<
+      { message: string; matchDayId: string },
+      string
+    >({
+      query: (matchDayId) => ({
+        url: `/matchdays/${matchDayId}/start`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['MatchDay'],
+    }),
   }),
 });
 
@@ -57,4 +67,5 @@ export const {
   useGetPlayerStatsQuery,
   useCalculatePointsQuery,
   useLazyCalculatePointsQuery,
+  useStartMatchDayMutation,
 } = matchDayApi;

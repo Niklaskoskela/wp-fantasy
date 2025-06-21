@@ -61,25 +61,61 @@ Each user has
 * email, 
 * role, 
 * password and a 
-* single team
-
-Management such as creating players, clubs and managing matchdays is done by admin level users
+* team
 
 You will also need to create a usersession management. 
 
-Possibility for admin to reset password
+UserSession
+* id
+* User
+
+User can manage only their team's players.
+User has only one team, this needs to be also updated on frontend team creation side. 
+
+Content Management such as creating players, clubs and managing matchdays is done by admin level users
+
+Login screen
+
+Possibility for admin to reset password of user
 
 
 ### Future development
 
 
 Matchdays:
-1. Should have start and ending times. 
-2. Roster history: In database add a roster history --> store roster for each match day. Do this by properly making migrations
-3. In backend: The active roster is added to the roster history, when the match day starts, for all the teams.
-3. Team selector shows the next upcoming matchday and its start time. (or no if one does not exist)
-4. Player selection for a team: players for a match day can be picked ONLY before match day start time.
+1. Should have start and ending times. ✅ COMPLETED
+2. Roster history: In database add a roster history to a team. Basically store a roster matching a match day. Do this by properly making migrations. ✅ COMPLETED
+3. In backend: The active roster is added to the team's roster history, when the match day starts, for all the teams. ✅ COMPLETED
+4. In front end: Team selector shows the next upcoming matchday and its start time. (or no upcoming matchdays if none exist). Show also the roster of the last active match day ✅ COMPLETED
 
+#### Roster History Implementation ✅
+
+**Database Schema:**
+- Created `roster_history` table with migration `1750532266808_add-roster-history.js`
+- Tracks team compositions for each matchday
+- Includes constraints for data integrity (unique team/matchday/player combinations)
+- Ensures only one captain per team per matchday
+
+**Backend Services:**
+- `rosterHistoryService.ts`: Core service for managing roster histories
+- `rosterHistoryController.ts`: REST API endpoints
+- `rosterHistoryRoutes.ts`: Route definitions
+- Updated `matchDayService.ts` with `startMatchDay()` function to auto-snapshot rosters
+
+**API Endpoints:**
+- `POST /api/roster-history/:teamId/:matchDayId` - Create roster history
+- `GET /api/roster-history/:teamId/:matchDayId` - Get specific roster history
+- `GET /api/roster-history/team/:teamId` - Get all roster history for a team
+- `GET /api/roster-history/matchday/:matchDayId` - Get all roster history for a matchday
+- `POST /api/roster-history/snapshot/:matchDayId` - Snapshot all team rosters
+- `POST /api/matchdays/:id/start` - Start matchday (auto-snapshots rosters)
+- `DELETE /api/roster-history/:teamId/:matchDayId` - Remove roster history
+
+**Features:**
+- Automatic roster snapshotting when matchdays start
+- Prevention of duplicate roster entries
+- Captain tracking per matchday
+- Comprehensive test coverage
 
 ----
 Improve importing player data

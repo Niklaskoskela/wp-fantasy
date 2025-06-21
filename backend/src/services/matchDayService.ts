@@ -48,6 +48,40 @@ export function calculatePoints(matchDayId: string): { teamId: string; points: n
     return results;
 }
 
+/**
+ * Start a matchday - this snapshots all current team rosters
+ * and should be called when a matchday begins
+ */
+export function startMatchDay(matchDayId: string): boolean {
+    const matchDay = matchDays.find(md => md.id === matchDayId);
+    if (!matchDay) return false;
+    
+    // Check if matchday has already started
+    if (new Date() < matchDay.startTime) {
+        throw new Error('Matchday has not reached its start time yet');
+    }
+    
+    // Import the roster history service
+    const { snapshotAllTeamRosters, hasRosterHistory } = require('./rosterHistoryService');
+    
+    // Check if rosters have already been snapshotted for this matchday
+    const { getTeams } = require('./teamService');
+    const teams = getTeams();
+    
+    // If any team already has roster history for this matchday, don't snapshot again
+    const alreadySnapshotted = teams.some((team: any) => hasRosterHistory(team.id, matchDayId));
+    
+    if (!alreadySnapshotted) {
+        // Snapshot all team rosters for this matchday
+        snapshotAllTeamRosters(matchDayId);
+        console.log(`Rosters snapshotted for matchday ${matchDay.title} (${matchDayId})`);
+    } else {
+        console.log(`Rosters already snapshotted for matchday ${matchDay.title} (${matchDayId})`);
+    }
+    
+    return true;
+}
+
 export function getMatchDays(): MatchDay[] {
     return matchDays;
 }

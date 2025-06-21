@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createMatchDay = createMatchDay;
 exports.updatePlayerStats = updatePlayerStats;
 exports.calculatePoints = calculatePoints;
+exports.startMatchDay = startMatchDay;
 exports.getMatchDays = getMatchDays;
 exports.getPlayerStats = getPlayerStats;
 const uuid_1 = require("uuid");
@@ -48,6 +49,35 @@ function calculatePoints(matchDayId) {
         results.push({ teamId: team.id, points: total });
     }
     return results;
+}
+/**
+ * Start a matchday - this snapshots all current team rosters
+ * and should be called when a matchday begins
+ */
+function startMatchDay(matchDayId) {
+    const matchDay = matchDays.find(md => md.id === matchDayId);
+    if (!matchDay)
+        return false;
+    // Check if matchday has already started
+    if (new Date() < matchDay.startTime) {
+        throw new Error('Matchday has not reached its start time yet');
+    }
+    // Import the roster history service
+    const { snapshotAllTeamRosters, hasRosterHistory } = require('./rosterHistoryService');
+    // Check if rosters have already been snapshotted for this matchday
+    const { getTeams } = require('./teamService');
+    const teams = getTeams();
+    // If any team already has roster history for this matchday, don't snapshot again
+    const alreadySnapshotted = teams.some((team) => hasRosterHistory(team.id, matchDayId));
+    if (!alreadySnapshotted) {
+        // Snapshot all team rosters for this matchday
+        snapshotAllTeamRosters(matchDayId);
+        console.log(`Rosters snapshotted for matchday ${matchDay.title} (${matchDayId})`);
+    }
+    else {
+        console.log(`Rosters already snapshotted for matchday ${matchDay.title} (${matchDayId})`);
+    }
+    return true;
 }
 function getMatchDays() {
     return matchDays;

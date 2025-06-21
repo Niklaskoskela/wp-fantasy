@@ -49,6 +49,22 @@ export interface Player {
     statsHistory: Map<MatchDay, Stats>; // matchday -> stats
 }
 
+// Roster History interface - tracks team composition for each matchday
+export interface RosterHistory {
+    id: string;
+    teamId: string;
+    matchDayId: string;
+    playerId: string;
+    isCaptain: boolean;
+    createdAt: Date;
+}
+
+// Roster Entry interface - used for creating/updating roster history
+export interface RosterEntry {
+    playerId: string;
+    isCaptain: boolean;
+}
+
 // Team interface, team contains all team specific data.
 export interface Team {
     id: string;
@@ -56,6 +72,7 @@ export interface Team {
     players: Player[];
     teamCaptain?: Player;
     scoreHistory: Map<MatchDay, number>; // matchday -> team score
+    rosterHistory?: Map<string, RosterHistory[]>; // matchdayId -> roster entries
 }
 
 // Enhanced team interface with calculated scores for league display
