@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ClubsManager } from './components/ClubsManager';
 import { PlayersManager } from './components/PlayersManager';
 import { ClubsList } from './components/ClubsList';
@@ -45,7 +45,7 @@ function App() {
         <NavigationBar />
         <Container sx={{ mt: 4 }}>
           <Routes>
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth" element={ <AuthPage />} />
             <Route
               path='/clubs'
               element={
@@ -79,6 +79,14 @@ function App() {
               }
             />
             <Route
+              path='/home'
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path='/matchdays'
               element={
                 <ProtectedRoute requiresAdmin={true}>
@@ -99,16 +107,16 @@ function App() {
             <Route 
               path='/' 
               element={
-                <ProtectedRoute requiresAuth={false}>
-                  <HomePage />
+                <ProtectedRoute>
+                  <Navigate to="/teams" replace />
                 </ProtectedRoute>
               } 
             />
             <Route 
               path='*' 
               element={
-                <ProtectedRoute requiresAuth={false}>
-                  <HomePage />
+                <ProtectedRoute>
+                  <Navigate to="/teams" replace />
                 </ProtectedRoute>
               } 
             />

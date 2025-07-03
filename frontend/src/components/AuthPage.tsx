@@ -3,6 +3,7 @@ import { AuthForm } from './AuthForm';
 import { Box, Typography, Container } from '@mui/material';
 
 export const AuthPage: React.FC = () => {
+
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 8, mb: 4 }}>
