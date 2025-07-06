@@ -63,6 +63,7 @@ const types_1 = require("../../../shared/dist/types");
  */
 function register(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             // Check for validation errors
             const errors = (0, express_validator_1.validationResult)(req);
@@ -76,9 +77,12 @@ function register(req, res) {
             const { username, email, password } = req.body;
             // Register user
             const result = yield authService.registerUser(username, email, password, types_1.UserRole.USER);
+            // result should contain user and token
             res.status(201).json({
                 message: 'User registered successfully',
-                user: result.user
+                user: result.user,
+                token: result.token,
+                expiresAt: (_a = result.session) === null || _a === void 0 ? void 0 : _a.expiresAt
             });
         }
         catch (error) {

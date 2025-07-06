@@ -22,6 +22,6 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'build', // CRA's default build output
+    outDir: 'dist', // Output to dist folder for consistency with backend expectations
   },
 });

@@ -169,9 +169,22 @@ function registerUser(username_1, email_1, password_1) {
             failedLoginAttempts: 0
         };
         users.push(user);
-        // Return user without password
+        // Generate session and JWT for new user
+        const sessionToken = generateSecureToken();
+        const session = {
+            id: crypto_1.default.randomUUID(),
+            sessionToken,
+            userId: user.id,
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+            createdAt: new Date(),
+            ipAddress: undefined,
+            userAgent: undefined,
+            isActive: true
+        };
+        sessions.push(session);
         const { passwordHash: _, failedLoginAttempts: __ } = user, userResponse = __rest(user, ["passwordHash", "failedLoginAttempts"]);
-        return { user: userResponse };
+        const token = generateJWT(userResponse);
+        return { user: userResponse, token, session };
     });
 }
 // Login user

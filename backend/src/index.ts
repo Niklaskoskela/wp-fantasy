@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
+import morgan from 'morgan';
 import router from './routes/contentRoutes';
 import teamRoutes from './routes/teamRoutes';
 import matchDayRoutes from './routes/matchDayRoutes';
@@ -13,6 +14,9 @@ import { authenticateToken, requireAdmin } from './middleware/auth';
 dotenv.config();
 
 const app = express();
+
+// Logging middleware - log HTTP requests to console
+app.use(morgan('tiny'));
 
 // Security middleware
 app.use(helmet({
@@ -40,6 +44,9 @@ app.use(generalLimiter);
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static frontend files
+app.use(express.static('dist'));
 
 // Health check (public)
 app.get('/api/health', (_req, res) => {
