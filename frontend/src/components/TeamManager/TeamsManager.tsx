@@ -315,22 +315,19 @@ export function TeamsManager() {
 
           {/* Teams List */}
           <Box>
+            {/* Your Team Section */}
             <Typography variant='h6' gutterBottom>
-              Your Teams ({teams.length})
+              Your Team
             </Typography>
-
-            {teams.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
+            {user && teams.filter(t => t.ownerId === user.id).length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 2 }}>
                 <Typography color='text.secondary'>
-                  No teams created yet. Create your first team above!
+                  You have not created a team yet. Create your team above!
                 </Typography>
               </Box>
             ) : (
-              <List
-                sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}
-              >
-                {teams.map((team) => {
-                  // Always 7 slots: 0 = GK, 1-6 = outfield
+              <List sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2, mb: 4 }}>
+                {teams.filter(t => t.ownerId === user?.id).map((team) => {
                   const slots = pendingPlayers[team.id] || (() => {
                     let arr = Array(7).fill(null);
                     const gk = team.players.find((p) => p.position === 'goalkeeper');
@@ -339,8 +336,50 @@ export function TeamsManager() {
                     for (let i = 0; i < 6; i++) arr[i + 1] = outfield[i] || null;
                     return arr;
                   })();
-                  const captainId =
-                    pendingCaptain[team.id] ?? team.teamCaptain?.id;
+                  const captainId = pendingCaptain[team.id] ?? team.teamCaptain?.id;
+                  const canEdit = user && (user.role === 'admin' || team.ownerId === user.id);
+                  return (
+                    <TeamCard
+                      key={team.id}
+                      team={team}
+                      expanded={expandedTeamId === team.id}
+                      slots={slots}
+                      captainId={captainId}
+                      onToggleExpand={() => handleExpand(team.id)}
+                      onPickPlayer={(slot, position) => handleOpenPicker(team.id, slot, position)}
+                      onRemovePlayer={(slot) => handleRemovePlayer(team.id, slot)}
+                      onSetCaptain={(playerId) => handleSetCaptain(team.id, playerId)}
+                      onSave={() => handleSave(team.id)}
+                      isSaving={savingTeamId === team.id}
+                      canEdit={!!canEdit}
+                    />
+                  );
+                })}
+              </List>
+            )}
+
+            {/* Other Teams Section */}
+            <Typography variant='h6' gutterBottom>
+              Other Teams ({teams.filter(t => t.ownerId !== user?.id).length})
+            </Typography>
+            {teams.filter(t => t.ownerId !== user?.id).length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 2 }}>
+                <Typography color='text.secondary'>
+                  No other teams created yet.
+                </Typography>
+              </Box>
+            ) : (
+              <List sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}>
+                {teams.filter(t => t.ownerId !== user?.id).map((team) => {
+                  const slots = pendingPlayers[team.id] || (() => {
+                    let arr = Array(7).fill(null);
+                    const gk = team.players.find((p) => p.position === 'goalkeeper');
+                    const outfield = team.players.filter((p) => p.position !== 'goalkeeper');
+                    arr[0] = gk || null;
+                    for (let i = 0; i < 6; i++) arr[i + 1] = outfield[i] || null;
+                    return arr;
+                  })();
+                  const captainId = pendingCaptain[team.id] ?? team.teamCaptain?.id;
                   const canEdit = user && (user.role === 'admin' || team.ownerId === user.id);
                   return (
                     <TeamCard
