@@ -1,5 +1,6 @@
 // Login and Registration form component
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -41,6 +42,7 @@ export function AuthForm() {
   const [tabValue, setTabValue] = useState(0);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
   
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -80,6 +82,8 @@ export function AuthForm() {
     try {
       const result = await loginMutation(loginForm).unwrap();
       login(result.user, result.token);
+      // Redirect to teams page after successful login
+      navigate('/teams');
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -102,6 +106,8 @@ export function AuthForm() {
       setRegisterSuccess(true);
       // Auto-login after successful registration
       login(result.user, result.token);
+      // Redirect to teams page after successful registration
+      navigate('/teams');
     } catch (error) {
       console.error('Registration failed:', error);
     }

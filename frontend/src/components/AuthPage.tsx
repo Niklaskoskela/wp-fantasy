@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthForm } from './AuthForm';
 import { Box, Typography, Container } from '@mui/material';
+import { useAuth } from '../contexts/AuthContext';
 
 export const AuthPage: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to teams page
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/teams', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  // Don't render the auth form if user is already authenticated
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <Container maxWidth="sm">
