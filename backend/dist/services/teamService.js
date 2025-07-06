@@ -89,22 +89,12 @@ function setTeamCaptain(teamId, playerId, userId, userRole) {
     return teamResponse;
 }
 function getTeams(userId, userRole) {
-    // Admin can see all teams
-    if (userRole === types_1.UserRole.ADMIN) {
-        return teams.map(team => {
-            const { ownerId: _ } = team, teamResponse = __rest(team, ["ownerId"]);
-            return teamResponse;
-        });
-    }
-    // Regular users can only see their own team
-    if (userId) {
-        const userTeams = teams.filter(t => t.ownerId === userId);
-        return userTeams.map(team => {
-            const { ownerId: _ } = team, teamResponse = __rest(team, ["ownerId"]);
-            return teamResponse;
-        });
-    }
-    return [];
+    // All authenticated users can see all teams
+    return teams.map(team => {
+        // Return ownerId for frontend permission checks
+        const teamResponse = __rest(team, []);
+        return teamResponse;
+    });
 }
 function getUserTeam(userId) {
     const team = teams.find(t => t.ownerId === userId);
@@ -116,7 +106,8 @@ function getUserTeam(userId) {
 function getTeamsWithScores(userId, userRole) {
     const { getMatchDays, calculatePoints } = require('./matchDayService');
     const allMatchDays = getMatchDays();
-    const userTeams = getTeams(userId, userRole);
+    // All authenticated users can see all teams with scores
+    const userTeams = getTeams();
     return userTeams.map(team => {
         let totalPoints = 0;
         const matchDayScores = [];

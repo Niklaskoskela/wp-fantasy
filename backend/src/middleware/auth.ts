@@ -115,6 +115,15 @@ export function requireTeamOwnership(req: Request, res: Response, next: NextFunc
   next();
 }
 
+// Middleware: allow any authenticated user (any role)
+export function requireAuthenticatedUser(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+  next();
+}
+
 // Optional authentication middleware - sets user if token is valid, but doesn't require it
 export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization'];
@@ -133,3 +142,9 @@ export function optionalAuth(req: Request, res: Response, next: NextFunction): v
 
   next();
 }
+
+// Usage notes:
+// - Use requireAuthenticatedUser for GET endpoints (players, teams, matchdays) and for regular user actions (create/edit own team)
+// - Use requireTeamOwnership for actions that should only be allowed by the team owner (edit team, add/remove players)
+// - Use requireAdmin only for admin-only endpoints
+// - Do NOT use requireRole or requireAdmin for endpoints regular users should access

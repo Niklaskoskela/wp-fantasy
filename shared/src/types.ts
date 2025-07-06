@@ -73,6 +73,7 @@ export interface Team {
     teamCaptain?: Player;
     scoreHistory: Map<MatchDay, number>; // matchday -> team score
     rosterHistory?: Map<string, RosterHistory[]>; // matchdayId -> roster entries
+    ownerId?: string; // Added for permission checks
 }
 
 // User and Authentication Types

@@ -24,10 +24,12 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     // Register user
     const result = await authService.registerUser(username, email, password, UserRole.USER);
-    
+    // result should contain user and token
     res.status(201).json({
       message: 'User registered successfully',
-      user: result.user
+      user: result.user,
+      token: result.token,
+      expiresAt: result.session?.expiresAt
     });
   } catch (error) {
     console.error('Registration error:', error);

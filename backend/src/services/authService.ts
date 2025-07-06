@@ -105,7 +105,7 @@ export async function registerUser(
   email: string, 
   password: string,
   role: UserRole = UserRole.USER
-): Promise<{ user: User; errors?: string[] }> {
+): Promise<{ user: User; token: string; session: UserSession }> {
   // Validate input
   const errors: string[] = [];
   
@@ -148,9 +148,25 @@ export async function registerUser(
   
   users.push(user);
   
-  // Return user without password
+  // Generate session and JWT for new user
+  const sessionToken = generateSecureToken();
+  const session: UserSession = {
+    id: crypto.randomUUID(),
+    sessionToken,
+    userId: user.id,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    createdAt: new Date(),
+    ipAddress: undefined,
+    userAgent: undefined,
+    isActive: true
+  };
+  
+  sessions.push(session);
+  
   const { passwordHash: _, failedLoginAttempts: __, ...userResponse } = user;
-  return { user: userResponse };
+  const token = generateJWT(userResponse);
+  
+  return { user: userResponse, token, session };
 }
 
 // Login user

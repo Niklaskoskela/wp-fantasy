@@ -29,7 +29,7 @@ app.use((0, helmet_1.default)({
 }));
 // CORS configuration
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:5173'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-session-token'],
@@ -61,7 +61,7 @@ app.use((err, req, res, next) => {
     });
 });
 // 404 handler
-app.use('*', (req, res) => {
+app.use('/{*any}', (req, res) => {
     res.status(404).json({ error: 'Endpoint not found' });
 });
 const PORT = process.env.PORT || 5050;

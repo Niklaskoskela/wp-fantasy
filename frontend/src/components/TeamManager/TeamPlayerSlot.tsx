@@ -10,6 +10,7 @@ interface TeamPlayerSlotProps {
   onRemovePlayer: () => void;
   onSetCaptain: (playerId: string) => void;
   isGoalkeeperSlot?: boolean;
+  canEdit?: boolean;
 }
 
 export function TeamPlayerSlot({
@@ -20,6 +21,7 @@ export function TeamPlayerSlot({
   onRemovePlayer,
   onSetCaptain,
   isGoalkeeperSlot = false,
+  canEdit = false,
 }: TeamPlayerSlotProps) {
   const getSlotLabel = () => {
     if (isGoalkeeperSlot) return 'Goalkeeper';
@@ -45,34 +47,40 @@ export function TeamPlayerSlot({
             </Typography>
           </Box>
 
-          <Stack direction='row' spacing={1}>
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              onClick={onRemovePlayer}
-            >
-              Remove
-            </Button>
-            <Button
-              size='small'
-              variant={isCaptain ? 'contained' : 'outlined'}
-              color={isCaptain ? 'primary' : 'secondary'}
-              onClick={() => onSetCaptain(player.id)}
-            >
-              {isCaptain ? 'Captain' : 'Make Captain'}
-            </Button>
-          </Stack>
+          {canEdit && (
+            <Stack direction='row' spacing={1}>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                onClick={onRemovePlayer}
+              >
+                Remove
+              </Button>
+              <Button
+                size='small'
+                variant={isCaptain ? 'contained' : 'outlined'}
+                color={isCaptain ? 'primary' : 'secondary'}
+                onClick={() => onSetCaptain(player.id)}
+              >
+                {isCaptain ? 'Captain' : 'Make Captain'}
+              </Button>
+            </Stack>
+          )}
         </Stack>
       ) : (
-        <Button
-          size='small'
-          variant='outlined'
-          onClick={onPickPlayer}
-          sx={{ minWidth: 120 }}
-        >
-          Pick Player
-        </Button>
+        canEdit ? (
+          <Button
+            size='small'
+            variant='outlined'
+            onClick={onPickPlayer}
+            sx={{ minWidth: 120 }}
+          >
+            Pick Player
+          </Button>
+        ) : (
+          <Typography color='text.secondary'>Empty</Typography>
+        )
       )}
     </Box>
   );

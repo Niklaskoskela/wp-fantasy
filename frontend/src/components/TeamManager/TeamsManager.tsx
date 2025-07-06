@@ -27,11 +27,13 @@ import { ErrorNotification } from './ErrorNotification';
 import { TeamCard } from './TeamCard';
 import { LeagueStandings } from './LeagueStandings';
 import { MatchDayInfo } from '../MatchDayInfo';
+import { useAuth } from '../../contexts/AuthContext';
 
 export function TeamsManager() {
   const { data: teams = [], refetch } = useGetTeamsQuery();
   const { data: players = [] } = useGetPlayersQuery();
   const { data: matchDays = [], isLoading: isLoadingMatchDays } = useGetMatchDaysQuery();
+  const { user } = useAuth();
   
   // Find the first team to show roster history for (or could be user's selected team)
   const firstTeam = teams[0];
@@ -330,6 +332,9 @@ export function TeamsManager() {
                   const captainId =
                     pendingCaptain[team.id] ?? team.teamCaptain?.id;
 
+                  // Only allow editing for the user's own team (by ownerId) or admin
+                  const canEdit = user && (user.role === 'admin' || team.ownerId === user.id);
+
                   return (
                     <TeamCard
                       key={team.id}
@@ -338,17 +343,12 @@ export function TeamsManager() {
                       slots={slots}
                       captainId={captainId}
                       onToggleExpand={() => handleExpand(team.id)}
-                      onPickPlayer={(slot, position) =>
-                        handleOpenPicker(team.id, slot, position)
-                      }
-                      onRemovePlayer={(slot) =>
-                        handleRemovePlayer(team.id, slot)
-                      }
-                      onSetCaptain={(playerId) =>
-                        handleSetCaptain(team.id, playerId)
-                      }
+                      onPickPlayer={(slot, position) => handleOpenPicker(team.id, slot, position)}
+                      onRemovePlayer={(slot) => handleRemovePlayer(team.id, slot)}
+                      onSetCaptain={(playerId) => handleSetCaptain(team.id, playerId)}
                       onSave={() => handleSave(team.id)}
                       isSaving={savingTeamId === team.id}
+                      canEdit={!!canEdit}
                     />
                   );
                 })}

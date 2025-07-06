@@ -34,6 +34,7 @@ interface TeamCardProps {
   onSetCaptain: (playerId: string) => void;
   onSave: () => void;
   isSaving?: boolean;
+  canEdit?: boolean;
 }
 
 export function TeamCard({
@@ -47,6 +48,7 @@ export function TeamCard({
   onSetCaptain,
   onSave,
   isSaving = false,
+  canEdit = false,
 }: TeamCardProps) {
   const getTeamStats = () => {
     const filledSlots = slots.filter(Boolean).length;
@@ -105,29 +107,36 @@ export function TeamCard({
                 slotIndex={index}
                 player={player}
                 captainId={captainId}
-                onPickPlayer={() =>
-                  onPickPlayer(index, getRequiredPosition(index))
+                onPickPlayer={
+                  canEdit
+                    ? () => onPickPlayer(index, getRequiredPosition(index))
+                    : () => {}
                 }
-                onRemovePlayer={() => onRemovePlayer(index)}
-                onSetCaptain={onSetCaptain}
+                onRemovePlayer={
+                  canEdit ? () => onRemovePlayer(index) : () => {}
+                }
+                onSetCaptain={canEdit ? onSetCaptain : () => {}}
                 isGoalkeeperSlot={
                   index === 0 &&
                   !slots.some((p) => p?.position === PlayerPosition.GOALKEEPER)
                 }
+                canEdit={canEdit}
               />
             ))}
 
-            <Box sx={{ pt: 2 }}>
-              <Button
-                variant='contained'
-                onClick={onSave}
-                disabled={isSaving}
-                size='large'
-                fullWidth
-              >
-                {isSaving ? 'Saving...' : 'Save Team'}
-              </Button>
-            </Box>
+            {canEdit && (
+              <Box sx={{ pt: 2 }}>
+                <Button
+                  variant='contained'
+                  onClick={onSave}
+                  disabled={isSaving}
+                  size='large'
+                  fullWidth
+                >
+                  {isSaving ? 'Saving...' : 'Save Team'}
+                </Button>
+              </Box>
+            )}
           </Stack>
         </Box>
       </Collapse>
