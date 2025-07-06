@@ -81,9 +81,9 @@ export function TeamCard({
                 <Typography variant='h6'>{team.teamName}</Typography>
                 <Stack direction='row' spacing={1}>
                   <Chip
-                    label={`${filledSlots}/6 players`}
+                    label={`${filledSlots}/7 players`}
                     size='small'
-                    color={filledSlots === 6 ? 'success' : 'default'}
+                    color={filledSlots === 7 ? 'success' : 'default'}
                   />
                   {hasCaptain && (
                     <Chip label='Captain set' size='small' color='primary' />

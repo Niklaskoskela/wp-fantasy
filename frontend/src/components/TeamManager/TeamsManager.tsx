@@ -129,11 +129,20 @@ export function TeamsManager() {
 
     if (isExpanding && !pendingPlayers[teamId]) {
       const team = teams.find((t) => t.id === teamId);
+      // Always 7 slots: 1 GK (slot 0), 6 outfield (slots 1-6)
+      let slots: (Player | null)[] = Array(7).fill(null);
+      if (team) {
+        // Place goalkeeper in slot 0, outfield in slots 1-6
+        const gk = team.players.find((p) => p.position === 'goalkeeper');
+        const outfield = team.players.filter((p) => p.position !== 'goalkeeper');
+        slots[0] = gk || null;
+        for (let i = 0; i < 6; i++) {
+          slots[i + 1] = outfield[i] || null;
+        }
+      }
       setPendingPlayers((prev) => ({
         ...prev,
-        [teamId]: team
-          ? [...team.players, ...Array(6 - team.players.length).fill(null)]
-          : Array(6).fill(null),
+        [teamId]: slots,
       }));
       setPendingCaptain((prev) => ({
         ...prev,
@@ -146,29 +155,27 @@ export function TeamsManager() {
   const handleOpenPicker = (
     teamId: string,
     slot: number,
-    position?: PlayerPosition
+    _position?: PlayerPosition
   ) => {
-    setPickerSlot({ teamId, slot, position });
+    // Slot 0: GK, slots 1-6: outfield
+    const requiredPosition = slot === 0 ? PlayerPosition.GOALKEEPER : undefined;
+    setPickerSlot({ teamId, slot, position: requiredPosition });
     setPickerOpen(true);
   };
 
   // Pick a player for a slot
   const handlePickPlayer = (player: Player) => {
     if (!pickerSlot) return;
-
-    // Check if player is already picked in this team
     const currentTeamPlayers = pendingPlayers[pickerSlot.teamId] || [];
     const isAlreadyPicked = currentTeamPlayers.some((p) => p?.id === player.id);
-
     if (isAlreadyPicked) {
       showNotification('This player is already in the team', 'warning');
       return;
     }
-
     setPendingPlayers((prev) => {
       const arr = prev[pickerSlot.teamId]
         ? [...prev[pickerSlot.teamId]]
-        : Array(6).fill(null);
+        : Array(7).fill(null);
       arr[pickerSlot.slot] = player;
       return { ...prev, [pickerSlot.teamId]: arr };
     });
@@ -178,18 +185,15 @@ export function TeamsManager() {
   // Remove a player from a slot
   const handleRemovePlayer = (teamId: string, slot: number) => {
     setPendingPlayers((prev) => {
-      const arr = prev[teamId] ? [...prev[teamId]] : Array(6).fill(null);
+      const arr = prev[teamId] ? [...prev[teamId]] : Array(7).fill(null);
       const removedPlayer = arr[slot];
       arr[slot] = null;
-
-      // If removed player was captain, clear captain
       if (removedPlayer && pendingCaptain[teamId] === removedPlayer.id) {
         setPendingCaptain((prevCaptain) => ({
           ...prevCaptain,
           [teamId]: undefined,
         }));
       }
-
       return { ...prev, [teamId]: arr };
     });
   };
@@ -223,8 +227,9 @@ export function TeamsManager() {
         }
       }
 
-      // Add new players
-      for (const p of playersArr) {
+      // Add new players (slot 0: GK, 1-6: outfield)
+      for (let i = 0; i < playersArr.length; i++) {
+        const p = playersArr[i];
         if (p) {
           await addPlayerToTeam({ teamId, player: p }).unwrap();
         }
@@ -325,16 +330,18 @@ export function TeamsManager() {
                 sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}
               >
                 {teams.map((team) => {
-                  const slots = pendingPlayers[team.id] || [
-                    ...team.players,
-                    ...Array(6 - team.players.length).fill(null),
-                  ];
+                  // Always 7 slots: 0 = GK, 1-6 = outfield
+                  const slots = pendingPlayers[team.id] || (() => {
+                    let arr = Array(7).fill(null);
+                    const gk = team.players.find((p) => p.position === 'goalkeeper');
+                    const outfield = team.players.filter((p) => p.position !== 'goalkeeper');
+                    arr[0] = gk || null;
+                    for (let i = 0; i < 6; i++) arr[i + 1] = outfield[i] || null;
+                    return arr;
+                  })();
                   const captainId =
                     pendingCaptain[team.id] ?? team.teamCaptain?.id;
-
-                  // Only allow editing for the user's own team (by ownerId) or admin
                   const canEdit = user && (user.role === 'admin' || team.ownerId === user.id);
-
                   return (
                     <TeamCard
                       key={team.id}
@@ -372,7 +379,7 @@ export function TeamsManager() {
                     .map((p) => (p as Player).id)
                 : []
             }
-            requiredPosition={pickerSlot?.position}
+            requiredPosition={pickerSlot?.slot === 0 ? PlayerPosition.GOALKEEPER : undefined}
           />
         </Box>
       )}

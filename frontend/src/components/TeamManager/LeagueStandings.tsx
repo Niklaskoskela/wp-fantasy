@@ -102,9 +102,9 @@ export function LeagueStandings() {
                 </TableCell>
                 <TableCell align='center'>
                   <Chip
-                    label={`${team.players.length}/6`}
+                    label={`${team.players.length}/7`}
                     size='small'
-                    color={team.players.length === 6 ? 'success' : 'default'}
+                    color={team.players.length === 7 ? 'success' : 'default'}
                   />
                 </TableCell>
                 <TableCell align='center'>
