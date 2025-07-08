@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const path_1 = __importDefault(require("path"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
+const path_1 = __importDefault(require("path"));
 const contentRoutes_1 = __importDefault(require("./routes/contentRoutes"));
 const teamRoutes_1 = __importDefault(require("./routes/teamRoutes"));
 const matchDayRoutes_1 = __importDefault(require("./routes/matchDayRoutes"));
@@ -26,10 +26,8 @@ app.use((0, helmet_1.default)({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"],
-            fontSrc: ["'self'"],
         },
     },
 }));
@@ -46,7 +44,7 @@ app.use(rateLimiting_1.generalLimiter);
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static frontend files
-app.use(express_1.default.static('dist'));
+app.use(express_1.default.static(path_1.default.join(__dirname, '../../frontend/dist')));
 // Health check (public)
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -60,16 +58,6 @@ app.use('/api', auth_1.authenticateToken, matchDayRoutes_1.default);
 app.use('/api/roster-history', auth_1.authenticateToken, rosterHistoryRoutes_1.default);
 // Admin-only routes
 app.use('/api/admin', auth_1.authenticateToken, auth_1.requireAdmin);
-// Catch-all handler for React Router (must be after API routes but before error handling)
-app.get('/{*any}', (req, res) => {
-    // Don't serve index.html for API routes that weren't found
-    if (req.path.startsWith('/api/')) {
-        res.status(404).json({ error: 'API endpoint not found' });
-        return;
-    }
-    // For all other routes, serve the React app
-    res.sendFile(path_1.default.resolve(__dirname, 'dist', 'index.html'));
-});
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
@@ -77,6 +65,10 @@ app.use((err, req, res, next) => {
         error: 'Internal server error',
         message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
     });
+});
+// 404 handler
+app.all('/{*any}', (req, res) => {
+    res.status(404).json({ error: 'Endpoint not found' });
 });
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {

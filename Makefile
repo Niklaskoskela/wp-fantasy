@@ -1,13 +1,12 @@
 buildFront:
-	rm -rf frontend/dist
-	rm -rf backend/dist
 	cd frontend && npm ci && npm run build
-	cp -r frontend/dist backend
 
-buildBack::
-	cd backend && npm run build
+buildBack:
+	cd backend && npm ci && npm run build
+
+build: buildFront buildBack
 
 run:
 	cd backend && npm run start
 
-buildRun: buildFront buildBack run
+buildRun: build run

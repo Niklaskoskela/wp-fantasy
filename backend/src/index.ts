@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
 import router from './routes/contentRoutes';
 import teamRoutes from './routes/teamRoutes';
 import matchDayRoutes from './routes/matchDayRoutes';
@@ -46,7 +47,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static frontend files
-app.use(express.static('dist'));
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
 // Health check (public)
 app.get('/api/health', (_req, res) => {
@@ -75,7 +76,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // 404 handler
-app.use('/{*any}', (req, res) => {
+app.all('/{*any}', (req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
