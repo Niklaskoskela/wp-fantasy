@@ -18,7 +18,16 @@ require('dotenv').config();
 const runCommand = (cmd) => {
   try {
     console.log(`Running: ${cmd}`);
-    execSync(cmd, { stdio: 'inherit', cwd: __dirname });
+    // Add SSL configuration for Neon DB connections
+    const env = { ...process.env };
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')) {
+      env.PGSSLMODE = 'require';
+      // Add SSL flags to the node-pg-migrate command
+      if (cmd.includes('node-pg-migrate')) {
+        cmd = cmd + ' --ssl';
+      }
+    }
+    execSync(cmd, { stdio: 'inherit', cwd: __dirname, env });
   } catch (error) {
     console.error(`Command failed: ${cmd}`);
     process.exit(1);
