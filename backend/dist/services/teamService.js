@@ -35,7 +35,8 @@ function createTeam(teamName, ownerId) {
             id: teamRow.id.toString(),
             teamName: teamRow.team_name,
             players: [],
-            scoreHistory: new Map()
+            scoreHistory: new Map(),
+            ownerId
         };
     });
 }
@@ -123,6 +124,9 @@ function getTeamById(teamId) {
         if (teamResult.rows.length === 0)
             return null;
         const teamRow = teamResult.rows[0];
+        // Get team owner (user who has this team_id)
+        const ownerResult = yield database_1.pool.query('SELECT id FROM users WHERE team_id = $1', [teamId]);
+        const ownerId = ownerResult.rows.length > 0 ? ownerResult.rows[0].id.toString() : undefined;
         // Get team players
         const playersResult = yield database_1.pool.query(`SELECT p.id, p.name, p.position, p.club_id, c.name as club_name, tp.is_captain
          FROM team_players tp 
@@ -154,7 +158,8 @@ function getTeamById(teamId) {
                 },
                 statsHistory: new Map()
             } : undefined,
-            scoreHistory: new Map()
+            scoreHistory: new Map(),
+            ownerId
         };
     });
 }
