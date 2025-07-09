@@ -68,7 +68,7 @@ app.use((err, req, res, next) => {
 });
 // 404 handler
 app.all('/{*any}', (req, res) => {
-    res.status(404).json({ error: 'Endpoint not found' });
+    res.sendFile(path_1.default.join(__dirname, '../../frontend/dist', 'index.html'));
 });
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {

@@ -77,7 +77,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // 404 handler
 app.all('/{*any}', (req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+  res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
 });
 
 const PORT = process.env.PORT || 5050;
