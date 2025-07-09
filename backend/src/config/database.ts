@@ -3,23 +3,31 @@ import { Pool } from 'pg';
 // Database configuration with SSL support for production/cloud databases
 const getDatabaseConfig = (): any => {
   const config: any = {
-    connectionString: process.env.DATABASE_URL,
+    user: process.env.PGUSER || process.env.DB_USER || 'postgres',
+    host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
+    database: process.env.PGDATABASE || process.env.DB_NAME || 'wp_fantasy',
+    password: process.env.PGPASSWORD || process.env.DB_PASSWORD || 'password',
+    port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432'),
   };
 
-  // Parse sslmode from connection string or detect cloud databases
-  const databaseUrl = process.env.DATABASE_URL || '';
-  const isCloudDatabase = databaseUrl.includes('neon.tech') || 
-                         databaseUrl.includes('amazonaws.com') || 
-                         databaseUrl.includes('supabase.com');
+  // Determine if this is a cloud database or requires SSL
+  const host = config.host;
+  const isCloudDatabase = host.includes('neon.tech') || 
+                         host.includes('amazonaws.com') || 
+                         host.includes('supabase.com');
   
-  const requiresSSL = databaseUrl.includes('sslmode=require') || 
-                     isCloudDatabase ||
-                     process.env.ENVIRONMENT === 'production';
+  const requiresSSL = isCloudDatabase ||
+                     process.env.ENVIRONMENT != 'dev' ||
+                     process.env.SSL_MODE === 'require';
 
-  const isLocalDatabase = databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1');
+  const isLocalDatabase = host === 'localhost' || host === '127.0.0.1';
 
   // Debug logging
   console.log('🔍 Database Configuration Debug:');
+  console.log('  - host:', config.host);
+  console.log('  - database:', config.database);
+  console.log('  - user:', config.user);
+  console.log('  - port:', config.port);
   console.log('  - isCloudDatabase:', isCloudDatabase);
   console.log('  - requiresSSL:', requiresSSL);
   console.log('  - isLocalDatabase:', isLocalDatabase);
