@@ -1,8 +1,6 @@
 // Club and Player services for content management
-import { Pool } from 'pg';
 import { Club, PlayerPosition } from 'shared';
-
-export const pool = new Pool();
+import { pool } from '../config/database';
 
 export class ClubService {
   static async createClub(name: string): Promise<Club> {

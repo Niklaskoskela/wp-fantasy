@@ -1,8 +1,6 @@
 // PlayerService split from clubService for player management
-import { Pool } from 'pg';
 import { PlayerPosition } from 'shared';
-
-const pool = new Pool();
+import { pool } from '../config/database';
 
 export class PlayerService {
   static async createPlayer(
