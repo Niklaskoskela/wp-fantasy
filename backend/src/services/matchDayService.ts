@@ -1,38 +1,81 @@
 import { MatchDay, Player, Stats, Team } from '../../../shared/dist/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getTeams } from './teamService';
+import { pool } from '../config/database';
 
-// In-memory stores
-const matchDays: MatchDay[] = [];
-const playerStats: { [key: string]: { [playerId: string]: Stats } } = {}; // matchDayId -> playerId -> stats
-
-export function createMatchDay(title: string, startTime: Date, endTime: Date): MatchDay {
-    const matchDay: MatchDay = { 
-        id: uuidv4(), 
-        title,
-        startTime,
-        endTime
+export async function createMatchDay(title: string, startTime: Date, endTime: Date): Promise<MatchDay> {
+    const result = await pool.query(
+        'INSERT INTO matchdays (title, start_time, end_time) VALUES ($1, $2, $3) RETURNING id, title, start_time, end_time',
+        [title, startTime, endTime]
+    );
+    
+    const row = result.rows[0];
+    return {
+        id: row.id.toString(),
+        title: row.title,
+        startTime: row.start_time,
+        endTime: row.end_time
     };
-    matchDays.push(matchDay);
-    playerStats[matchDay.id] = {};
-    return matchDay;
 }
 
-export function updatePlayerStats(matchDayId: string, playerId: string, stats: Stats): Stats | null {
-    if (!playerStats[matchDayId]) return null;
-    playerStats[matchDayId][playerId] = stats;
-    return stats;
+export async function updatePlayerStats(matchDayId: string, playerId: string, stats: Stats): Promise<Stats | null> {
+    try {
+        const result = await pool.query(
+            `INSERT INTO player_stats (player_id, matchday_id, goals, assists, blocks, steals, pf_drawn, pf, balls_lost, contra_fouls, shots, swim_offs, brutality, saves, wins) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+             ON CONFLICT (player_id, matchday_id) 
+             DO UPDATE SET 
+                goals = EXCLUDED.goals,
+                assists = EXCLUDED.assists,
+                blocks = EXCLUDED.blocks,
+                steals = EXCLUDED.steals,
+                pf_drawn = EXCLUDED.pf_drawn,
+                pf = EXCLUDED.pf,
+                balls_lost = EXCLUDED.balls_lost,
+                contra_fouls = EXCLUDED.contra_fouls,
+                shots = EXCLUDED.shots,
+                swim_offs = EXCLUDED.swim_offs,
+                brutality = EXCLUDED.brutality,
+                saves = EXCLUDED.saves,
+                wins = EXCLUDED.wins
+             RETURNING *`,
+            [playerId, matchDayId, stats.goals, stats.assists, stats.blocks, stats.steals, 
+             stats.pfDrawn, stats.pf, stats.ballsLost, stats.contraFouls, stats.shots, 
+             stats.swimOffs, stats.brutality, stats.saves, stats.wins]
+        );
+        
+        const row = result.rows[0];
+        return {
+            id: row.id.toString(),
+            goals: row.goals,
+            assists: row.assists,
+            blocks: row.blocks,
+            steals: row.steals,
+            pfDrawn: row.pf_drawn,
+            pf: row.pf,
+            ballsLost: row.balls_lost,
+            contraFouls: row.contra_fouls,
+            shots: row.shots,
+            swimOffs: row.swim_offs,
+            brutality: row.brutality,
+            saves: row.saves,
+            wins: row.wins
+        };
+    } catch (error) {
+        console.error('Error updating player stats:', error);
+        return null;
+    }
 }
 
-export function calculatePoints(matchDayId: string): { teamId: string; points: number }[] {
-    const teams = getTeams();
+export async function calculatePoints(matchDayId: string): Promise<{ teamId: string; points: number }[]> {
+    const teams = await getTeams();
     const results: { teamId: string; points: number }[] = [];
     
     for (const team of teams) {
         let total = 0;
         
         for (const player of team.players) {
-            const stats = playerStats[matchDayId]?.[player.id];
+            const stats = await getPlayerStatsForPlayer(matchDayId, player.id);
             if (stats) {
                 // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
                 const basePoints = stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2;
@@ -49,11 +92,46 @@ export function calculatePoints(matchDayId: string): { teamId: string; points: n
 }
 
 /**
+ * Get player stats for a specific player in a matchday
+ */
+async function getPlayerStatsForPlayer(matchDayId: string, playerId: string): Promise<Stats | null> {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM player_stats WHERE matchday_id = $1 AND player_id = $2',
+            [matchDayId, playerId]
+        );
+        
+        if (result.rows.length === 0) return null;
+        
+        const row = result.rows[0];
+        return {
+            id: row.id.toString(),
+            goals: row.goals,
+            assists: row.assists,
+            blocks: row.blocks,
+            steals: row.steals,
+            pfDrawn: row.pf_drawn,
+            pf: row.pf,
+            ballsLost: row.balls_lost,
+            contraFouls: row.contra_fouls,
+            shots: row.shots,
+            swimOffs: row.swim_offs,
+            brutality: row.brutality,
+            saves: row.saves,
+            wins: row.wins
+        };
+    } catch (error) {
+        console.error('Error getting player stats:', error);
+        return null;
+    }
+}
+
+/**
  * Start a matchday - this snapshots all current team rosters
  * and should be called when a matchday begins
  */
-export function startMatchDay(matchDayId: string): boolean {
-    const matchDay = matchDays.find(md => md.id === matchDayId);
+export async function startMatchDay(matchDayId: string): Promise<boolean> {
+    const matchDay = await getMatchDayById(matchDayId);
     if (!matchDay) return false;
     
     // Check if matchday has already started
@@ -66,14 +144,16 @@ export function startMatchDay(matchDayId: string): boolean {
     
     // Check if rosters have already been snapshotted for this matchday
     const { getTeams } = require('./teamService');
-    const teams = getTeams();
+    const teams = await getTeams();
     
     // If any team already has roster history for this matchday, don't snapshot again
-    const alreadySnapshotted = teams.some((team: any) => hasRosterHistory(team.id, matchDayId));
+    const alreadySnapshotted = await Promise.all(
+        teams.map(async (team: any) => await hasRosterHistory(team.id, matchDayId))
+    ).then(results => results.some(result => result));
     
     if (!alreadySnapshotted) {
         // Snapshot all team rosters for this matchday
-        snapshotAllTeamRosters(matchDayId);
+        await snapshotAllTeamRosters(matchDayId, undefined, undefined);
         console.log(`Rosters snapshotted for matchday ${matchDay.title} (${matchDayId})`);
     } else {
         console.log(`Rosters already snapshotted for matchday ${matchDay.title} (${matchDayId})`);
@@ -82,10 +162,80 @@ export function startMatchDay(matchDayId: string): boolean {
     return true;
 }
 
-export function getMatchDays(): MatchDay[] {
-    return matchDays;
+/**
+ * Get a specific matchday by ID
+ */
+async function getMatchDayById(matchDayId: string): Promise<MatchDay | null> {
+    try {
+        const result = await pool.query(
+            'SELECT id, title, start_time, end_time FROM matchdays WHERE id = $1',
+            [matchDayId]
+        );
+        
+        if (result.rows.length === 0) return null;
+        
+        const row = result.rows[0];
+        return {
+            id: row.id.toString(),
+            title: row.title,
+            startTime: row.start_time,
+            endTime: row.end_time
+        };
+    } catch (error) {
+        console.error('Error getting matchday by ID:', error);
+        return null;
+    }
 }
 
-export function getPlayerStats(matchDayId: string): { [playerId: string]: Stats } {
-    return playerStats[matchDayId] || {};
+export async function getMatchDays(): Promise<MatchDay[]> {
+    try {
+        const result = await pool.query(
+            'SELECT id, title, start_time, end_time FROM matchdays ORDER BY start_time DESC'
+        );
+        
+        return result.rows.map(row => ({
+            id: row.id.toString(),
+            title: row.title,
+            startTime: row.start_time,
+            endTime: row.end_time
+        }));
+    } catch (error) {
+        console.error('Error getting matchdays:', error);
+        return [];
+    }
+}
+
+export async function getPlayerStats(matchDayId: string): Promise<{ [playerId: string]: Stats }> {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM player_stats WHERE matchday_id = $1',
+            [matchDayId]
+        );
+        
+        const statsMap: { [playerId: string]: Stats } = {};
+        
+        for (const row of result.rows) {
+            statsMap[row.player_id.toString()] = {
+                id: row.id.toString(),
+                goals: row.goals,
+                assists: row.assists,
+                blocks: row.blocks,
+                steals: row.steals,
+                pfDrawn: row.pf_drawn,
+                pf: row.pf,
+                ballsLost: row.balls_lost,
+                contraFouls: row.contra_fouls,
+                shots: row.shots,
+                swimOffs: row.swim_offs,
+                brutality: row.brutality,
+                saves: row.saves,
+                wins: row.wins
+            };
+        }
+        
+        return statsMap;
+    } catch (error) {
+        console.error('Error getting player stats:', error);
+        return {};
+    }
 }

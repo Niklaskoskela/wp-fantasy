@@ -20,7 +20,7 @@ const matchDayRoutes_1 = __importDefault(require("../routes/matchDayRoutes"));
 const teamRoutes_1 = __importDefault(require("../routes/teamRoutes"));
 const authRoutes_1 = __importDefault(require("../routes/authRoutes"));
 const auth_1 = require("../middleware/auth");
-const clubService_1 = require("../services/clubService"); // Adjust path if needed
+const database_1 = require("../config/database");
 dotenv_1.default.config();
 // VERY SHITTY (SYSTEMS) TEST, but it works for now
 // Create a test app that mirrors the main app structure
@@ -194,6 +194,6 @@ describe('System-wide League Flow', () => {
     }));
 });
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield clubService_1.pool.end();
+    yield database_1.pool.end();
 }));
 //# sourceMappingURL=api.test.js.map

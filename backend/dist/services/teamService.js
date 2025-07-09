@@ -1,14 +1,12 @@
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createTeam = createTeam;
@@ -20,111 +18,193 @@ exports.getUserTeam = getUserTeam;
 exports.getTeamsWithScores = getTeamsWithScores;
 // Service for managing teams: create, update players, set captain
 const types_1 = require("../../../shared/dist/types");
-const uuid_1 = require("uuid");
-// In-memory store for demo (replace with DB in production)
-const teams = [];
+const database_1 = require("../config/database");
 function createTeam(teamName, ownerId) {
-    // Check if user already has a team
-    const existingTeam = teams.find(t => t.ownerId === ownerId);
-    if (existingTeam) {
-        throw new Error('User already has a team');
-    }
-    const newTeam = {
-        id: (0, uuid_1.v4)(),
-        teamName,
-        players: [],
-        scoreHistory: new Map(),
-        ownerId
-    };
-    teams.push(newTeam);
-    // Return team without ownerId for API response
-    const { ownerId: _ } = newTeam, teamResponse = __rest(newTeam, ["ownerId"]);
-    return teamResponse;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check if user already has a team
+        const existingTeamCheck = yield database_1.pool.query('SELECT id FROM teams WHERE EXISTS (SELECT 1 FROM users WHERE users.id = $1 AND users.team_id = teams.id)', [ownerId]);
+        if (existingTeamCheck.rows.length > 0) {
+            throw new Error('User already has a team');
+        }
+        // Create team
+        const teamResult = yield database_1.pool.query('INSERT INTO teams (team_name) VALUES ($1) RETURNING id, team_name', [teamName]);
+        const teamRow = teamResult.rows[0];
+        // Update user's team_id
+        yield database_1.pool.query('UPDATE users SET team_id = $1 WHERE id = $2', [teamRow.id, ownerId]);
+        return {
+            id: teamRow.id.toString(),
+            teamName: teamRow.team_name,
+            players: [],
+            scoreHistory: new Map()
+        };
+    });
 }
 function addPlayerToTeam(teamId, player, userId, userRole) {
-    const team = teams.find((t) => t.id === teamId);
-    if (!team)
-        return null;
-    // Check ownership (admin can modify any team)
-    if (userRole !== types_1.UserRole.ADMIN && team.ownerId !== userId) {
-        throw new Error('You can only modify your own team');
-    }
-    if (team.players.length >= 6)
-        throw new Error('Team already has 6 players');
-    if (player.position === 'goalkeeper' && team.players.some((p) => p.position === 'goalkeeper')) {
-        throw new Error('Team already has a goalkeeper');
-    }
-    team.players.push(player);
-    const { ownerId: _ } = team, teamResponse = __rest(team, ["ownerId"]);
-    return teamResponse;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check team ownership
+        const teamCheck = yield database_1.pool.query('SELECT t.id, t.team_name FROM teams t JOIN users u ON u.team_id = t.id WHERE t.id = $1 AND ($2 = $3 OR u.id = $4)', [teamId, userRole, types_1.UserRole.ADMIN, userId]);
+        if (teamCheck.rows.length === 0) {
+            if (userRole !== types_1.UserRole.ADMIN) {
+                throw new Error('You can only modify your own team');
+            }
+            // Admin can modify any team, check if team exists
+            const teamExistsCheck = yield database_1.pool.query('SELECT id, team_name FROM teams WHERE id = $1', [teamId]);
+            if (teamExistsCheck.rows.length === 0) {
+                return null;
+            }
+        }
+        // Check team player count
+        const playerCountCheck = yield database_1.pool.query('SELECT COUNT(*) as count FROM team_players WHERE team_id = $1', [teamId]);
+        if (parseInt(playerCountCheck.rows[0].count) >= 6) {
+            throw new Error('Team already has 6 players');
+        }
+        // Check if team already has a goalkeeper
+        if (player.position === 'goalkeeper') {
+            const goalkeeperCheck = yield database_1.pool.query('SELECT COUNT(*) as count FROM team_players tp JOIN players p ON tp.player_id = p.id WHERE tp.team_id = $1 AND p.position = $2', [teamId, 'goalkeeper']);
+            if (parseInt(goalkeeperCheck.rows[0].count) > 0) {
+                throw new Error('Team already has a goalkeeper');
+            }
+        }
+        // Add player to team
+        yield database_1.pool.query('INSERT INTO team_players (team_id, player_id) VALUES ($1, $2)', [teamId, player.id]);
+        return getTeamById(teamId);
+    });
 }
 function removePlayerFromTeam(teamId, playerId, userId, userRole) {
-    const team = teams.find((t) => t.id === teamId);
-    if (!team)
-        return null;
-    // Check ownership (admin can modify any team)
-    if (userRole !== types_1.UserRole.ADMIN && team.ownerId !== userId) {
-        throw new Error('You can only modify your own team');
-    }
-    team.players = team.players.filter((p) => p.id !== playerId);
-    if (team.teamCaptain && team.teamCaptain.id === playerId) {
-        team.teamCaptain = undefined;
-    }
-    const { ownerId: _ } = team, teamResponse = __rest(team, ["ownerId"]);
-    return teamResponse;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check team ownership
+        const teamCheck = yield database_1.pool.query('SELECT t.id, t.team_name FROM teams t JOIN users u ON u.team_id = t.id WHERE t.id = $1 AND ($2 = $3 OR u.id = $4)', [teamId, userRole, types_1.UserRole.ADMIN, userId]);
+        if (teamCheck.rows.length === 0) {
+            if (userRole !== types_1.UserRole.ADMIN) {
+                throw new Error('You can only modify your own team');
+            }
+            // Admin can modify any team, check if team exists
+            const teamExistsCheck = yield database_1.pool.query('SELECT id, team_name FROM teams WHERE id = $1', [teamId]);
+            if (teamExistsCheck.rows.length === 0) {
+                return null;
+            }
+        }
+        // Remove player from team
+        yield database_1.pool.query('DELETE FROM team_players WHERE team_id = $1 AND player_id = $2', [teamId, playerId]);
+        // Remove captain if this player was the captain
+        yield database_1.pool.query('UPDATE team_players SET is_captain = FALSE WHERE team_id = $1 AND player_id = $2', [teamId, playerId]);
+        return getTeamById(teamId);
+    });
 }
 function setTeamCaptain(teamId, playerId, userId, userRole) {
-    const team = teams.find((t) => t.id === teamId);
-    if (!team)
-        return null;
-    // Check ownership (admin can modify any team)
-    if (userRole !== types_1.UserRole.ADMIN && team.ownerId !== userId) {
-        throw new Error('You can only modify your own team');
-    }
-    const player = team.players.find((p) => p.id === playerId);
-    if (!player)
-        throw new Error('Player not in team');
-    team.teamCaptain = player;
-    const { ownerId: _ } = team, teamResponse = __rest(team, ["ownerId"]);
-    return teamResponse;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check team ownership
+        const teamCheck = yield database_1.pool.query('SELECT t.id, t.team_name FROM teams t JOIN users u ON u.team_id = t.id WHERE t.id = $1 AND ($2 = $3 OR u.id = $4)', [teamId, userRole, types_1.UserRole.ADMIN, userId]);
+        if (teamCheck.rows.length === 0) {
+            if (userRole !== types_1.UserRole.ADMIN) {
+                throw new Error('You can only modify your own team');
+            }
+            // Admin can modify any team, check if team exists
+            const teamExistsCheck = yield database_1.pool.query('SELECT id, team_name FROM teams WHERE id = $1', [teamId]);
+            if (teamExistsCheck.rows.length === 0) {
+                return null;
+            }
+        }
+        // Check if player is in team
+        const playerCheck = yield database_1.pool.query('SELECT COUNT(*) as count FROM team_players WHERE team_id = $1 AND player_id = $2', [teamId, playerId]);
+        if (parseInt(playerCheck.rows[0].count) === 0) {
+            throw new Error('Player not in team');
+        }
+        // Clear existing captain
+        yield database_1.pool.query('UPDATE team_players SET is_captain = FALSE WHERE team_id = $1', [teamId]);
+        // Set new captain
+        yield database_1.pool.query('UPDATE team_players SET is_captain = TRUE WHERE team_id = $1 AND player_id = $2', [teamId, playerId]);
+        return getTeamById(teamId);
+    });
+}
+function getTeamById(teamId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const teamResult = yield database_1.pool.query('SELECT id, team_name FROM teams WHERE id = $1', [teamId]);
+        if (teamResult.rows.length === 0)
+            return null;
+        const teamRow = teamResult.rows[0];
+        // Get team players
+        const playersResult = yield database_1.pool.query(`SELECT p.id, p.name, p.position, p.club_id, c.name as club_name, tp.is_captain
+         FROM team_players tp 
+         JOIN players p ON tp.player_id = p.id 
+         JOIN clubs c ON p.club_id = c.id 
+         WHERE tp.team_id = $1`, [teamId]);
+        const players = playersResult.rows.map(row => ({
+            id: row.id.toString(),
+            name: row.name,
+            position: row.position,
+            club: {
+                id: row.club_id.toString(),
+                name: row.club_name
+            },
+            statsHistory: new Map()
+        }));
+        const captain = playersResult.rows.find(row => row.is_captain);
+        return {
+            id: teamRow.id.toString(),
+            teamName: teamRow.team_name,
+            players,
+            teamCaptain: captain ? {
+                id: captain.id.toString(),
+                name: captain.name,
+                position: captain.position,
+                club: {
+                    id: captain.club_id.toString(),
+                    name: captain.club_name
+                },
+                statsHistory: new Map()
+            } : undefined,
+            scoreHistory: new Map()
+        };
+    });
 }
 function getTeams(userId, userRole) {
-    // All authenticated users can see all teams
-    return teams.map(team => {
-        // Return ownerId for frontend permission checks
-        const teamResponse = __rest(team, []);
-        return teamResponse;
+    return __awaiter(this, void 0, void 0, function* () {
+        const teamsResult = yield database_1.pool.query('SELECT id, team_name FROM teams ORDER BY team_name');
+        const teams = [];
+        for (const teamRow of teamsResult.rows) {
+            const team = yield getTeamById(teamRow.id.toString());
+            if (team) {
+                teams.push(team);
+            }
+        }
+        return teams;
     });
 }
 function getUserTeam(userId) {
-    const team = teams.find(t => t.ownerId === userId);
-    if (!team)
-        return null;
-    const { ownerId: _ } = team, teamResponse = __rest(team, ["ownerId"]);
-    return teamResponse;
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield database_1.pool.query('SELECT team_id FROM users WHERE id = $1', [userId]);
+        if (result.rows.length === 0 || !result.rows[0].team_id) {
+            return null;
+        }
+        return getTeamById(result.rows[0].team_id.toString());
+    });
 }
 function getTeamsWithScores(userId, userRole) {
-    const { getMatchDays, calculatePoints } = require('./matchDayService');
-    const allMatchDays = getMatchDays();
-    // All authenticated users can see all teams with scores
-    const userTeams = getTeams();
-    return userTeams.map(team => {
-        let totalPoints = 0;
-        const matchDayScores = [];
-        // Calculate points for each match day
-        for (const matchDay of allMatchDays) {
-            const matchDayResults = calculatePoints(matchDay.id);
-            const teamResult = matchDayResults.find((result) => result.teamId === team.id);
-            const points = teamResult ? teamResult.points : 0;
-            totalPoints += points;
-            matchDayScores.push({
-                matchDayId: matchDay.id,
-                matchDayTitle: matchDay.title,
-                points
-            });
+    return __awaiter(this, void 0, void 0, function* () {
+        const { getMatchDays, calculatePoints } = require('./matchDayService');
+        const allMatchDays = yield getMatchDays();
+        const userTeams = yield getTeams();
+        const teamsWithScores = [];
+        for (const team of userTeams) {
+            let totalPoints = 0;
+            const matchDayScores = [];
+            // Calculate points for each match day
+            for (const matchDay of allMatchDays) {
+                const matchDayResults = yield calculatePoints(matchDay.id);
+                const teamResult = matchDayResults.find((result) => result.teamId === team.id);
+                const points = teamResult ? teamResult.points : 0;
+                totalPoints += points;
+                matchDayScores.push({
+                    matchDayId: matchDay.id,
+                    matchDayTitle: matchDay.title,
+                    points
+                });
+            }
+            teamsWithScores.push(Object.assign(Object.assign({}, team), { totalPoints,
+                matchDayScores }));
         }
-        return Object.assign(Object.assign({}, team), { totalPoints,
-            matchDayScores });
+        return teamsWithScores;
     });
 }
 //# sourceMappingURL=teamService.js.map

@@ -9,26 +9,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ClubService = exports.pool = void 0;
-// Club and Player services for content management
-const pg_1 = require("pg");
-exports.pool = new pg_1.Pool();
+exports.ClubService = void 0;
+const database_1 = require("../config/database");
 class ClubService {
     static createClub(name) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield exports.pool.query('INSERT INTO clubs (name) VALUES ($1) RETURNING id, name', [name]);
+            const result = yield database_1.pool.query('INSERT INTO clubs (name) VALUES ($1) RETURNING id, name', [name]);
             return { id: result.rows[0].id.toString(), name: result.rows[0].name };
         });
     }
     static getAllClubs() {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield exports.pool.query('SELECT id, name FROM clubs');
+            const result = yield database_1.pool.query('SELECT id, name FROM clubs');
             return result.rows.map((row) => ({ id: row.id.toString(), name: row.name }));
         });
     }
     static getClubById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield exports.pool.query('SELECT id, name FROM clubs WHERE id = $1', [id]);
+            const result = yield database_1.pool.query('SELECT id, name FROM clubs WHERE id = $1', [id]);
             if (result.rows.length === 0)
                 return null;
             return { id: result.rows[0].id.toString(), name: result.rows[0].name };

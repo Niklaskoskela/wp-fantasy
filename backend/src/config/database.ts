@@ -1,29 +1,27 @@
 import { Pool } from 'pg';
 
 // Database configuration with SSL support for production/cloud databases
-const getDatabaseConfig = () => {
+const getDatabaseConfig = (): any => {
   const config: any = {
-    connectionString: process.env.DATABASE_URL,
+    user: process.env.PGUSER || process.env.DB_USER || 'postgres',
+    host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
+    database: process.env.PGDATABASE || process.env.DB_NAME || 'wp_fantasy',
+    password: process.env.PGPASSWORD || process.env.DB_PASSWORD || 'password',
+    port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432'),
   };
+  const requireSsl = process.env.environment != 'dev'
 
-  // Add SSL configuration for cloud databases (Neon, etc.)
-  if (process.env.DATABASE_URL?.includes('neon.tech') || 
-      process.env.DATABASE_URL?.includes('amazonaws.com') || 
-      process.env.DATABASE_URL?.includes('supabase.com') ||
-      process.env.ENVIRONMENT === 'production') {
+  // Configure SSL based on database type, not environment
+  if (requireSsl) {
     config.ssl = {
-      rejectUnauthorized: false, // Required for most cloud database providers
+      rejectUnauthorized: false // Required for Neon and other cloud databases
     };
-  }
-
-  // For development, you might want to disable SSL if using local PostgreSQL
-  if (process.env.ENVIRONMENT === 'dev' || process.env.NODE_ENV === 'development') {
-    // Only disable SSL if DATABASE_URL is localhost
-    if (process.env.DATABASE_URL?.includes('localhost')) {
-      config.ssl = false;
-    }
-  }
-
+    console.log('  - SSL enabled with rejectUnauthorized: false');
+  } else {
+    // Explicitly disable SSL for local databases
+    config.ssl = false;
+    console.log('  - SSL disabled for local database');
+  } 
   return config;
 };
 

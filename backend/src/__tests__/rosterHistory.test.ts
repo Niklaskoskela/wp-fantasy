@@ -11,18 +11,13 @@ describe('Roster History Service', () => {
     let testPlayers: any[];
     let testUserId: string;
 
-    beforeEach(() => {
-        // Reset the in-memory stores by clearing arrays
-        (rosterHistoryService as any).rosterHistories = [];
-        (matchDayService as any).matchDays = [];
-        (matchDayService as any).playerStats = {};
-
+    beforeEach(async () => {
         // Generate unique user ID for each test to avoid conflicts
         testUserId = `test-user-${Date.now()}-${Math.random()}`;
 
         // Create test data
-        testTeam = teamService.createTeam('Test Team', testUserId);
-        testMatchDay = matchDayService.createMatchDay(
+        testTeam = await teamService.createTeam('Test Team', testUserId);
+        testMatchDay = await matchDayService.createMatchDay(
             'Test Match Day',
             new Date('2024-01-01T10:00:00Z'),
             new Date('2024-01-01T12:00:00Z')
@@ -36,22 +31,22 @@ describe('Roster History Service', () => {
         ];
 
         // Add players to team (as the team owner)
-        testPlayers.forEach(player => {
-            teamService.addPlayerToTeam(testTeam.id, player, testUserId, UserRole.USER);
-        });
+        for (const player of testPlayers) {
+            await teamService.addPlayerToTeam(testTeam.id, player, testUserId, UserRole.USER);
+        }
 
         // Set captain (as the team owner)
-        teamService.setTeamCaptain(testTeam.id, testPlayers[0].id, testUserId, UserRole.USER);
+        await teamService.setTeamCaptain(testTeam.id, testPlayers[0].id, testUserId, UserRole.USER);
     });
 
-    test('should create roster history for a team', () => {
+    test('should create roster history for a team', async () => {
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false },
             { playerId: 'player3', isCaptain: false }
         ];
 
-        const rosterHistory = rosterHistoryService.createRosterHistory(
+        const rosterHistory = await rosterHistoryService.createRosterHistory(
             testTeam.id,
             testMatchDay.id,
             rosterEntries
@@ -64,21 +59,21 @@ describe('Roster History Service', () => {
         expect(rosterHistory[0].isCaptain).toBe(true);
     });
 
-    test('should get roster history for a team and matchday', () => {
+    test('should get roster history for a team and matchday', async () => {
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false }
         ];
 
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
-        const retrieved = rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
+        await rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        const retrieved = await rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
 
         expect(retrieved).toHaveLength(2);
         expect(retrieved.find(r => r.playerId === 'player1')?.isCaptain).toBe(true);
     });
 
-    test('should snapshot all team rosters for a matchday', () => {
-        const snapshots = rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id, testUserId, UserRole.USER);
+    test('should snapshot all team rosters for a matchday', async () => {
+        const snapshots = await rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id, testUserId, UserRole.USER);
 
         expect(snapshots.has(testTeam.id)).toBe(true);
         const teamSnapshot = snapshots.get(testTeam.id);
@@ -89,14 +84,14 @@ describe('Roster History Service', () => {
         expect(captainEntry?.playerId).toBe(testPlayers[0].id);
     });
 
-    test('should prevent duplicate roster entries', () => {
+    test('should prevent duplicate roster entries', async () => {
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false }
         ];
 
         // Create initial roster
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        await rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         
         // Try to create again - should replace the previous one
         const newRosterEntries = [
@@ -104,31 +99,31 @@ describe('Roster History Service', () => {
             { playerId: 'player3', isCaptain: true }
         ];
         
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, newRosterEntries);
+        await rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, newRosterEntries);
         
-        const finalRoster = rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
+        const finalRoster = await rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
         expect(finalRoster).toHaveLength(2);
         expect(finalRoster.find(r => r.playerId === 'player3')?.isCaptain).toBe(true);
         expect(finalRoster.find(r => r.playerId === 'player2')).toBeUndefined();
     });
 
-    test('should check if roster history exists', () => {
-        expect(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
+    test('should check if roster history exists', async () => {
+        expect(await rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
         
         const rosterEntries = [{ playerId: 'player1', isCaptain: true }];
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        await rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         
-        expect(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
+        expect(await rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
     });
 
-    test('should remove roster history', () => {
+    test('should remove roster history', async () => {
         const rosterEntries = [{ playerId: 'player1', isCaptain: true }];
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        await rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         
-        expect(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
+        expect(await rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
         
-        rosterHistoryService.removeRosterHistory(testTeam.id, testMatchDay.id);
+        await rosterHistoryService.removeRosterHistory(testTeam.id, testMatchDay.id);
         
-        expect(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
+        expect(await rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
     });
 });
