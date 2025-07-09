@@ -1,5 +1,5 @@
 -- Sample seed data for development and testing
--- Run this after migrations to populate the database with test data
+/*-- Run this after migrations to populate the database with test data
 
 -- Insert sample clubs
 INSERT INTO clubs (name) VALUES 

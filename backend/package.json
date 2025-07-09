@@ -27,7 +27,8 @@
     "db:test": "node test-db.js",
     "db:test:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node test-db.js",
     "db:clean": "node clean-db.js",
-    "db:clean:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node clean-db.js"
+    "db:clean:dev": "DATABASE_URL=postgresql://wpfantasy_user@localhost:5432/wpfantasy node clean-db.js",
+    "db:seed": "node seed-data.js"
   },
   "keywords": [],
   "author": "",
