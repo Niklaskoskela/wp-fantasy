@@ -31,8 +31,9 @@ export async function createTeam(teamName: string, ownerId: string): Promise<Tea
         id: teamRow.id.toString(),
         teamName: teamRow.team_name,
         players: [],
-        scoreHistory: new Map<MatchDay, number>()
-    };
+        scoreHistory: new Map<MatchDay, number>(),
+        ownerId
+    } as Team;
 }
 
 export async function addPlayerToTeam(teamId: string, player: Player, userId: string, userRole: UserRole): Promise<Team | null> {
@@ -170,6 +171,14 @@ async function getTeamById(teamId: string): Promise<Team | null> {
     
     const teamRow = teamResult.rows[0];
     
+    // Get team owner (user who has this team_id)
+    const ownerResult = await pool.query(
+        'SELECT id FROM users WHERE team_id = $1',
+        [teamId]
+    );
+    
+    const ownerId = ownerResult.rows.length > 0 ? ownerResult.rows[0].id.toString() : undefined;
+    
     // Get team players
     const playersResult = await pool.query(
         `SELECT p.id, p.name, p.position, p.club_id, c.name as club_name, tp.is_captain
@@ -207,8 +216,9 @@ async function getTeamById(teamId: string): Promise<Team | null> {
             },
             statsHistory: new Map()
         } : undefined,
-        scoreHistory: new Map<MatchDay, number>()
-    };
+        scoreHistory: new Map<MatchDay, number>(),
+        ownerId
+    } as Team;
 }
 
 export async function getTeams(userId?: string, userRole?: UserRole): Promise<Team[]> {
