@@ -9,44 +9,19 @@ const getDatabaseConfig = (): any => {
     password: process.env.PGPASSWORD || process.env.DB_PASSWORD || 'password',
     port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432'),
   };
-
-  // Determine if this is a cloud database or requires SSL
-  const host = config.host;
-  const isCloudDatabase = host.includes('neon.tech') || 
-                         host.includes('amazonaws.com') || 
-                         host.includes('supabase.com');
-  
-  const requiresSSL = isCloudDatabase ||
-                     process.env.ENVIRONMENT != 'dev' ||
-                     process.env.SSL_MODE === 'require';
-
-  const isLocalDatabase = host === 'localhost' || host === '127.0.0.1';
-
-  // Debug logging
-  console.log('🔍 Database Configuration Debug:');
-  console.log('  - host:', config.host);
-  console.log('  - database:', config.database);
-  console.log('  - user:', config.user);
-  console.log('  - port:', config.port);
-  console.log('  - isCloudDatabase:', isCloudDatabase);
-  console.log('  - requiresSSL:', requiresSSL);
-  console.log('  - isLocalDatabase:', isLocalDatabase);
-  console.log('  - ENVIRONMENT:', process.env.ENVIRONMENT);
+  const requireSsl = process.env.environment != 'dev'
 
   // Configure SSL based on database type, not environment
-  if (requiresSSL && !isLocalDatabase) {
+  if (requireSsl) {
     config.ssl = {
       rejectUnauthorized: false // Required for Neon and other cloud databases
     };
     console.log('  - SSL enabled with rejectUnauthorized: false');
-  } else if (isLocalDatabase) {
+  } else {
     // Explicitly disable SSL for local databases
     config.ssl = false;
     console.log('  - SSL disabled for local database');
-  } else {
-    console.log('  - Using default SSL configuration');
-  }
-
+  } 
   return config;
 };
 
