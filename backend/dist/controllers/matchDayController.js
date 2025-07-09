@@ -32,6 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createMatchDay = createMatchDay;
 exports.updatePlayerStats = updatePlayerStats;
@@ -41,51 +50,71 @@ exports.startMatchDay = startMatchDay;
 exports.getPlayerStats = getPlayerStats;
 const matchDayService = __importStar(require("../services/matchDayService"));
 function createMatchDay(req, res) {
-    const { title, startTime, endTime } = req.body;
-    if (!title || !startTime || !endTime) {
-        return res.status(400).json({ error: 'title, startTime, and endTime are required' });
-    }
-    const matchDay = matchDayService.createMatchDay(title, new Date(startTime), new Date(endTime));
-    return res.status(201).json(matchDay);
+    return __awaiter(this, void 0, void 0, function* () {
+        const { title, startTime, endTime } = req.body;
+        if (!title || !startTime || !endTime) {
+            res.status(400).json({ error: 'title, startTime, and endTime are required' });
+            return;
+        }
+        const matchDay = yield matchDayService.createMatchDay(title, new Date(startTime), new Date(endTime));
+        res.status(201).json(matchDay);
+    });
 }
 function updatePlayerStats(req, res) {
-    const { id: matchDayId } = req.params;
-    const { playerId, stats } = req.body;
-    if (!playerId || !stats)
-        return res.status(400).json({ error: 'playerId and stats required' });
-    const updated = matchDayService.updatePlayerStats(matchDayId, playerId, stats);
-    if (!updated)
-        return res.status(404).json({ error: 'MatchDay not found' });
-    return res.json(updated);
+    return __awaiter(this, void 0, void 0, function* () {
+        const { id: matchDayId } = req.params;
+        const { playerId, stats } = req.body;
+        if (!playerId || !stats) {
+            res.status(400).json({ error: 'playerId and stats required' });
+            return;
+        }
+        const updated = yield matchDayService.updatePlayerStats(matchDayId, playerId, stats);
+        if (!updated) {
+            res.status(404).json({ error: 'MatchDay not found' });
+            return;
+        }
+        res.json(updated);
+    });
 }
 function calculatePoints(req, res) {
-    const { id: matchDayId } = req.params;
-    const results = matchDayService.calculatePoints(matchDayId);
-    return res.json(results);
+    return __awaiter(this, void 0, void 0, function* () {
+        const { id: matchDayId } = req.params;
+        const results = yield matchDayService.calculatePoints(matchDayId);
+        res.json(results);
+    });
 }
 function getMatchDays(_req, res) {
-    return res.json(matchDayService.getMatchDays());
+    return __awaiter(this, void 0, void 0, function* () {
+        const matchDays = yield matchDayService.getMatchDays();
+        res.json(matchDays);
+    });
 }
 function startMatchDay(req, res) {
-    const { id: matchDayId } = req.params;
-    try {
-        const result = matchDayService.startMatchDay(matchDayId);
-        if (!result) {
-            return res.status(404).json({ error: 'MatchDay not found' });
+    return __awaiter(this, void 0, void 0, function* () {
+        const { id: matchDayId } = req.params;
+        try {
+            const result = yield matchDayService.startMatchDay(matchDayId);
+            if (!result) {
+                res.status(404).json({ error: 'MatchDay not found' });
+                return;
+            }
+            res.json({ message: 'MatchDay started successfully', matchDayId });
         }
-        return res.json({ message: 'MatchDay started successfully', matchDayId });
-    }
-    catch (error) {
-        console.error('Error starting matchday:', error);
-        if (error instanceof Error) {
-            return res.status(400).json({ error: error.message });
+        catch (error) {
+            console.error('Error starting matchday:', error);
+            if (error instanceof Error) {
+                res.status(400).json({ error: error.message });
+                return;
+            }
+            res.status(500).json({ error: 'Internal server error' });
         }
-        return res.status(500).json({ error: 'Internal server error' });
-    }
+    });
 }
 function getPlayerStats(req, res) {
-    const { id: matchDayId } = req.params;
-    const stats = matchDayService.getPlayerStats(matchDayId);
-    return res.json(stats);
+    return __awaiter(this, void 0, void 0, function* () {
+        const { id: matchDayId } = req.params;
+        const stats = yield matchDayService.getPlayerStats(matchDayId);
+        res.json(stats);
+    });
 }
 //# sourceMappingURL=matchDayController.js.map

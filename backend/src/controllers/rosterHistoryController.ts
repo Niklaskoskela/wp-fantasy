@@ -32,7 +32,7 @@ export async function createRosterHistory(req: Request, res: Response): Promise<
             return;
         }
 
-        const rosterHistory = rosterHistoryService.createRosterHistory(teamId, matchDayId, rosterEntries);
+        const rosterHistory = await rosterHistoryService.createRosterHistory(teamId, matchDayId, rosterEntries);
         res.status(201).json(rosterHistory);
     } catch (error) {
         console.error('Error creating roster history:', error);
@@ -47,7 +47,7 @@ export async function createRosterHistory(req: Request, res: Response): Promise<
 export async function getRosterHistory(req: Request, res: Response): Promise<void> {
     try {
         const { teamId, matchDayId } = req.params;
-        const rosterHistory = rosterHistoryService.getRosterHistory(teamId, matchDayId);
+        const rosterHistory = await rosterHistoryService.getRosterHistory(teamId, matchDayId);
         res.json(rosterHistory);
     } catch (error) {
         console.error('Error getting roster history:', error);
@@ -62,7 +62,7 @@ export async function getRosterHistory(req: Request, res: Response): Promise<voi
 export async function getTeamRosterHistory(req: Request, res: Response): Promise<void> {
     try {
         const { teamId } = req.params;
-        const rosterHistory = rosterHistoryService.getTeamRosterHistory(teamId);
+        const rosterHistory = await rosterHistoryService.getTeamRosterHistory(teamId);
         
         // Convert Map to object for JSON serialization
         const rosterHistoryObj: { [matchDayId: string]: any[] } = {};
@@ -84,7 +84,7 @@ export async function getTeamRosterHistory(req: Request, res: Response): Promise
 export async function getMatchDayRosterHistory(req: Request, res: Response): Promise<void> {
     try {
         const { matchDayId } = req.params;
-        const rosterHistory = rosterHistoryService.getMatchDayRosterHistory(matchDayId);
+        const rosterHistory = await rosterHistoryService.getMatchDayRosterHistory(matchDayId);
         
         // Convert Map to object for JSON serialization
         const rosterHistoryObj: { [teamId: string]: any[] } = {};
@@ -107,7 +107,13 @@ export async function getMatchDayRosterHistory(req: Request, res: Response): Pro
 export async function snapshotAllTeamRosters(req: Request, res: Response): Promise<void> {
     try {
         const { matchDayId } = req.params;
-        const snapshots = rosterHistoryService.snapshotAllTeamRosters(matchDayId);
+        
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        
+        const snapshots = await rosterHistoryService.snapshotAllTeamRosters(matchDayId, req.user.id, req.user.role);
         
         // Convert Map to object for JSON serialization
         const snapshotsObj: { [teamId: string]: any[] } = {};
@@ -129,7 +135,7 @@ export async function snapshotAllTeamRosters(req: Request, res: Response): Promi
 export async function removeRosterHistory(req: Request, res: Response): Promise<void> {
     try {
         const { teamId, matchDayId } = req.params;
-        rosterHistoryService.removeRosterHistory(teamId, matchDayId);
+        await rosterHistoryService.removeRosterHistory(teamId, matchDayId);
         res.status(204).send();
     } catch (error) {
         console.error('Error removing roster history:', error);
@@ -144,7 +150,7 @@ export async function removeRosterHistory(req: Request, res: Response): Promise<
 export async function checkRosterHistory(req: Request, res: Response): Promise<void> {
     try {
         const { teamId, matchDayId } = req.params;
-        const exists = rosterHistoryService.hasRosterHistory(teamId, matchDayId);
+        const exists = await rosterHistoryService.hasRosterHistory(teamId, matchDayId);
         res.json({ exists });
     } catch (error) {
         console.error('Error checking roster history:', error);

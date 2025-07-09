@@ -222,7 +222,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
  */
 export async function getAllUsers(req: Request, res: Response): Promise<void> {
   try {
-    const users = authService.getAllUsers();
+    const users = await authService.getAllUsers();
     res.json({ users });
   } catch (error) {
     console.error('Get all users error:', error);
@@ -284,7 +284,7 @@ export async function adminResetPassword(req: Request, res: Response): Promise<v
     const { newPassword } = req.body;
 
     // Get user
-    const user = authService.getUserById(userId);
+    const user = await authService.getUserById(userId);
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
@@ -323,7 +323,7 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
     const { username, email, role } = req.body;
 
     // Get user
-    const user = authService.getUserById(userId);
+    const user = await authService.getUserById(userId);
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
@@ -331,7 +331,7 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
 
     // Check if new username/email already exists (excluding current user)
     if (username && username !== user.username) {
-      const existingUser = authService.getUserByUsername(username);
+      const existingUser = await authService.getUserByUsername(username);
       if (existingUser && existingUser.id !== user.id) {
         res.status(409).json({ error: 'Username already exists' });
         return;
@@ -339,7 +339,7 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
     }
 
     if (email && email !== user.email) {
-      const existingUser = authService.getUserByEmail(email);
+      const existingUser = await authService.getUserByEmail(email);
       if (existingUser && existingUser.id !== user.id) {
         res.status(409).json({ error: 'Email already exists' });
         return;

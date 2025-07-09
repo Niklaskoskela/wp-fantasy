@@ -32,6 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createTeam = createTeam;
 exports.addPlayerToTeam = addPlayerToTeam;
@@ -41,87 +50,126 @@ exports.getTeams = getTeams;
 exports.getTeamsWithScores = getTeamsWithScores;
 const teamService = __importStar(require("../services/teamService"));
 function createTeam(req, res) {
-    const { teamName } = req.body;
-    if (!teamName)
-        return res.status(400).json({ error: 'teamName required' });
-    if (!req.user)
-        return res.status(401).json({ error: 'Authentication required' });
-    try {
-        const team = teamService.createTeam(teamName, req.user.id);
-        return res.status(201).json(team);
-    }
-    catch (e) {
-        return res.status(400).json({ error: e.message });
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        const { teamName } = req.body;
+        if (!teamName) {
+            res.status(400).json({ error: 'teamName required' });
+            return;
+        }
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        try {
+            const team = yield teamService.createTeam(teamName, req.user.id);
+            res.status(201).json(team);
+        }
+        catch (e) {
+            res.status(400).json({ error: e.message });
+        }
+    });
 }
 function addPlayerToTeam(req, res) {
-    const { teamId, player } = req.body;
-    if (!teamId || !player)
-        return res.status(400).json({ error: 'teamId and player required' });
-    if (!req.user)
-        return res.status(401).json({ error: 'Authentication required' });
-    try {
-        const team = teamService.addPlayerToTeam(teamId, player, req.user.id, req.user.role);
-        return res.json(team);
-    }
-    catch (e) {
-        // Use 409 Conflict for business logic errors (e.g., too many goalkeepers)
-        if (e.message && (e.message.includes('goalkeeper') || e.message.includes('6 players'))) {
-            return res.status(409).json({ error: e.message });
+    return __awaiter(this, void 0, void 0, function* () {
+        const { teamId, player } = req.body;
+        if (!teamId || !player) {
+            res.status(400).json({ error: 'teamId and player required' });
+            return;
         }
-        // Use 403 for authorization errors
-        if (e.message && e.message.includes('only modify your own team')) {
-            return res.status(403).json({ error: e.message });
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
         }
-        return res.status(400).json({ error: e.message });
-    }
+        try {
+            const team = yield teamService.addPlayerToTeam(teamId, player, req.user.id, req.user.role);
+            res.json(team);
+        }
+        catch (e) {
+            // Use 409 Conflict for business logic errors (e.g., too many goalkeepers)
+            if (e.message && (e.message.includes('goalkeeper') || e.message.includes('6 players'))) {
+                res.status(409).json({ error: e.message });
+                return;
+            }
+            // Use 403 for authorization errors
+            if (e.message && e.message.includes('only modify your own team')) {
+                res.status(403).json({ error: e.message });
+                return;
+            }
+            res.status(400).json({ error: e.message });
+        }
+    });
 }
 function removePlayerFromTeam(req, res) {
-    const { teamId, playerId } = req.body;
-    if (!teamId || !playerId)
-        return res.status(400).json({ error: 'teamId and playerId required' });
-    if (!req.user)
-        return res.status(401).json({ error: 'Authentication required' });
-    try {
-        const team = teamService.removePlayerFromTeam(teamId, playerId, req.user.id, req.user.role);
-        return res.json(team);
-    }
-    catch (e) {
-        if (e.message && e.message.includes('only modify your own team')) {
-            return res.status(403).json({ error: e.message });
+    return __awaiter(this, void 0, void 0, function* () {
+        const { teamId, playerId } = req.body;
+        if (!teamId || !playerId) {
+            res.status(400).json({ error: 'teamId and playerId required' });
+            return;
         }
-        return res.status(400).json({ error: e.message });
-    }
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        try {
+            const team = yield teamService.removePlayerFromTeam(teamId, playerId, req.user.id, req.user.role);
+            res.json(team);
+        }
+        catch (e) {
+            if (e.message && e.message.includes('only modify your own team')) {
+                res.status(403).json({ error: e.message });
+                return;
+            }
+            res.status(400).json({ error: e.message });
+        }
+    });
 }
 function setTeamCaptain(req, res) {
-    const { teamId, playerId } = req.body;
-    if (!teamId || !playerId)
-        return res.status(400).json({ error: 'teamId and playerId required' });
-    if (!req.user)
-        return res.status(401).json({ error: 'Authentication required' });
-    try {
-        const team = teamService.setTeamCaptain(teamId, playerId, req.user.id, req.user.role);
-        return res.json(team);
-    }
-    catch (e) {
-        // Use 409 Conflict for business logic errors (e.g., player not in team)
-        if (e.message && e.message.includes('Player not in team')) {
-            return res.status(409).json({ error: e.message });
+    return __awaiter(this, void 0, void 0, function* () {
+        const { teamId, playerId } = req.body;
+        if (!teamId || !playerId) {
+            res.status(400).json({ error: 'teamId and playerId required' });
+            return;
         }
-        if (e.message && e.message.includes('only modify your own team')) {
-            return res.status(403).json({ error: e.message });
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
         }
-        return res.status(400).json({ error: e.message });
-    }
+        try {
+            const team = yield teamService.setTeamCaptain(teamId, playerId, req.user.id, req.user.role);
+            res.json(team);
+        }
+        catch (e) {
+            // Use 409 Conflict for business logic errors (e.g., player not in team)
+            if (e.message && e.message.includes('Player not in team')) {
+                res.status(409).json({ error: e.message });
+                return;
+            }
+            if (e.message && e.message.includes('only modify your own team')) {
+                res.status(403).json({ error: e.message });
+                return;
+            }
+            res.status(400).json({ error: e.message });
+        }
+    });
 }
 function getTeams(req, res) {
-    if (!req.user)
-        return res.status(401).json({ error: 'Authentication required' });
-    return res.json(teamService.getTeams(req.user.id, req.user.role));
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        const teams = yield teamService.getTeams(req.user.id, req.user.role);
+        res.json(teams);
+    });
 }
 function getTeamsWithScores(req, res) {
-    if (!req.user)
-        return res.status(401).json({ error: 'Authentication required' });
-    return res.json(teamService.getTeamsWithScores(req.user.id, req.user.role));
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        const teams = yield teamService.getTeamsWithScores(req.user.id, req.user.role);
+        res.json(teams);
+    });
 }
 //# sourceMappingURL=teamController.js.map

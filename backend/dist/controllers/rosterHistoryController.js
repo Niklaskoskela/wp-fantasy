@@ -76,7 +76,7 @@ function createRosterHistory(req, res) {
                 res.status(400).json({ error: 'Only one captain allowed per team' });
                 return;
             }
-            const rosterHistory = rosterHistoryService.createRosterHistory(teamId, matchDayId, rosterEntries);
+            const rosterHistory = yield rosterHistoryService.createRosterHistory(teamId, matchDayId, rosterEntries);
             res.status(201).json(rosterHistory);
         }
         catch (error) {
@@ -93,7 +93,7 @@ function getRosterHistory(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { teamId, matchDayId } = req.params;
-            const rosterHistory = rosterHistoryService.getRosterHistory(teamId, matchDayId);
+            const rosterHistory = yield rosterHistoryService.getRosterHistory(teamId, matchDayId);
             res.json(rosterHistory);
         }
         catch (error) {
@@ -110,7 +110,7 @@ function getTeamRosterHistory(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { teamId } = req.params;
-            const rosterHistory = rosterHistoryService.getTeamRosterHistory(teamId);
+            const rosterHistory = yield rosterHistoryService.getTeamRosterHistory(teamId);
             // Convert Map to object for JSON serialization
             const rosterHistoryObj = {};
             rosterHistory.forEach((value, key) => {
@@ -132,7 +132,7 @@ function getMatchDayRosterHistory(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { matchDayId } = req.params;
-            const rosterHistory = rosterHistoryService.getMatchDayRosterHistory(matchDayId);
+            const rosterHistory = yield rosterHistoryService.getMatchDayRosterHistory(matchDayId);
             // Convert Map to object for JSON serialization
             const rosterHistoryObj = {};
             rosterHistory.forEach((value, key) => {
@@ -155,7 +155,11 @@ function snapshotAllTeamRosters(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { matchDayId } = req.params;
-            const snapshots = rosterHistoryService.snapshotAllTeamRosters(matchDayId);
+            if (!req.user) {
+                res.status(401).json({ error: 'Authentication required' });
+                return;
+            }
+            const snapshots = yield rosterHistoryService.snapshotAllTeamRosters(matchDayId, req.user.id, req.user.role);
             // Convert Map to object for JSON serialization
             const snapshotsObj = {};
             snapshots.forEach((value, key) => {
@@ -177,7 +181,7 @@ function removeRosterHistory(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { teamId, matchDayId } = req.params;
-            rosterHistoryService.removeRosterHistory(teamId, matchDayId);
+            yield rosterHistoryService.removeRosterHistory(teamId, matchDayId);
             res.status(204).send();
         }
         catch (error) {
@@ -194,7 +198,7 @@ function checkRosterHistory(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { teamId, matchDayId } = req.params;
-            const exists = rosterHistoryService.hasRosterHistory(teamId, matchDayId);
+            const exists = yield rosterHistoryService.hasRosterHistory(teamId, matchDayId);
             res.json({ exists });
         }
         catch (error) {

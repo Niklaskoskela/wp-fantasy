@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createRosterHistory = createRosterHistory;
 exports.getRosterHistory = getRosterHistory;
@@ -8,87 +17,114 @@ exports.removeRosterHistory = removeRosterHistory;
 exports.hasRosterHistory = hasRosterHistory;
 exports.snapshotAllTeamRosters = snapshotAllTeamRosters;
 exports.getAllRosterHistories = getAllRosterHistories;
-const uuid_1 = require("uuid");
-// In-memory store for demo (replace with DB integration in production)
-const rosterHistories = [];
+const database_1 = require("../config/database");
 /**
  * Create roster history entries for a team on a specific matchday
  * This snapshots the current team composition when a matchday starts
  */
 function createRosterHistory(teamId, matchDayId, rosterEntries) {
-    // First, remove any existing roster history for this team/matchday combination
-    // This allows updating the roster if needed before matchday starts
-    removeRosterHistory(teamId, matchDayId);
-    const newRosterEntries = [];
-    for (const entry of rosterEntries) {
-        const rosterHistory = {
-            id: (0, uuid_1.v4)(),
-            teamId,
-            matchDayId,
-            playerId: entry.playerId,
-            isCaptain: entry.isCaptain,
-            createdAt: new Date()
-        };
-        rosterHistories.push(rosterHistory);
-        newRosterEntries.push(rosterHistory);
-    }
-    return newRosterEntries;
+    return __awaiter(this, void 0, void 0, function* () {
+        // First, remove any existing roster history for this team/matchday combination
+        // This allows updating the roster if needed before matchday starts
+        yield removeRosterHistory(teamId, matchDayId);
+        const newRosterEntries = [];
+        for (const entry of rosterEntries) {
+            const result = yield database_1.pool.query('INSERT INTO roster_history (team_id, matchday_id, player_id, is_captain) VALUES ($1, $2, $3, $4) RETURNING id, team_id, matchday_id, player_id, is_captain, created_at', [teamId, matchDayId, entry.playerId, entry.isCaptain]);
+            const row = result.rows[0];
+            const rosterHistory = {
+                id: row.id.toString(),
+                teamId: row.team_id.toString(),
+                matchDayId: row.matchday_id.toString(),
+                playerId: row.player_id.toString(),
+                isCaptain: row.is_captain,
+                createdAt: row.created_at
+            };
+            newRosterEntries.push(rosterHistory);
+        }
+        return newRosterEntries;
+    });
 }
 /**
  * Get roster history for a specific team and matchday
  */
 function getRosterHistory(teamId, matchDayId) {
-    return rosterHistories.filter(rh => rh.teamId === teamId && rh.matchDayId === matchDayId);
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield database_1.pool.query('SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE team_id = $1 AND matchday_id = $2', [teamId, matchDayId]);
+        return result.rows.map(row => ({
+            id: row.id.toString(),
+            teamId: row.team_id.toString(),
+            matchDayId: row.matchday_id.toString(),
+            playerId: row.player_id.toString(),
+            isCaptain: row.is_captain,
+            createdAt: row.created_at
+        }));
+    });
 }
 /**
  * Get all roster history for a specific team across all matchdays
  */
 function getTeamRosterHistory(teamId) {
-    const teamRosterHistory = rosterHistories.filter(rh => rh.teamId === teamId);
-    const historyMap = new Map();
-    for (const history of teamRosterHistory) {
-        if (!historyMap.has(history.matchDayId)) {
-            historyMap.set(history.matchDayId, []);
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield database_1.pool.query('SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE team_id = $1', [teamId]);
+        const historyMap = new Map();
+        for (const row of result.rows) {
+            const rosterHistory = {
+                id: row.id.toString(),
+                teamId: row.team_id.toString(),
+                matchDayId: row.matchday_id.toString(),
+                playerId: row.player_id.toString(),
+                isCaptain: row.is_captain,
+                createdAt: row.created_at
+            };
+            if (!historyMap.has(rosterHistory.matchDayId)) {
+                historyMap.set(rosterHistory.matchDayId, []);
+            }
+            historyMap.get(rosterHistory.matchDayId).push(rosterHistory);
         }
-        historyMap.get(history.matchDayId).push(history);
-    }
-    return historyMap;
+        return historyMap;
+    });
 }
 /**
  * Get all roster history for a specific matchday across all teams
  */
 function getMatchDayRosterHistory(matchDayId) {
-    const matchDayRosterHistory = rosterHistories.filter(rh => rh.matchDayId === matchDayId);
-    const historyMap = new Map();
-    for (const history of matchDayRosterHistory) {
-        if (!historyMap.has(history.teamId)) {
-            historyMap.set(history.teamId, []);
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield database_1.pool.query('SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE matchday_id = $1', [matchDayId]);
+        const historyMap = new Map();
+        for (const row of result.rows) {
+            const rosterHistory = {
+                id: row.id.toString(),
+                teamId: row.team_id.toString(),
+                matchDayId: row.matchday_id.toString(),
+                playerId: row.player_id.toString(),
+                isCaptain: row.is_captain,
+                createdAt: row.created_at
+            };
+            if (!historyMap.has(rosterHistory.teamId)) {
+                historyMap.set(rosterHistory.teamId, []);
+            }
+            historyMap.get(rosterHistory.teamId).push(rosterHistory);
         }
-        historyMap.get(history.teamId).push(history);
-    }
-    return historyMap;
+        return historyMap;
+    });
 }
 /**
  * Remove roster history for a specific team and matchday
  * Useful for updating rosters before matchday starts
  */
 function removeRosterHistory(teamId, matchDayId) {
-    const indicesToRemove = [];
-    rosterHistories.forEach((rh, index) => {
-        if (rh.teamId === teamId && rh.matchDayId === matchDayId) {
-            indicesToRemove.push(index);
-        }
+    return __awaiter(this, void 0, void 0, function* () {
+        yield database_1.pool.query('DELETE FROM roster_history WHERE team_id = $1 AND matchday_id = $2', [teamId, matchDayId]);
     });
-    // Remove in reverse order to maintain correct indices
-    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
-        rosterHistories.splice(indicesToRemove[i], 1);
-    }
 }
 /**
  * Check if roster history exists for a team and matchday
  */
 function hasRosterHistory(teamId, matchDayId) {
-    return rosterHistories.some(rh => rh.teamId === teamId && rh.matchDayId === matchDayId);
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield database_1.pool.query('SELECT COUNT(*) as count FROM roster_history WHERE team_id = $1 AND matchday_id = $2', [teamId, matchDayId]);
+        return parseInt(result.rows[0].count) > 0;
+    });
 }
 /**
  * Snapshot all current team rosters for a matchday
@@ -96,29 +132,41 @@ function hasRosterHistory(teamId, matchDayId) {
  * Only admin users can snapshot all teams, regular users can only snapshot their own team
  */
 function snapshotAllTeamRosters(matchDayId, userId, userRole) {
-    const { getTeams } = require('./teamService');
-    const teams = getTeams(userId, userRole);
-    const allSnapshots = new Map();
-    for (const team of teams) {
-        // Convert current team roster to roster entries
-        const rosterEntries = team.players.map((player) => {
-            var _a;
-            return ({
-                playerId: player.id,
-                isCaptain: ((_a = team.teamCaptain) === null || _a === void 0 ? void 0 : _a.id) === player.id
+    return __awaiter(this, void 0, void 0, function* () {
+        const { getTeams } = require('./teamService');
+        const teams = yield getTeams(userId, userRole);
+        const allSnapshots = new Map();
+        for (const team of teams) {
+            // Convert current team roster to roster entries
+            const rosterEntries = team.players.map((player) => {
+                var _a;
+                return ({
+                    playerId: player.id,
+                    isCaptain: ((_a = team.teamCaptain) === null || _a === void 0 ? void 0 : _a.id) === player.id
+                });
             });
-        });
-        if (rosterEntries.length > 0) {
-            const snapshot = createRosterHistory(team.id, matchDayId, rosterEntries);
-            allSnapshots.set(team.id, snapshot);
+            if (rosterEntries.length > 0) {
+                const snapshot = yield createRosterHistory(team.id, matchDayId, rosterEntries);
+                allSnapshots.set(team.id, snapshot);
+            }
         }
-    }
-    return allSnapshots;
+        return allSnapshots;
+    });
 }
 /**
  * Get all roster histories (for debugging/admin purposes)
  */
 function getAllRosterHistories() {
-    return [...rosterHistories];
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield database_1.pool.query('SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history ORDER BY created_at DESC');
+        return result.rows.map(row => ({
+            id: row.id.toString(),
+            teamId: row.team_id.toString(),
+            matchDayId: row.matchday_id.toString(),
+            playerId: row.player_id.toString(),
+            isCaptain: row.is_captain,
+            createdAt: row.created_at
+        }));
+    });
 }
 //# sourceMappingURL=rosterHistoryService.js.map

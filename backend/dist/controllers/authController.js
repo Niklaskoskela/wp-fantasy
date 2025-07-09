@@ -274,7 +274,7 @@ function resetPassword(req, res) {
 function getAllUsers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const users = authService.getAllUsers();
+            const users = yield authService.getAllUsers();
             res.json({ users });
         }
         catch (error) {
@@ -336,7 +336,7 @@ function adminResetPassword(req, res) {
             const { userId } = req.params;
             const { newPassword } = req.body;
             // Get user
-            const user = authService.getUserById(userId);
+            const user = yield authService.getUserById(userId);
             if (!user) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -373,21 +373,21 @@ function updateUser(req, res) {
             const { userId } = req.params;
             const { username, email, role } = req.body;
             // Get user
-            const user = authService.getUserById(userId);
+            const user = yield authService.getUserById(userId);
             if (!user) {
                 res.status(404).json({ error: 'User not found' });
                 return;
             }
             // Check if new username/email already exists (excluding current user)
             if (username && username !== user.username) {
-                const existingUser = authService.getUserByUsername(username);
+                const existingUser = yield authService.getUserByUsername(username);
                 if (existingUser && existingUser.id !== user.id) {
                     res.status(409).json({ error: 'Username already exists' });
                     return;
                 }
             }
             if (email && email !== user.email) {
-                const existingUser = authService.getUserByEmail(email);
+                const existingUser = yield authService.getUserByEmail(email);
                 if (existingUser && existingUser.id !== user.id) {
                     res.status(409).json({ error: 'Email already exists' });
                     return;

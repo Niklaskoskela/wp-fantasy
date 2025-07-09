@@ -6,7 +6,7 @@ import matchDayRoutes from '../routes/matchDayRoutes';
 import teamRoutes from '../routes/teamRoutes';
 import authRoutes from '../routes/authRoutes';
 import { authenticateToken } from '../middleware/auth';
-import { pool } from '../services/clubService'; // Adjust path if needed
+import { pool } from '../config/database';
 
 dotenv.config();
 // VERY SHITTY (SYSTEMS) TEST, but it works for now

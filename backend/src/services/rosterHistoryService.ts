@@ -1,36 +1,38 @@
 // Service for managing roster history: track team compositions for each matchday
 import { RosterHistory, RosterEntry, UserRole } from '../../../shared/dist/types';
-import { v4 as uuidv4 } from 'uuid';
-
-// In-memory store for demo (replace with DB integration in production)
-const rosterHistories: RosterHistory[] = [];
+import { pool } from '../config/database';
 
 /**
  * Create roster history entries for a team on a specific matchday
  * This snapshots the current team composition when a matchday starts
  */
-export function createRosterHistory(
+export async function createRosterHistory(
     teamId: string, 
     matchDayId: string, 
     rosterEntries: RosterEntry[]
-): RosterHistory[] {
+): Promise<RosterHistory[]> {
     // First, remove any existing roster history for this team/matchday combination
     // This allows updating the roster if needed before matchday starts
-    removeRosterHistory(teamId, matchDayId);
+    await removeRosterHistory(teamId, matchDayId);
     
     const newRosterEntries: RosterHistory[] = [];
     
     for (const entry of rosterEntries) {
+        const result = await pool.query(
+            'INSERT INTO roster_history (team_id, matchday_id, player_id, is_captain) VALUES ($1, $2, $3, $4) RETURNING id, team_id, matchday_id, player_id, is_captain, created_at',
+            [teamId, matchDayId, entry.playerId, entry.isCaptain]
+        );
+        
+        const row = result.rows[0];
         const rosterHistory: RosterHistory = {
-            id: uuidv4(),
-            teamId,
-            matchDayId,
-            playerId: entry.playerId,
-            isCaptain: entry.isCaptain,
-            createdAt: new Date()
+            id: row.id.toString(),
+            teamId: row.team_id.toString(),
+            matchDayId: row.matchday_id.toString(),
+            playerId: row.player_id.toString(),
+            isCaptain: row.is_captain,
+            createdAt: row.created_at
         };
         
-        rosterHistories.push(rosterHistory);
         newRosterEntries.push(rosterHistory);
     }
     
@@ -40,24 +42,47 @@ export function createRosterHistory(
 /**
  * Get roster history for a specific team and matchday
  */
-export function getRosterHistory(teamId: string, matchDayId: string): RosterHistory[] {
-    return rosterHistories.filter(
-        rh => rh.teamId === teamId && rh.matchDayId === matchDayId
+export async function getRosterHistory(teamId: string, matchDayId: string): Promise<RosterHistory[]> {
+    const result = await pool.query(
+        'SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE team_id = $1 AND matchday_id = $2',
+        [teamId, matchDayId]
     );
+    
+    return result.rows.map(row => ({
+        id: row.id.toString(),
+        teamId: row.team_id.toString(),
+        matchDayId: row.matchday_id.toString(),
+        playerId: row.player_id.toString(),
+        isCaptain: row.is_captain,
+        createdAt: row.created_at
+    }));
 }
 
 /**
  * Get all roster history for a specific team across all matchdays
  */
-export function getTeamRosterHistory(teamId: string): Map<string, RosterHistory[]> {
-    const teamRosterHistory = rosterHistories.filter(rh => rh.teamId === teamId);
+export async function getTeamRosterHistory(teamId: string): Promise<Map<string, RosterHistory[]>> {
+    const result = await pool.query(
+        'SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE team_id = $1',
+        [teamId]
+    );
+    
     const historyMap = new Map<string, RosterHistory[]>();
     
-    for (const history of teamRosterHistory) {
-        if (!historyMap.has(history.matchDayId)) {
-            historyMap.set(history.matchDayId, []);
+    for (const row of result.rows) {
+        const rosterHistory: RosterHistory = {
+            id: row.id.toString(),
+            teamId: row.team_id.toString(),
+            matchDayId: row.matchday_id.toString(),
+            playerId: row.player_id.toString(),
+            isCaptain: row.is_captain,
+            createdAt: row.created_at
+        };
+        
+        if (!historyMap.has(rosterHistory.matchDayId)) {
+            historyMap.set(rosterHistory.matchDayId, []);
         }
-        historyMap.get(history.matchDayId)!.push(history);
+        historyMap.get(rosterHistory.matchDayId)!.push(rosterHistory);
     }
     
     return historyMap;
@@ -66,15 +91,28 @@ export function getTeamRosterHistory(teamId: string): Map<string, RosterHistory[
 /**
  * Get all roster history for a specific matchday across all teams
  */
-export function getMatchDayRosterHistory(matchDayId: string): Map<string, RosterHistory[]> {
-    const matchDayRosterHistory = rosterHistories.filter(rh => rh.matchDayId === matchDayId);
+export async function getMatchDayRosterHistory(matchDayId: string): Promise<Map<string, RosterHistory[]>> {
+    const result = await pool.query(
+        'SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE matchday_id = $1',
+        [matchDayId]
+    );
+    
     const historyMap = new Map<string, RosterHistory[]>();
     
-    for (const history of matchDayRosterHistory) {
-        if (!historyMap.has(history.teamId)) {
-            historyMap.set(history.teamId, []);
+    for (const row of result.rows) {
+        const rosterHistory: RosterHistory = {
+            id: row.id.toString(),
+            teamId: row.team_id.toString(),
+            matchDayId: row.matchday_id.toString(),
+            playerId: row.player_id.toString(),
+            isCaptain: row.is_captain,
+            createdAt: row.created_at
+        };
+        
+        if (!historyMap.has(rosterHistory.teamId)) {
+            historyMap.set(rosterHistory.teamId, []);
         }
-        historyMap.get(history.teamId)!.push(history);
+        historyMap.get(rosterHistory.teamId)!.push(rosterHistory);
     }
     
     return historyMap;
@@ -84,28 +122,23 @@ export function getMatchDayRosterHistory(matchDayId: string): Map<string, Roster
  * Remove roster history for a specific team and matchday
  * Useful for updating rosters before matchday starts
  */
-export function removeRosterHistory(teamId: string, matchDayId: string): void {
-    const indicesToRemove: number[] = [];
-    
-    rosterHistories.forEach((rh, index) => {
-        if (rh.teamId === teamId && rh.matchDayId === matchDayId) {
-            indicesToRemove.push(index);
-        }
-    });
-    
-    // Remove in reverse order to maintain correct indices
-    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
-        rosterHistories.splice(indicesToRemove[i], 1);
-    }
+export async function removeRosterHistory(teamId: string, matchDayId: string): Promise<void> {
+    await pool.query(
+        'DELETE FROM roster_history WHERE team_id = $1 AND matchday_id = $2',
+        [teamId, matchDayId]
+    );
 }
 
 /**
  * Check if roster history exists for a team and matchday
  */
-export function hasRosterHistory(teamId: string, matchDayId: string): boolean {
-    return rosterHistories.some(
-        rh => rh.teamId === teamId && rh.matchDayId === matchDayId
+export async function hasRosterHistory(teamId: string, matchDayId: string): Promise<boolean> {
+    const result = await pool.query(
+        'SELECT COUNT(*) as count FROM roster_history WHERE team_id = $1 AND matchday_id = $2',
+        [teamId, matchDayId]
     );
+    
+    return parseInt(result.rows[0].count) > 0;
 }
 
 /**
@@ -113,9 +146,9 @@ export function hasRosterHistory(teamId: string, matchDayId: string): boolean {
  * This should be called when a matchday starts to freeze team compositions
  * Only admin users can snapshot all teams, regular users can only snapshot their own team
  */
-export function snapshotAllTeamRosters(matchDayId: string, userId?: string, userRole?: UserRole): Map<string, RosterHistory[]> {
+export async function snapshotAllTeamRosters(matchDayId: string, userId?: string, userRole?: UserRole): Promise<Map<string, RosterHistory[]>> {
     const { getTeams } = require('./teamService');
-    const teams = getTeams(userId, userRole);
+    const teams = await getTeams(userId, userRole);
     const allSnapshots = new Map<string, RosterHistory[]>();
     
     for (const team of teams) {
@@ -126,7 +159,7 @@ export function snapshotAllTeamRosters(matchDayId: string, userId?: string, user
         }));
         
         if (rosterEntries.length > 0) {
-            const snapshot = createRosterHistory(team.id, matchDayId, rosterEntries);
+            const snapshot = await createRosterHistory(team.id, matchDayId, rosterEntries);
             allSnapshots.set(team.id, snapshot);
         }
     }
@@ -137,6 +170,17 @@ export function snapshotAllTeamRosters(matchDayId: string, userId?: string, user
 /**
  * Get all roster histories (for debugging/admin purposes)
  */
-export function getAllRosterHistories(): RosterHistory[] {
-    return [...rosterHistories];
+export async function getAllRosterHistories(): Promise<RosterHistory[]> {
+    const result = await pool.query(
+        'SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history ORDER BY created_at DESC'
+    );
+    
+    return result.rows.map(row => ({
+        id: row.id.toString(),
+        teamId: row.team_id.toString(),
+        matchDayId: row.matchday_id.toString(),
+        playerId: row.player_id.toString(),
+        isCaptain: row.is_captain,
+        createdAt: row.created_at
+    }));
 }

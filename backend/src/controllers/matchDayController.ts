@@ -1,53 +1,63 @@
 import { Request, Response } from 'express';
 import * as matchDayService from '../services/matchDayService';
 
-export function createMatchDay(req: Request, res: Response) {
+export async function createMatchDay(req: Request, res: Response): Promise<void> {
     const { title, startTime, endTime } = req.body;
     if (!title || !startTime || !endTime) {
-        return res.status(400).json({ error: 'title, startTime, and endTime are required' });
+        res.status(400).json({ error: 'title, startTime, and endTime are required' });
+        return;
     }
-    const matchDay = matchDayService.createMatchDay(title, new Date(startTime), new Date(endTime));
-    return res.status(201).json(matchDay);
+    const matchDay = await matchDayService.createMatchDay(title, new Date(startTime), new Date(endTime));
+    res.status(201).json(matchDay);
 }
 
-export function updatePlayerStats(req: Request, res: Response) {
+export async function updatePlayerStats(req: Request, res: Response): Promise<void> {
     const { id: matchDayId } = req.params;
     const { playerId, stats } = req.body;
-    if (!playerId || !stats) return res.status(400).json({ error: 'playerId and stats required' });
-    const updated = matchDayService.updatePlayerStats(matchDayId, playerId, stats);
-    if (!updated) return res.status(404).json({ error: 'MatchDay not found' });
-    return res.json(updated);
+    if (!playerId || !stats) {
+        res.status(400).json({ error: 'playerId and stats required' });
+        return;
+    }
+    const updated = await matchDayService.updatePlayerStats(matchDayId, playerId, stats);
+    if (!updated) {
+        res.status(404).json({ error: 'MatchDay not found' });
+        return;
+    }
+    res.json(updated);
 }
 
-export function calculatePoints(req: Request, res: Response) {
+export async function calculatePoints(req: Request, res: Response): Promise<void> {
     const { id: matchDayId } = req.params;
-    const results = matchDayService.calculatePoints(matchDayId);
-    return res.json(results);
+    const results = await matchDayService.calculatePoints(matchDayId);
+    res.json(results);
 }
 
-export function getMatchDays(_req: Request, res: Response) {
-    return res.json(matchDayService.getMatchDays());
+export async function getMatchDays(_req: Request, res: Response): Promise<void> {
+    const matchDays = await matchDayService.getMatchDays();
+    res.json(matchDays);
 }
 
-export function startMatchDay(req: Request, res: Response) {
+export async function startMatchDay(req: Request, res: Response): Promise<void> {
     const { id: matchDayId } = req.params;
     try {
-        const result = matchDayService.startMatchDay(matchDayId);
+        const result = await matchDayService.startMatchDay(matchDayId);
         if (!result) {
-            return res.status(404).json({ error: 'MatchDay not found' });
+            res.status(404).json({ error: 'MatchDay not found' });
+            return;
         }
-        return res.json({ message: 'MatchDay started successfully', matchDayId });
+        res.json({ message: 'MatchDay started successfully', matchDayId });
     } catch (error) {
         console.error('Error starting matchday:', error);
         if (error instanceof Error) {
-            return res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error.message });
+            return;
         }
-        return res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-export function getPlayerStats(req: Request, res: Response) {
+export async function getPlayerStats(req: Request, res: Response): Promise<void> {
     const { id: matchDayId } = req.params;
-    const stats = matchDayService.getPlayerStats(matchDayId);
-    return res.json(stats);
+    const stats = await matchDayService.getPlayerStats(matchDayId);
+    res.json(stats);
 }

@@ -32,6 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 // Test roster history functionality
 const globals_1 = require("@jest/globals");
@@ -44,16 +53,12 @@ const types_1 = require("../../../shared/dist/types");
     let testMatchDay;
     let testPlayers;
     let testUserId;
-    (0, globals_1.beforeEach)(() => {
-        // Reset the in-memory stores by clearing arrays
-        rosterHistoryService.rosterHistories = [];
-        matchDayService.matchDays = [];
-        matchDayService.playerStats = {};
+    (0, globals_1.beforeEach)(() => __awaiter(void 0, void 0, void 0, function* () {
         // Generate unique user ID for each test to avoid conflicts
         testUserId = `test-user-${Date.now()}-${Math.random()}`;
         // Create test data
-        testTeam = teamService.createTeam('Test Team', testUserId);
-        testMatchDay = matchDayService.createMatchDay('Test Match Day', new Date('2024-01-01T10:00:00Z'), new Date('2024-01-01T12:00:00Z'));
+        testTeam = yield teamService.createTeam('Test Team', testUserId);
+        testMatchDay = yield matchDayService.createMatchDay('Test Match Day', new Date('2024-01-01T10:00:00Z'), new Date('2024-01-01T12:00:00Z'));
         // Mock players (in real implementation these would come from playerService)
         testPlayers = [
             { id: 'player1', name: 'Player 1', position: 'field' },
@@ -61,76 +66,76 @@ const types_1 = require("../../../shared/dist/types");
             { id: 'player3', name: 'Player 3', position: 'field' }
         ];
         // Add players to team (as the team owner)
-        testPlayers.forEach(player => {
-            teamService.addPlayerToTeam(testTeam.id, player, testUserId, types_1.UserRole.USER);
-        });
+        for (const player of testPlayers) {
+            yield teamService.addPlayerToTeam(testTeam.id, player, testUserId, types_1.UserRole.USER);
+        }
         // Set captain (as the team owner)
-        teamService.setTeamCaptain(testTeam.id, testPlayers[0].id, testUserId, types_1.UserRole.USER);
-    });
-    (0, globals_1.test)('should create roster history for a team', () => {
+        yield teamService.setTeamCaptain(testTeam.id, testPlayers[0].id, testUserId, types_1.UserRole.USER);
+    }));
+    (0, globals_1.test)('should create roster history for a team', () => __awaiter(void 0, void 0, void 0, function* () {
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false },
             { playerId: 'player3', isCaptain: false }
         ];
-        const rosterHistory = rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        const rosterHistory = yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         (0, globals_1.expect)(rosterHistory).toHaveLength(3);
         (0, globals_1.expect)(rosterHistory[0].teamId).toBe(testTeam.id);
         (0, globals_1.expect)(rosterHistory[0].matchDayId).toBe(testMatchDay.id);
         (0, globals_1.expect)(rosterHistory[0].playerId).toBe('player1');
         (0, globals_1.expect)(rosterHistory[0].isCaptain).toBe(true);
-    });
-    (0, globals_1.test)('should get roster history for a team and matchday', () => {
+    }));
+    (0, globals_1.test)('should get roster history for a team and matchday', () => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false }
         ];
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
-        const retrieved = rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
+        yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        const retrieved = yield rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
         (0, globals_1.expect)(retrieved).toHaveLength(2);
         (0, globals_1.expect)((_a = retrieved.find(r => r.playerId === 'player1')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
-    });
-    (0, globals_1.test)('should snapshot all team rosters for a matchday', () => {
-        const snapshots = rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id, testUserId, types_1.UserRole.USER);
+    }));
+    (0, globals_1.test)('should snapshot all team rosters for a matchday', () => __awaiter(void 0, void 0, void 0, function* () {
+        const snapshots = yield rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id, testUserId, types_1.UserRole.USER);
         (0, globals_1.expect)(snapshots.has(testTeam.id)).toBe(true);
         const teamSnapshot = snapshots.get(testTeam.id);
         (0, globals_1.expect)(teamSnapshot).toHaveLength(3); // 3 players in the team
         // Captain should be correctly identified
         const captainEntry = teamSnapshot === null || teamSnapshot === void 0 ? void 0 : teamSnapshot.find(entry => entry.isCaptain);
         (0, globals_1.expect)(captainEntry === null || captainEntry === void 0 ? void 0 : captainEntry.playerId).toBe(testPlayers[0].id);
-    });
-    (0, globals_1.test)('should prevent duplicate roster entries', () => {
+    }));
+    (0, globals_1.test)('should prevent duplicate roster entries', () => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false }
         ];
         // Create initial roster
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         // Try to create again - should replace the previous one
         const newRosterEntries = [
             { playerId: 'player1', isCaptain: false },
             { playerId: 'player3', isCaptain: true }
         ];
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, newRosterEntries);
-        const finalRoster = rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
+        yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, newRosterEntries);
+        const finalRoster = yield rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
         (0, globals_1.expect)(finalRoster).toHaveLength(2);
         (0, globals_1.expect)((_a = finalRoster.find(r => r.playerId === 'player3')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
         (0, globals_1.expect)(finalRoster.find(r => r.playerId === 'player2')).toBeUndefined();
-    });
-    (0, globals_1.test)('should check if roster history exists', () => {
-        (0, globals_1.expect)(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
+    }));
+    (0, globals_1.test)('should check if roster history exists', () => __awaiter(void 0, void 0, void 0, function* () {
+        (0, globals_1.expect)(yield rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
         const rosterEntries = [{ playerId: 'player1', isCaptain: true }];
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
-        (0, globals_1.expect)(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
-    });
-    (0, globals_1.test)('should remove roster history', () => {
+        yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        (0, globals_1.expect)(yield rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
+    }));
+    (0, globals_1.test)('should remove roster history', () => __awaiter(void 0, void 0, void 0, function* () {
         const rosterEntries = [{ playerId: 'player1', isCaptain: true }];
-        rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
-        (0, globals_1.expect)(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
-        rosterHistoryService.removeRosterHistory(testTeam.id, testMatchDay.id);
-        (0, globals_1.expect)(rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
-    });
+        yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
+        (0, globals_1.expect)(yield rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(true);
+        yield rosterHistoryService.removeRosterHistory(testTeam.id, testMatchDay.id);
+        (0, globals_1.expect)(yield rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);
+    }));
 });
 //# sourceMappingURL=rosterHistory.test.js.map

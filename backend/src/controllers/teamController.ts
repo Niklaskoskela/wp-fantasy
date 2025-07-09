@@ -1,88 +1,125 @@
 import { Request, Response } from 'express';
 import * as teamService from '../services/teamService';
 
-export function createTeam(req: Request, res: Response) {
+export async function createTeam(req: Request, res: Response): Promise<void> {
     const { teamName } = req.body;
-    if (!teamName) return res.status(400).json({ error: 'teamName required' });
+    if (!teamName) {
+        res.status(400).json({ error: 'teamName required' });
+        return;
+    }
     
-    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
     
     try {
-        const team = teamService.createTeam(teamName, req.user.id);
-        return res.status(201).json(team);
+        const team = await teamService.createTeam(teamName, req.user.id);
+        res.status(201).json(team);
     } catch (e: any) {
-        return res.status(400).json({ error: e.message });
+        res.status(400).json({ error: e.message });
     }
 }
 
-export function addPlayerToTeam(req: Request, res: Response) {
+export async function addPlayerToTeam(req: Request, res: Response): Promise<void> {
     const { teamId, player } = req.body;
-    if (!teamId || !player) return res.status(400).json({ error: 'teamId and player required' });
+    if (!teamId || !player) {
+        res.status(400).json({ error: 'teamId and player required' });
+        return;
+    }
     
-    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
     
     try {
-        const team = teamService.addPlayerToTeam(teamId, player, req.user.id, req.user.role);
-        return res.json(team);
+        const team = await teamService.addPlayerToTeam(teamId, player, req.user.id, req.user.role);
+        res.json(team);
     } catch (e: any) {
         // Use 409 Conflict for business logic errors (e.g., too many goalkeepers)
         if (e.message && (e.message.includes('goalkeeper') || e.message.includes('6 players'))) {
-            return res.status(409).json({ error: e.message });
+            res.status(409).json({ error: e.message });
+            return;
         }
         // Use 403 for authorization errors
         if (e.message && e.message.includes('only modify your own team')) {
-            return res.status(403).json({ error: e.message });
+            res.status(403).json({ error: e.message });
+            return;
         }
-        return res.status(400).json({ error: e.message });
+        res.status(400).json({ error: e.message });
     }
 }
 
-export function removePlayerFromTeam(req: Request, res: Response) {
+export async function removePlayerFromTeam(req: Request, res: Response): Promise<void> {
     const { teamId, playerId } = req.body;
-    if (!teamId || !playerId) return res.status(400).json({ error: 'teamId and playerId required' });
+    if (!teamId || !playerId) {
+        res.status(400).json({ error: 'teamId and playerId required' });
+        return;
+    }
     
-    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
     
     try {
-        const team = teamService.removePlayerFromTeam(teamId, playerId, req.user.id, req.user.role);
-        return res.json(team);
+        const team = await teamService.removePlayerFromTeam(teamId, playerId, req.user.id, req.user.role);
+        res.json(team);
     } catch (e: any) {
         if (e.message && e.message.includes('only modify your own team')) {
-            return res.status(403).json({ error: e.message });
+            res.status(403).json({ error: e.message });
+            return;
         }
-        return res.status(400).json({ error: e.message });
+        res.status(400).json({ error: e.message });
     }
 }
 
-export function setTeamCaptain(req: Request, res: Response) {
+export async function setTeamCaptain(req: Request, res: Response): Promise<void> {
     const { teamId, playerId } = req.body;
-    if (!teamId || !playerId) return res.status(400).json({ error: 'teamId and playerId required' });
+    if (!teamId || !playerId) {
+        res.status(400).json({ error: 'teamId and playerId required' });
+        return;
+    }
     
-    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
     
     try {
-        const team = teamService.setTeamCaptain(teamId, playerId, req.user.id, req.user.role);
-        return res.json(team);
+        const team = await teamService.setTeamCaptain(teamId, playerId, req.user.id, req.user.role);
+        res.json(team);
     } catch (e: any) {
         // Use 409 Conflict for business logic errors (e.g., player not in team)
         if (e.message && e.message.includes('Player not in team')) {
-            return res.status(409).json({ error: e.message });
+            res.status(409).json({ error: e.message });
+            return;
         }
         if (e.message && e.message.includes('only modify your own team')) {
-            return res.status(403).json({ error: e.message });
+            res.status(403).json({ error: e.message });
+            return;
         }
-        return res.status(400).json({ error: e.message });
+        res.status(400).json({ error: e.message });
     }
 }
 
-export function getTeams(req: Request, res: Response) {
-    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+export async function getTeams(req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
     
-    return res.json(teamService.getTeams(req.user.id, req.user.role));
+    const teams = await teamService.getTeams(req.user.id, req.user.role);
+    res.json(teams);
 }
 
-export function getTeamsWithScores(req: Request, res: Response) {
-    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+export async function getTeamsWithScores(req: Request, res: Response): Promise<void> {
+    if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+    }
     
-    return res.json(teamService.getTeamsWithScores(req.user.id, req.user.role));
+    const teams = await teamService.getTeamsWithScores(req.user.id, req.user.role);
+    res.json(teams);
 }

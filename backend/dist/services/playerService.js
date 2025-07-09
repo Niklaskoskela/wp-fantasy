@@ -10,13 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayerService = void 0;
-// PlayerService split from clubService for player management
-const pg_1 = require("pg");
-const pool = new pg_1.Pool();
+const database_1 = require("../config/database");
 class PlayerService {
     static createPlayer(name, position, clubId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield pool.query('INSERT INTO players (name, position, club_id) VALUES ($1, $2, $3) RETURNING id, name, position, club_id', [name, position, clubId]);
+            const result = yield database_1.pool.query('INSERT INTO players (name, position, club_id) VALUES ($1, $2, $3) RETURNING id, name, position, club_id', [name, position, clubId]);
             return {
                 id: result.rows[0].id.toString(),
                 name: result.rows[0].name,
@@ -28,7 +26,7 @@ class PlayerService {
     }
     static getAllPlayers() {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield pool.query('SELECT id, name, position, club_id FROM players');
+            const result = yield database_1.pool.query('SELECT id, name, position, club_id FROM players');
             return result.rows.map((row) => ({
                 id: row.id.toString(),
                 name: row.name,
@@ -40,7 +38,7 @@ class PlayerService {
     }
     static getPlayerById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield pool.query('SELECT id, name, position, club_id FROM players WHERE id = $1', [id]);
+            const result = yield database_1.pool.query('SELECT id, name, position, club_id FROM players WHERE id = $1', [id]);
             if (result.rows.length === 0)
                 return null;
             return {
