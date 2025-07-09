@@ -37,10 +37,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const rosterHistoryController = __importStar(require("../controllers/rosterHistoryController"));
 const router = (0, express_1.Router)();
-// Create roster history for a team on a specific matchday
-router.post('/:teamId/:matchDayId', rosterHistoryController.createRosterHistory);
-// Get roster history for a specific team and matchday
-router.get('/:teamId/:matchDayId', rosterHistoryController.getRosterHistory);
+// More specific routes first to avoid conflicts
 // Get all roster history for a specific team across all matchdays
 router.get('/team/:teamId', rosterHistoryController.getTeamRosterHistory);
 // Get all roster history for a specific matchday across all teams
@@ -49,6 +46,11 @@ router.get('/matchday/:matchDayId', rosterHistoryController.getMatchDayRosterHis
 router.post('/snapshot/:matchDayId', rosterHistoryController.snapshotAllTeamRosters);
 // Check if roster history exists for a team and matchday
 router.get('/check/:teamId/:matchDayId', rosterHistoryController.checkRosterHistory);
+// Generic routes with parameters last
+// Create roster history for a team on a specific matchday
+router.post('/:teamId/:matchDayId', rosterHistoryController.createRosterHistory);
+// Get roster history for a specific team and matchday
+router.get('/:teamId/:matchDayId', rosterHistoryController.getRosterHistory);
 // Remove roster history for a specific team and matchday
 router.delete('/:teamId/:matchDayId', rosterHistoryController.removeRosterHistory);
 exports.default = router;
