@@ -48,6 +48,8 @@ exports.removePlayerFromTeam = removePlayerFromTeam;
 exports.setTeamCaptain = setTeamCaptain;
 exports.getTeams = getTeams;
 exports.getTeamsWithScores = getTeamsWithScores;
+exports.clearTeamsCache = clearTeamsCache;
+exports.clearAllCaches = clearAllCaches;
 const teamService = __importStar(require("../services/teamService"));
 function createTeam(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -170,6 +172,51 @@ function getTeamsWithScores(req, res) {
         }
         const teams = yield teamService.getTeamsWithScores(req.user.id, req.user.role);
         res.json(teams);
+    });
+}
+function clearTeamsCache(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        // Only allow admin to clear cache
+        if (req.user.role !== 'admin') {
+            res.status(403).json({ error: 'Admin access required' });
+            return;
+        }
+        teamService.invalidateTeamsWithScoresCache();
+        res.json({ message: 'Teams cache cleared successfully' });
+    });
+}
+function clearAllCaches(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        // Only allow admin to clear cache
+        if (req.user.role !== 'admin') {
+            res.status(403).json({ error: 'Admin access required' });
+            return;
+        }
+        // Clear all caches
+        teamService.invalidateTeamsWithScoresCache();
+        try {
+            const { PlayerService } = require('../services/playerService');
+            PlayerService.invalidatePlayerCaches();
+        }
+        catch (e) {
+            console.warn('PlayerService cache invalidation failed:', e);
+        }
+        try {
+            const { ClubService } = require('../services/clubService');
+            ClubService.invalidateClubCaches();
+        }
+        catch (e) {
+            console.warn('ClubService cache invalidation failed:', e);
+        }
+        res.json({ message: 'All caches cleared successfully' });
     });
 }
 //# sourceMappingURL=teamController.js.map

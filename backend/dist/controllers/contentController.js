@@ -58,6 +58,21 @@ class ClubController {
             }
         });
     }
+    static clearClubsCache(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!req.user || req.user.role !== 'admin') {
+                    return res.status(403).json({ error: 'Admin access required' });
+                }
+                clubService_1.ClubService.invalidateClubCaches();
+                res.json({ message: 'Clubs cache cleared successfully' });
+            }
+            catch (error) {
+                console.error('Error in clearClubsCache:', error);
+                res.status(500).json({ error: 'Failed to clear clubs cache' });
+            }
+        });
+    }
 }
 exports.ClubController = ClubController;
 class PlayerController {
@@ -103,6 +118,21 @@ class PlayerController {
             catch (error) {
                 console.error('Error in getPlayer:', error);
                 res.status(500).json({ error: 'Failed to fetch player' });
+            }
+        });
+    }
+    static clearPlayersCache(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!req.user || req.user.role !== 'admin') {
+                    return res.status(403).json({ error: 'Admin access required' });
+                }
+                playerService_1.PlayerService.invalidatePlayerCaches();
+                res.json({ message: 'Players cache cleared successfully' });
+            }
+            catch (error) {
+                console.error('Error in clearPlayersCache:', error);
+                res.status(500).json({ error: 'Failed to clear players cache' });
             }
         });
     }

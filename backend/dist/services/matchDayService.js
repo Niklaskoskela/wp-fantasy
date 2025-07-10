@@ -31,6 +31,7 @@ function createMatchDay(title, startTime, endTime) {
 }
 function updatePlayerStats(matchDayId, playerId, stats) {
     return __awaiter(this, void 0, void 0, function* () {
+        const { invalidateTeamsWithScoresCache } = require('./teamService');
         try {
             const result = yield database_1.pool.query(`INSERT INTO player_stats (player_id, matchday_id, goals, assists, blocks, steals, pf_drawn, pf, balls_lost, contra_fouls, shots, swim_offs, brutality, saves, wins) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
@@ -53,6 +54,8 @@ function updatePlayerStats(matchDayId, playerId, stats) {
                 stats.pfDrawn, stats.pf, stats.ballsLost, stats.contraFouls, stats.shots,
                 stats.swimOffs, stats.brutality, stats.saves, stats.wins]);
             const row = result.rows[0];
+            // Invalidate cache since player stats changed
+            invalidateTeamsWithScoresCache();
             return {
                 id: row.id.toString(),
                 goals: row.goals,
