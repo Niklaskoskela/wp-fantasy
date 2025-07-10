@@ -324,27 +324,22 @@ function activateUser(req, res) {
 function adminResetPassword(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Check for validation errors
-            const errors = (0, express_validator_1.validationResult)(req);
-            if (!errors.isEmpty()) {
-                res.status(400).json({
-                    error: 'Validation failed',
-                    details: errors.array()
-                });
-                return;
-            }
             const { userId } = req.params;
-            const { newPassword } = req.body;
             // Get user
             const user = yield authService.getUserById(userId);
             if (!user) {
                 res.status(404).json({ error: 'User not found' });
                 return;
             }
+            // Generate a temporary password
+            const tempPassword = authService.generateSecureToken().substring(0, 12);
             // Create a password reset token and use it immediately
             const token = yield authService.createPasswordResetToken(user.email);
-            yield authService.resetPasswordWithToken(token, newPassword);
-            res.json({ message: 'Password reset successfully' });
+            yield authService.resetPasswordWithToken(token, tempPassword);
+            res.json({
+                message: 'Password reset successfully',
+                tempPassword: tempPassword
+            });
         }
         catch (error) {
             console.error('Admin reset password error:', error);
