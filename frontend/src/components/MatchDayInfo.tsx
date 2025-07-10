@@ -47,10 +47,11 @@ export function MatchDayInfo({
   const lastActiveMatchDay = activeMatchDays[0];
 
   // Helper function to format date
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
+    const dateObj = new Date(date);
     return {
-      date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: dateObj.toLocaleDateString(),
+      time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
   };
 
@@ -168,7 +169,7 @@ export function MatchDayInfo({
 }
 
 // Helper function to calculate time until a date
-function getTimeUntil(date: Date): string {
+function getTimeUntil(date: Date | string): string {
   const now = new Date();
   const target = new Date(date);
   const diff = target.getTime() - now.getTime();
