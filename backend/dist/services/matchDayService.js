@@ -17,7 +17,7 @@ exports.getMatchDays = getMatchDays;
 exports.getPlayerStats = getPlayerStats;
 const teamService_1 = require("./teamService");
 const database_1 = require("../config/database");
-const points_1 = require("config/points");
+const points_1 = require("../config/points");
 function createMatchDay(title, startTime, endTime) {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield database_1.pool.query('INSERT INTO matchdays (title, start_time, end_time) VALUES ($1, $2, $3) RETURNING id, title, start_time, end_time', [title, startTime, endTime]);

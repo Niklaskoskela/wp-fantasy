@@ -2,7 +2,7 @@ import { MatchDay, Player, Stats, Team } from '../../../shared/dist/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getTeams } from './teamService';
 import { pool } from '../config/database';
-import { pointsConfig } from 'config/points';
+import { pointsConfig } from '../config/points';
 
 export async function createMatchDay(title: string, startTime: Date, endTime: Date): Promise<MatchDay> {
     const result = await pool.query(
