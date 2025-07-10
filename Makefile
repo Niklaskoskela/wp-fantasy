@@ -1,8 +1,8 @@
 buildFront:
-	cd frontend && npm ci && npm run build
+	cd frontend && npm i && npm run build
 
 buildBack:
-	cd backend && npm ci && npm run build
+	cd backend && npm i && npm run build
 
 build: buildFront buildBack
 
