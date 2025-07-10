@@ -176,8 +176,8 @@ export function LeagueStandings() {
 
       <Box sx={{ mt: 2 }}>
         <Typography variant='caption' color='text.secondary'>
-          Total points are calculated across all match days. Click on "Match
-          Days" to see per-match-day breakdown.
+          Total points are calculated across all match days. Click on &quot;Match
+          Days&quot; to see per-match-day breakdown.
         </Typography>
       </Box>
     </Box>

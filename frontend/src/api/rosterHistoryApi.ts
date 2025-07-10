@@ -37,7 +37,8 @@ export const rosterHistoryApi = createApi({
       RosterHistory[],
       { teamId: string; matchDayId: string }
     >({
-      query: ({ teamId, matchDayId }) => `/roster-history/${teamId}/${matchDayId}`,
+      query: ({ teamId, matchDayId }) =>
+        `/roster-history/${teamId}/${matchDayId}`,
       providesTags: (_result, _err, { teamId, matchDayId }) => [
         { type: 'RosterHistory', id: `${teamId}-${matchDayId}` },
       ],
@@ -82,7 +83,8 @@ export const rosterHistoryApi = createApi({
       { exists: boolean },
       { teamId: string; matchDayId: string }
     >({
-      query: ({ teamId, matchDayId }) => `/roster-history/check/${teamId}/${matchDayId}`,
+      query: ({ teamId, matchDayId }) =>
+        `/roster-history/check/${teamId}/${matchDayId}`,
       providesTags: (_result, _err, { teamId, matchDayId }) => [
         { type: 'RosterHistory', id: `check-${teamId}-${matchDayId}` },
       ],

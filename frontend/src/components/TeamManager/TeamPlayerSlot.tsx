@@ -68,19 +68,17 @@ export function TeamPlayerSlot({
             </Stack>
           )}
         </Stack>
+      ) : canEdit ? (
+        <Button
+          size='small'
+          variant='outlined'
+          onClick={onPickPlayer}
+          sx={{ minWidth: 120 }}
+        >
+          Pick Player
+        </Button>
       ) : (
-        canEdit ? (
-          <Button
-            size='small'
-            variant='outlined'
-            onClick={onPickPlayer}
-            sx={{ minWidth: 120 }}
-          >
-            Pick Player
-          </Button>
-        ) : (
-          <Typography color='text.secondary'>Empty</Typography>
-        )
+        <Typography color='text.secondary'>Empty</Typography>
       )}
     </Box>
   );

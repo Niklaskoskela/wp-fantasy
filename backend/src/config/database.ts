@@ -5,8 +5,18 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Database configuration with SSL support for production/cloud databases
-const getDatabaseConfig = (): any => {
-  const config: any = {
+interface DatabaseConfig {
+  user: string;
+  host: string;
+  database: string;
+  password: string;
+  port: number;
+  env: string;
+  ssl?: boolean | { rejectUnauthorized: boolean };
+}
+
+const getDatabaseConfig = (): DatabaseConfig => {
+  const config: DatabaseConfig = {
     user: process.env.PGUSER || process.env.DB_USER || 'wpfantasy_user',
     host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
     database: process.env.PGDATABASE || process.env.DB_NAME || 'wpfantasy',

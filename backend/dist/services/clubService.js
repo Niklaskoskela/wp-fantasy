@@ -13,7 +13,7 @@ exports.ClubService = void 0;
 const database_1 = require("../config/database");
 // Cache storage
 let allClubsCache = null;
-let clubByIdCache = new Map();
+const clubByIdCache = new Map();
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds (clubs change less frequently)
 class ClubService {
     // Function to invalidate all club caches

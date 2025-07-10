@@ -1,5 +1,5 @@
 // Club and Player services for content management
-import { Club, PlayerPosition } from 'shared';
+import { Club } from 'shared';
 import { pool } from '../config/database';
 
 // Cache interfaces
@@ -10,7 +10,7 @@ interface CacheEntry<T> {
 
 // Cache storage
 let allClubsCache: CacheEntry<Club[]> | null = null;
-let clubByIdCache: Map<string, CacheEntry<Club | null>> = new Map();
+const clubByIdCache: Map<string, CacheEntry<Club | null>> = new Map();
 
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds (clubs change less frequently)
 

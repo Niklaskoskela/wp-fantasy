@@ -7,7 +7,7 @@ const getToken = () => localStorage.getItem('authToken');
 
 export const matchDayApi = createApi({
   reducerPath: 'matchDayApi',
-  baseQuery: fetchBaseQuery({ 
+  baseQuery: fetchBaseQuery({
     baseUrl: API_URL,
     prepareHeaders: (headers) => {
       const token = getToken();
@@ -23,7 +23,10 @@ export const matchDayApi = createApi({
       query: () => '/matchdays',
       providesTags: ['MatchDay'],
     }),
-    createMatchDay: builder.mutation<MatchDay, { title: string; startTime: string; endTime: string }>({
+    createMatchDay: builder.mutation<
+      MatchDay,
+      { title: string; startTime: string; endTime: string }
+    >({
       query: (body) => ({ url: '/matchdays', method: 'POST', body }),
       invalidatesTags: ['MatchDay'],
     }),
@@ -41,10 +44,7 @@ export const matchDayApi = createApi({
         { type: 'PlayerStats', id: matchDayId },
       ],
     }),
-    getPlayerStats: builder.query<
-      { [playerId: string]: Stats },
-      string
-    >({
+    getPlayerStats: builder.query<{ [playerId: string]: Stats }, string>({
       query: (matchDayId) => `/matchdays/${matchDayId}/player-stats`,
       providesTags: (_result, _err, matchDayId) => [
         { type: 'PlayerStats', id: matchDayId },

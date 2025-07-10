@@ -159,7 +159,7 @@ function snapshotAllTeamRosters(req, res) {
                 res.status(401).json({ error: 'Authentication required' });
                 return;
             }
-            const snapshots = yield rosterHistoryService.snapshotAllTeamRosters(matchDayId, req.user.id, req.user.role);
+            const snapshots = yield rosterHistoryService.snapshotAllTeamRosters(matchDayId);
             // Convert Map to object for JSON serialization
             const snapshotsObj = {};
             snapshots.forEach((value, key) => {

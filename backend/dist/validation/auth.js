@@ -19,7 +19,7 @@ exports.validateRegistration = [
     (0, express_validator_1.body)('password')
         .isLength({ min: 8 })
         .withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/)
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
 ];
 // Login validation
@@ -43,7 +43,7 @@ exports.validateChangePassword = [
     (0, express_validator_1.body)('newPassword')
         .isLength({ min: 8 })
         .withMessage('New password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/)
         .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
 ];
 // Forgot password validation
@@ -65,7 +65,7 @@ exports.validateResetPassword = [
     (0, express_validator_1.body)('newPassword')
         .isLength({ min: 8 })
         .withMessage('New password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/)
         .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
 ];
 // Admin reset password validation
@@ -73,7 +73,7 @@ exports.validateAdminResetPassword = [
     (0, express_validator_1.body)('newPassword')
         .isLength({ min: 8 })
         .withMessage('New password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/)
         .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
 ];
 // Update user validation (admin only)

@@ -32,7 +32,8 @@
     "preview": "vite preview",
     "lint": "eslint src/**/*.{ts,tsx}",
     "lint:fix": "eslint ./src/ --fix",
-    "format": "prettier --write ./src/"
+    "format": "prettier --write ./src/",
+    "typecheck": "tsc --noEmit"
   },
   "browserslist": {
     "production": [

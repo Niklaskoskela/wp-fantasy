@@ -1,7 +1,22 @@
 // Service for managing teams: create, update players, set captain
-import { Team, Player, MatchDay, UserRole } from '../../../shared/dist/types';
+import { Team, Player, MatchDay, UserRole, Stats } from '../../../shared/dist/types';
 import { pool } from '../config/database';
 import { pointsConfig } from '../config/points';
+import { PlayerService } from './playerService';
+
+// Types for teams with scores
+interface TeamWithScores {
+    id: string;
+    teamName: string;
+    players: Player[];
+    captain?: Player;
+    teamCaptain?: Player;
+    scoreHistory: Map<MatchDay, number>;
+    totalScore: number;
+    totalPoints: number;
+    matchDayScores: { matchDayId: string; matchDayTitle: string; points: number; }[];
+    ownerId: string;
+}
 
 export async function createTeam(teamName: string, ownerId: string): Promise<Team> {
     // Check if user already has a team
@@ -88,7 +103,6 @@ export async function addPlayerToTeam(teamId: string, player: Player, userId: st
     
     // Also invalidate player caches if they exist
     try {
-        const { PlayerService } = require('./playerService');
         PlayerService.invalidatePlayerCaches();
     } catch (e) {
         // Ignore if PlayerService is not available
@@ -132,7 +146,6 @@ export async function removePlayerFromTeam(teamId: string, playerId: string, use
     
     // Also invalidate player caches if they exist
     try {
-        const { PlayerService } = require('./playerService');
         PlayerService.invalidatePlayerCaches();
     } catch (e) {
         // Ignore if PlayerService is not available
@@ -248,7 +261,7 @@ async function getTeamById(teamId: string): Promise<Team | null> {
     } as Team;
 }
 
-export async function getTeams(userId?: string, userRole?: UserRole): Promise<Team[]> {
+export async function getTeams(): Promise<Team[]> {
     // Single optimized query to get all teams and their data at once
     const result = await pool.query(
         `SELECT 
@@ -324,7 +337,7 @@ export async function getUserTeam(userId: string): Promise<Team | null> {
 
 // Cache for team scores - expires after 5 minutes
 interface CacheEntry {
-    data: any[];
+    data: TeamWithScores[];
     timestamp: number;
 }
 
@@ -336,13 +349,13 @@ export function invalidateTeamsWithScoresCache(): void {
     teamsWithScoresCache = null;
 }
 
-export async function getTeamsWithScores(userId?: string, userRole?: UserRole): Promise<any[]> {
+export async function getTeamsWithScores(): Promise<TeamWithScores[]> {
     // Check cache first
     if (teamsWithScoresCache && Date.now() - teamsWithScoresCache.timestamp < CACHE_DURATION) {
         return teamsWithScoresCache.data;
     }
 
-    const { getMatchDays } = require('./matchDayService');
+    const { getMatchDays } = await import('./matchDayService');
     const allMatchDays = await getMatchDays();
     
     // Get all teams with their data in one optimized query
@@ -385,13 +398,14 @@ export async function getTeamsWithScores(userId?: string, userRole?: UserRole): 
             ps.wins
         FROM player_stats ps
         WHERE ps.matchday_id = ANY($1)
-    `, [allMatchDays.map((md: any) => md.id)]);
+    `, [allMatchDays.map((md: MatchDay) => md.id)]);
     
     // Build stats lookup map
-    const statsMap: { [key: string]: any } = {};
-    statsResult.rows.forEach(row => {
+    const statsMap: { [key: string]: Stats } = {};
+    statsResult.rows.forEach((row: { player_id: string; matchday_id: string; id?: string; goals: number; assists: number; blocks: number; steals: number; pf_drawn: number; pf: number; balls_lost: number; contra_fouls: number; shots: number; swim_offs: number; brutality: number; saves: number; wins: number; }) => {
         const key = `${row.player_id}_${row.matchday_id}`;
         statsMap[key] = {
+            id: row.id?.toString() || '',
             goals: row.goals,
             assists: row.assists,
             blocks: row.blocks,
@@ -409,7 +423,7 @@ export async function getTeamsWithScores(userId?: string, userRole?: UserRole): 
     });
     
     // Build teams map from the result
-    const teamsMap: { [teamId: string]: any } = {};
+    const teamsMap: { [teamId: string]: TeamWithScores } = {};
     
     teamsResult.rows.forEach(row => {
         const teamId = row.team_id.toString();
@@ -422,6 +436,7 @@ export async function getTeamsWithScores(userId?: string, userRole?: UserRole): 
                 teamCaptain: undefined,
                 scoreHistory: new Map(),
                 ownerId: row.owner_id,
+                totalScore: 0,
                 totalPoints: 0,
                 matchDayScores: []
             };

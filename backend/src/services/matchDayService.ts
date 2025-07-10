@@ -1,5 +1,4 @@
-import { MatchDay, Player, Stats, Team } from '../../../shared/dist/types';
-import { v4 as uuidv4 } from 'uuid';
+import { MatchDay, Stats, Team } from '../../../shared/dist/types';
 import { getTeams } from './teamService';
 import { pool } from '../config/database';
 import { pointsConfig } from '../config/points';
@@ -20,7 +19,7 @@ export async function createMatchDay(title: string, startTime: Date, endTime: Da
 }
 
 export async function updatePlayerStats(matchDayId: string, playerId: string, stats: Stats): Promise<Stats | null> {
-    const { invalidateTeamsWithScoresCache } = require('./teamService');
+    const { invalidateTeamsWithScoresCache } = await import('./teamService');
     
     try {
         const result = await pool.query(
@@ -112,41 +111,6 @@ export async function calculatePoints(matchDayId: string): Promise<{ teamId: str
 }
 
 /**
- * Get player stats for a specific player in a matchday
- */
-async function getPlayerStatsForPlayer(matchDayId: string, playerId: string): Promise<Stats | null> {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM player_stats WHERE matchday_id = $1 AND player_id = $2',
-            [matchDayId, playerId]
-        );
-        
-        if (result.rows.length === 0) return null;
-        
-        const row = result.rows[0];
-        return {
-            id: row.id.toString(),
-            goals: row.goals,
-            assists: row.assists,
-            blocks: row.blocks,
-            steals: row.steals,
-            pfDrawn: row.pf_drawn,
-            pf: row.pf,
-            ballsLost: row.balls_lost,
-            contraFouls: row.contra_fouls,
-            shots: row.shots,
-            swimOffs: row.swim_offs,
-            brutality: row.brutality,
-            saves: row.saves,
-            wins: row.wins
-        };
-    } catch (error) {
-        console.error('Error getting player stats:', error);
-        return null;
-    }
-}
-
-/**
  * Start a matchday - this snapshots all current team rosters
  * and should be called when a matchday begins
  */
@@ -160,20 +124,20 @@ export async function startMatchDay(matchDayId: string): Promise<boolean> {
     }
     
     // Import the roster history service
-    const { snapshotAllTeamRosters, hasRosterHistory } = require('./rosterHistoryService');
+    const { snapshotAllTeamRosters, hasRosterHistory } = await import('./rosterHistoryService');
     
     // Check if rosters have already been snapshotted for this matchday
-    const { getTeams } = require('./teamService');
+    const { getTeams } = await import('./teamService');
     const teams = await getTeams();
     
     // If any team already has roster history for this matchday, don't snapshot again
     const alreadySnapshotted = await Promise.all(
-        teams.map(async (team: any) => await hasRosterHistory(team.id, matchDayId))
+        teams.map(async (team: Team) => await hasRosterHistory(team.id, matchDayId))
     ).then(results => results.some(result => result));
     
     if (!alreadySnapshotted) {
         // Snapshot all team rosters for this matchday
-        await snapshotAllTeamRosters(matchDayId, undefined, undefined);
+        await snapshotAllTeamRosters(matchDayId);
         console.log(`Rosters snapshotted for matchday ${matchDay.title} (${matchDayId})`);
     } else {
         console.log(`Rosters already snapshotted for matchday ${matchDay.title} (${matchDayId})`);

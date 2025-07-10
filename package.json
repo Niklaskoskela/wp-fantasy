@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "WordPress Fantasy Football Application",
   "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:shared\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:shared": "cd shared && npm run dev",
@@ -26,6 +27,7 @@
     "test": "npm run test:backend",
     "test:backend": "cd backend && npm run test",
     "test-all": "npm run lint && npm run typecheck && npm run test",
+    "check-all": "npm run lint && npm run typecheck",
     "prepare": "husky install"
   },
   "dependencies": {

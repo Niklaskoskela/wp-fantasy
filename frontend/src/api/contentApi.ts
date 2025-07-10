@@ -7,7 +7,7 @@ const getToken = () => localStorage.getItem('authToken');
 
 export const contentApi = createApi({
   reducerPath: 'contentApi',
-  baseQuery: fetchBaseQuery({ 
+  baseQuery: fetchBaseQuery({
     baseUrl: API_URL,
     prepareHeaders: (headers) => {
       const token = getToken();

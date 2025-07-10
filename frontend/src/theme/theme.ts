@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import { navMaxWidth, contentMaxWidth } from './constants';
+import { contentMaxWidth } from './constants';
 
 // Water polo inspired color palette
 const colors = {

@@ -1,5 +1,5 @@
 // Service for managing roster history: track team compositions for each matchday
-import { RosterHistory, RosterEntry, UserRole } from '../../../shared/dist/types';
+import { RosterHistory, RosterEntry, Player } from '../../../shared/dist/types';
 import { pool } from '../config/database';
 
 /**
@@ -82,7 +82,10 @@ export async function getTeamRosterHistory(teamId: string): Promise<Map<string, 
         if (!historyMap.has(rosterHistory.matchDayId)) {
             historyMap.set(rosterHistory.matchDayId, []);
         }
-        historyMap.get(rosterHistory.matchDayId)!.push(rosterHistory);
+        const matchDayHistory = historyMap.get(rosterHistory.matchDayId);
+        if (matchDayHistory) {
+            matchDayHistory.push(rosterHistory);
+        }
     }
     
     return historyMap;
@@ -112,7 +115,10 @@ export async function getMatchDayRosterHistory(matchDayId: string): Promise<Map<
         if (!historyMap.has(rosterHistory.teamId)) {
             historyMap.set(rosterHistory.teamId, []);
         }
-        historyMap.get(rosterHistory.teamId)!.push(rosterHistory);
+        const teamHistory = historyMap.get(rosterHistory.teamId);
+        if (teamHistory) {
+            teamHistory.push(rosterHistory);
+        }
     }
     
     return historyMap;
@@ -146,14 +152,14 @@ export async function hasRosterHistory(teamId: string, matchDayId: string): Prom
  * This should be called when a matchday starts to freeze team compositions
  * Only admin users can snapshot all teams, regular users can only snapshot their own team
  */
-export async function snapshotAllTeamRosters(matchDayId: string, userId?: string, userRole?: UserRole): Promise<Map<string, RosterHistory[]>> {
-    const { getTeams } = require('./teamService');
-    const teams = await getTeams(userId, userRole);
+export async function snapshotAllTeamRosters(matchDayId: string): Promise<Map<string, RosterHistory[]>> {
+    const { getTeams } = await import('./teamService');
+    const teams = await getTeams();
     const allSnapshots = new Map<string, RosterHistory[]>();
     
     for (const team of teams) {
         // Convert current team roster to roster entries
-        const rosterEntries: RosterEntry[] = team.players.map((player: any) => ({
+        const rosterEntries: RosterEntry[] = team.players.map((player: Player) => ({
             playerId: player.id,
             isCaptain: team.teamCaptain?.id === player.id
         }));

@@ -1,5 +1,11 @@
 // Authentication context for managing user state and login status
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import { AuthUser } from '../api/authApi';
 import { UserRole } from 'shared';
 
@@ -75,11 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAdmin: user?.role === UserRole.ADMIN,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {
@@ -96,7 +98,10 @@ interface ProtectedRouteProps {
   requireAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  requireAdmin = false,
+}: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, isAdmin, user } = useAuth();
 
   if (isLoading) {

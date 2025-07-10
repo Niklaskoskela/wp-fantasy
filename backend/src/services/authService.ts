@@ -33,7 +33,7 @@ export function validatePassword(password: string): { isValid: boolean; errors: 
     errors.push('Password must contain at least one number');
   }
   
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
   
@@ -78,7 +78,7 @@ export function verifyJWT(token: string): User | null {
     const payload = jwt.verify(token, JWT_SECRET, {
       issuer: 'wp-fantasy',
       audience: 'wp-fantasy-users'
-    }) as any;
+    }) as jwt.JwtPayload & { id: string; username: string; email: string; role: UserRole };
     
     return {
       id: payload.id,

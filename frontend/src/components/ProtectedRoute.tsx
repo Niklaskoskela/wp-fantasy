@@ -20,11 +20,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (isLoading) {
     return (
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="50vh"
+        display='flex'
+        flexDirection='column'
+        alignItems='center'
+        justifyContent='center'
+        minHeight='50vh'
         gap={2}
       >
         <CircularProgress />
@@ -34,17 +34,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (requiresAuth && !isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to='/auth' replace />;
   }
 
   if (requiresAdmin && user?.role !== UserRole.ADMIN) {
     return (
       <Box sx={{ p: 4 }}>
-        <Typography variant="h4" color="error" gutterBottom>
+        <Typography variant='h4' color='error' gutterBottom>
           Access Denied
         </Typography>
-        <Typography variant="body1">
-          You don't have permission to access this page. This page is restricted to administrators only.
+        <Typography variant='body1'>
+          You don&apos;t have permission to access this page. This page is
+          restricted to administrators only.
         </Typography>
       </Box>
     );
