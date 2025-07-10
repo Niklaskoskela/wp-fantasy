@@ -1,6 +1,7 @@
 // Service for managing teams: create, update players, set captain
 import { Team, Player, MatchDay, UserRole } from '../../../shared/dist/types';
 import { pool } from '../config/database';
+import { pointsConfig } from '../config/points';
 
 export async function createTeam(teamName: string, ownerId: string): Promise<Team> {
     // Check if user already has a team
@@ -186,53 +187,55 @@ export async function setTeamCaptain(teamId: string, playerId: string, userId: s
 }
 
 async function getTeamById(teamId: string): Promise<Team | null> {
-    const teamResult = await pool.query(
-        'SELECT id, team_name FROM teams WHERE id = $1',
+    // Single optimized query to get all team data at once
+    const result = await pool.query(
+        `SELECT 
+            t.id as team_id,
+            t.team_name,
+            u.id as owner_id,
+            p.id as player_id,
+            p.name as player_name,
+            p.position,
+            c.id as club_id,
+            c.name as club_name,
+            tp.is_captain
+         FROM teams t
+         LEFT JOIN users u ON u.team_id = t.id
+         LEFT JOIN team_players tp ON tp.team_id = t.id
+         LEFT JOIN players p ON p.id = tp.player_id
+         LEFT JOIN clubs c ON c.id = p.club_id
+         WHERE t.id = $1`,
         [teamId]
     );
     
-    if (teamResult.rows.length === 0) return null;
+    if (result.rows.length === 0) return null;
     
-    const teamRow = teamResult.rows[0];
+    const firstRow = result.rows[0];
+    const ownerId = firstRow.owner_id ? firstRow.owner_id.toString() : undefined;
     
-    // Get team owner (user who has this team_id)
-    const ownerResult = await pool.query(
-        'SELECT id FROM users WHERE team_id = $1',
-        [teamId]
-    );
+    // Process the result to build players array and identify captain
+    const players = result.rows
+        .filter(row => row.player_id) // Only include rows with players
+        .map(row => ({
+            id: row.player_id.toString(),
+            name: row.player_name,
+            position: row.position,
+            club: {
+                id: row.club_id.toString(),
+                name: row.club_name
+            },
+            statsHistory: new Map()
+        }));
     
-    const ownerId = ownerResult.rows.length > 0 ? ownerResult.rows[0].id.toString() : undefined;
-    
-    // Get team players
-    const playersResult = await pool.query(
-        `SELECT p.id, p.name, p.position, p.club_id, c.name as club_name, tp.is_captain
-         FROM team_players tp 
-         JOIN players p ON tp.player_id = p.id 
-         JOIN clubs c ON p.club_id = c.id 
-         WHERE tp.team_id = $1`,
-        [teamId]
-    );
-    
-    const players = playersResult.rows.map(row => ({
-        id: row.id.toString(),
-        name: row.name,
-        position: row.position,
-        club: {
-            id: row.club_id.toString(),
-            name: row.club_name
-        },
-        statsHistory: new Map()
-    }));
-    
-    const captain = playersResult.rows.find(row => row.is_captain);
+    const captain = result.rows.find(row => row.is_captain && row.player_id);
     
     return {
-        id: teamRow.id.toString(),
-        teamName: teamRow.team_name,
+        id: firstRow.team_id.toString(),
+        teamName: firstRow.team_name,
         players,
         teamCaptain: captain ? {
-            id: captain.id.toString(),
-            name: captain.name,
+            id: captain.player_id.toString(),
+            name: captain.player_name,
             position: captain.position,
             club: {
                 id: captain.club_id.toString(),
@@ -246,20 +249,64 @@ async function getTeamById(teamId: string): Promise<Team | null> {
 }
 
 export async function getTeams(userId?: string, userRole?: UserRole): Promise<Team[]> {
-    const teamsResult = await pool.query(
-        'SELECT id, team_name FROM teams ORDER BY team_name'
+    // Single optimized query to get all teams and their data at once
+    const result = await pool.query(
+        `SELECT 
+            t.id as team_id,
+            t.team_name,
+            u.id as owner_id,
+            p.id as player_id,
+            p.name as player_name,
+            p.position,
+            c.id as club_id,
+            c.name as club_name,
+            tp.is_captain
+         FROM teams t
+         LEFT JOIN users u ON u.team_id = t.id
+         LEFT JOIN team_players tp ON tp.team_id = t.id
+         LEFT JOIN players p ON p.id = tp.player_id
+         LEFT JOIN clubs c ON c.id = p.club_id
+         ORDER BY t.team_name, p.name`
     );
     
-    const teams: Team[] = [];
+    // Build teams map from the result
+    const teamsMap: { [teamId: string]: Team } = {};
     
-    for (const teamRow of teamsResult.rows) {
-        const team = await getTeamById(teamRow.id.toString());
-        if (team) {
-            teams.push(team);
+    result.rows.forEach(row => {
+        const teamId = row.team_id.toString();
+        
+        if (!teamsMap[teamId]) {
+            teamsMap[teamId] = {
+                id: teamId,
+                teamName: row.team_name,
+                players: [],
+                teamCaptain: undefined,
+                scoreHistory: new Map<MatchDay, number>(),
+                ownerId: row.owner_id ? row.owner_id.toString() : undefined
+            } as Team;
         }
-    }
+        
+        if (row.player_id) {
+            const player = {
+                id: row.player_id.toString(),
+                name: row.player_name,
+                position: row.position,
+                club: {
+                    id: row.club_id.toString(),
+                    name: row.club_name
+                },
+                statsHistory: new Map()
+            };
+            
+            teamsMap[teamId].players.push(player);
+            
+            if (row.is_captain) {
+                teamsMap[teamId].teamCaptain = player;
+            }
+        }
+    });
     
-    return teams;
+    return Object.values(teamsMap);
 }
 
 export async function getUserTeam(userId: string): Promise<Team | null> {
@@ -414,8 +461,21 @@ export async function getTeamsWithScores(userId?: string, userRole?: UserRole): 
                 const stats = statsMap[statsKey];
                 
                 if (stats) {
-                    // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
-                    const basePoints = stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2;
+                    // Calculate points using the configuration
+                    const basePoints = 
+                        stats.goals * pointsConfig.goal + 
+                        stats.assists * pointsConfig.assist + 
+                        stats.blocks * pointsConfig.block + 
+                        stats.steals * pointsConfig.steal + 
+                        stats.pfDrawn * pointsConfig.pfDrawn + 
+                        stats.pf * pointsConfig.pf + 
+                        stats.ballsLost * pointsConfig.ballsLost + 
+                        stats.contraFouls * pointsConfig.contraFoul + 
+                        stats.shots * pointsConfig.shot + 
+                        stats.swimOffs * pointsConfig.swimOff + 
+                        stats.brutality * pointsConfig.brutality + 
+                        stats.saves * pointsConfig.save + 
+                        stats.wins * pointsConfig.win;
                     matchDayPoints += basePoints;
                     
                     // Captain gets double points

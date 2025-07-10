@@ -90,7 +90,6 @@ function calculatePoints(matchDayId) {
             for (const player of team.players) {
                 const stats = playerStats[player.id];
                 if (stats) {
-                    // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
                     const basePoints = stats.goals * points_1.pointsConfig.goal +
                         stats.assists * points_1.pointsConfig.assist +
                         stats.blocks * points_1.pointsConfig.block +

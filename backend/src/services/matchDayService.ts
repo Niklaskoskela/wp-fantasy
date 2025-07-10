@@ -85,7 +85,6 @@ export async function calculatePoints(matchDayId: string): Promise<{ teamId: str
         for (const player of team.players) {
             const stats = playerStats[player.id];
             if (stats) {
-                // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
                 const basePoints = 
                     stats.goals * pointsConfig.goal + 
                     stats.assists * pointsConfig.assist + 
