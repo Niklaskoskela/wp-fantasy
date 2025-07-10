@@ -56,8 +56,8 @@ function addPlayerToTeam(teamId, player, userId, userRole) {
         }
         // Check team player count
         const playerCountCheck = yield database_1.pool.query('SELECT COUNT(*) as count FROM team_players WHERE team_id = $1', [teamId]);
-        if (parseInt(playerCountCheck.rows[0].count) >= 6) {
-            throw new Error('Team already has 6 players');
+        if (parseInt(playerCountCheck.rows[0].count) >= 7) {
+            throw new Error('Team already has 7 players');
         }
         // Check if team already has a goalkeeper
         if (player.position === 'goalkeeper') {

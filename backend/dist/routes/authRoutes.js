@@ -53,7 +53,7 @@ router.post('/change-password', auth_1.authenticateToken, authValidation.validat
 router.get('/users', auth_1.authenticateToken, auth_1.requireAdmin, authController.getAllUsers);
 router.put('/users/:userId/deactivate', auth_1.authenticateToken, auth_1.requireAdmin, authController.deactivateUser);
 router.put('/users/:userId/activate', auth_1.authenticateToken, auth_1.requireAdmin, authController.activateUser);
-router.post('/admin/reset-password/:userId', auth_1.authenticateToken, auth_1.requireAdmin, authValidation.validateAdminResetPassword, authController.adminResetPassword);
+router.post('/admin/reset-password/:userId', auth_1.authenticateToken, auth_1.requireAdmin, authController.adminResetPassword);
 router.put('/users/:userId', auth_1.authenticateToken, auth_1.requireAdmin, authValidation.validateUpdateUser, authController.updateUser);
 exports.default = router;
 //# sourceMappingURL=authRoutes.js.map

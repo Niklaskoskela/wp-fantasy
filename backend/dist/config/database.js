@@ -8,19 +8,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testConnection = exports.closePool = exports.pool = void 0;
 const pg_1 = require("pg");
+const dotenv_1 = __importDefault(require("dotenv"));
+// Load environment variables
+dotenv_1.default.config();
 // Database configuration with SSL support for production/cloud databases
 const getDatabaseConfig = () => {
     const config = {
-        user: process.env.PGUSER || process.env.DB_USER || 'postgres',
+        user: process.env.PGUSER || process.env.DB_USER || 'wpfantasy_user',
         host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
-        database: process.env.PGDATABASE || process.env.DB_NAME || 'wp_fantasy',
+        database: process.env.PGDATABASE || process.env.DB_NAME || 'wpfantasy',
         password: process.env.PGPASSWORD || process.env.DB_PASSWORD || 'password',
         port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432'),
+        env: process.env.ENVIRONMENT || '-',
     };
-    const requireSsl = process.env.environment != 'dev';
+    // Default SSL is enabled for production environments
+    const requireSsl = config.env != 'dev' && !(config.host.includes('localhost'));
+    console.log('Database configuration:');
+    console.log(`  - User: ${config.user}`);
+    console.log(`  - Host: ${config.host}`);
+    console.log(`  - Database: ${config.database}`);
+    console.log(`  - Port: ${config.port}`);
+    console.log(`  - SSL required: ${requireSsl}`);
+    console.log(`  - Environment: ${config.env}`);
     // Configure SSL based on database type, not environment
     if (requireSsl) {
         config.ssl = {
