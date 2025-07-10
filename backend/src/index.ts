@@ -16,6 +16,10 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy when deployed behind a reverse proxy (like Render, Heroku, etc.)
+// This allows express-rate-limit to correctly identify users via X-Forwarded-For header
+app.set('trust proxy', 1);
+
 // Logging middleware - log HTTP requests to console
 app.use(morgan('tiny'));
 
