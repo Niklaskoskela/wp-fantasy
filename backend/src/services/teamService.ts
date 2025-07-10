@@ -82,6 +82,17 @@ export async function addPlayerToTeam(teamId: string, player: Player, userId: st
         [teamId, player.id]
     );
     
+    // Invalidate caches since team composition changed
+    invalidateTeamsWithScoresCache();
+    
+    // Also invalidate player caches if they exist
+    try {
+        const { PlayerService } = require('./playerService');
+        PlayerService.invalidatePlayerCaches();
+    } catch (e) {
+        // Ignore if PlayerService is not available
+    }
+    
     return getTeamById(teamId);
 }
 
@@ -115,6 +126,16 @@ export async function removePlayerFromTeam(teamId: string, playerId: string, use
         [teamId, playerId]
     );
     
+    // Invalidate cache since team composition changed
+    invalidateTeamsWithScoresCache();
+    
+    // Also invalidate player caches if they exist
+    try {
+        const { PlayerService } = require('./playerService');
+        PlayerService.invalidatePlayerCaches();
+    } catch (e) {
+        // Ignore if PlayerService is not available
+    }
     return getTeamById(teamId);
 }
 
@@ -157,6 +178,9 @@ export async function setTeamCaptain(teamId: string, playerId: string, userId: s
         'UPDATE team_players SET is_captain = TRUE WHERE team_id = $1 AND player_id = $2',
         [teamId, playerId]
     );
+    
+    // Invalidate cache since team captain changed
+    invalidateTeamsWithScoresCache();
     
     return getTeamById(teamId);
 }
@@ -251,37 +275,176 @@ export async function getUserTeam(userId: string): Promise<Team | null> {
     return getTeamById(result.rows[0].team_id.toString());
 }
 
+// Cache for team scores - expires after 5 minutes
+interface CacheEntry {
+    data: any[];
+    timestamp: number;
+}
+
+let teamsWithScoresCache: CacheEntry | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Function to invalidate cache when teams or stats change
+export function invalidateTeamsWithScoresCache(): void {
+    teamsWithScoresCache = null;
+}
+
 export async function getTeamsWithScores(userId?: string, userRole?: UserRole): Promise<any[]> {
-    const { getMatchDays, calculatePoints } = require('./matchDayService');
+    // Check cache first
+    if (teamsWithScoresCache && Date.now() - teamsWithScoresCache.timestamp < CACHE_DURATION) {
+        return teamsWithScoresCache.data;
+    }
+
+    const { getMatchDays } = require('./matchDayService');
     const allMatchDays = await getMatchDays();
-    const userTeams = await getTeams();
     
-    const teamsWithScores = [];
+    // Get all teams with their data in one optimized query
+    const teamsResult = await pool.query(`
+        SELECT 
+            t.id as team_id,
+            t.team_name,
+            u.id as owner_id,
+            p.id as player_id,
+            p.name as player_name,
+            p.position,
+            c.id as club_id,
+            c.name as club_name,
+            tp.is_captain
+        FROM teams t
+        LEFT JOIN users u ON u.team_id = t.id
+        LEFT JOIN team_players tp ON tp.team_id = t.id
+        LEFT JOIN players p ON p.id = tp.player_id
+        LEFT JOIN clubs c ON c.id = p.club_id
+        ORDER BY t.team_name, p.name
+    `);
     
-    for (const team of userTeams) {
+    // Get all player stats for all match days in one query
+    const statsResult = await pool.query(`
+        SELECT 
+            ps.player_id,
+            ps.matchday_id,
+            ps.goals,
+            ps.assists,
+            ps.blocks,
+            ps.steals,
+            ps.pf_drawn,
+            ps.pf,
+            ps.balls_lost,
+            ps.contra_fouls,
+            ps.shots,
+            ps.swim_offs,
+            ps.brutality,
+            ps.saves,
+            ps.wins
+        FROM player_stats ps
+        WHERE ps.matchday_id = ANY($1)
+    `, [allMatchDays.map((md: any) => md.id)]);
+    
+    // Build stats lookup map
+    const statsMap: { [key: string]: any } = {};
+    statsResult.rows.forEach(row => {
+        const key = `${row.player_id}_${row.matchday_id}`;
+        statsMap[key] = {
+            goals: row.goals,
+            assists: row.assists,
+            blocks: row.blocks,
+            steals: row.steals,
+            pfDrawn: row.pf_drawn,
+            pf: row.pf,
+            ballsLost: row.balls_lost,
+            contraFouls: row.contra_fouls,
+            shots: row.shots,
+            swimOffs: row.swim_offs,
+            brutality: row.brutality,
+            saves: row.saves,
+            wins: row.wins
+        };
+    });
+    
+    // Build teams map from the result
+    const teamsMap: { [teamId: string]: any } = {};
+    
+    teamsResult.rows.forEach(row => {
+        const teamId = row.team_id.toString();
+        
+        if (!teamsMap[teamId]) {
+            teamsMap[teamId] = {
+                id: teamId,
+                teamName: row.team_name,
+                players: [],
+                teamCaptain: undefined,
+                scoreHistory: new Map(),
+                ownerId: row.owner_id,
+                totalPoints: 0,
+                matchDayScores: []
+            };
+        }
+        
+        if (row.player_id) {
+            const player = {
+                id: row.player_id.toString(),
+                name: row.player_name,
+                position: row.position,
+                club: {
+                    id: row.club_id.toString(),
+                    name: row.club_name
+                },
+                statsHistory: new Map()
+            };
+            
+            teamsMap[teamId].players.push(player);
+            
+            if (row.is_captain) {
+                teamsMap[teamId].teamCaptain = player;
+            }
+        }
+    });
+    
+    // Calculate scores for all teams and match days
+    const teamsWithScores = Object.values(teamsMap).map(team => {
         let totalPoints = 0;
         const matchDayScores: { matchDayId: string; matchDayTitle: string; points: number }[] = [];
         
         // Calculate points for each match day
         for (const matchDay of allMatchDays) {
-            const matchDayResults: { teamId: string; points: number }[] = await calculatePoints(matchDay.id);
-            const teamResult = matchDayResults.find((result: { teamId: string; points: number }) => result.teamId === team.id);
-            const points = teamResult ? teamResult.points : 0;
+            let matchDayPoints = 0;
             
-            totalPoints += points;
+            for (const player of team.players) {
+                const statsKey = `${player.id}_${matchDay.id}`;
+                const stats = statsMap[statsKey];
+                
+                if (stats) {
+                    // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
+                    const basePoints = stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2;
+                    matchDayPoints += basePoints;
+                    
+                    // Captain gets double points
+                    if (team.teamCaptain && team.teamCaptain.id === player.id) {
+                        matchDayPoints += basePoints;
+                    }
+                }
+            }
+            
+            totalPoints += matchDayPoints;
             matchDayScores.push({
                 matchDayId: matchDay.id,
                 matchDayTitle: matchDay.title,
-                points
+                points: matchDayPoints
             });
         }
         
-        teamsWithScores.push({
+        return {
             ...team,
             totalPoints,
             matchDayScores
-        });
-    }
+        };
+    });
+    
+    // Cache the result
+    teamsWithScoresCache = {
+        data: teamsWithScores,
+        timestamp: Date.now()
+    };
     
     return teamsWithScores;
 }

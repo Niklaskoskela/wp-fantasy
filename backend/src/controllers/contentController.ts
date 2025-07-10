@@ -40,6 +40,20 @@ export class ClubController {
       res.status(500).json({ error: 'Failed to fetch club' });
     }
   }
+
+  static async clearClubsCache(req: Request, res: Response) {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+      
+      ClubService.invalidateClubCaches();
+      res.json({ message: 'Clubs cache cleared successfully' });
+    } catch (error) {
+      console.error('Error in clearClubsCache:', error);
+      res.status(500).json({ error: 'Failed to clear clubs cache' });
+    }
+  }
 }
 
 export class PlayerController {
@@ -77,6 +91,20 @@ export class PlayerController {
     } catch (error) {
       console.error('Error in getPlayer:', error);
       res.status(500).json({ error: 'Failed to fetch player' });
+    }
+  }
+
+  static async clearPlayersCache(req: Request, res: Response) {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+      
+      PlayerService.invalidatePlayerCaches();
+      res.json({ message: 'Players cache cleared successfully' });
+    } catch (error) {
+      console.error('Error in clearPlayersCache:', error);
+      res.status(500).json({ error: 'Failed to clear players cache' });
     }
   }
 }

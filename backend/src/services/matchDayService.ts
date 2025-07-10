@@ -19,6 +19,8 @@ export async function createMatchDay(title: string, startTime: Date, endTime: Da
 }
 
 export async function updatePlayerStats(matchDayId: string, playerId: string, stats: Stats): Promise<Stats | null> {
+    const { invalidateTeamsWithScoresCache } = require('./teamService');
+    
     try {
         const result = await pool.query(
             `INSERT INTO player_stats (player_id, matchday_id, goals, assists, blocks, steals, pf_drawn, pf, balls_lost, contra_fouls, shots, swim_offs, brutality, saves, wins) 
@@ -45,6 +47,10 @@ export async function updatePlayerStats(matchDayId: string, playerId: string, st
         );
         
         const row = result.rows[0];
+        
+        // Invalidate cache since player stats changed
+        invalidateTeamsWithScoresCache();
+        
         return {
             id: row.id.toString(),
             goals: row.goals,

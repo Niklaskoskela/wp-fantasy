@@ -16,5 +16,7 @@ router.post('/teams/set-captain', asyncHandler(teamController_1.setTeamCaptain))
 router.get('/teams', asyncHandler(teamController_1.getTeams));
 router.get('/teams/with-scores', asyncHandler(teamController_1.getTeamsWithScores));
 router.get('/league/teams', asyncHandler(teamController_1.getTeamsWithScores));
+router.post('/teams/clear-cache', asyncHandler(teamController_1.clearTeamsCache));
+router.post('/cache/clear-all', asyncHandler(teamController_1.clearAllCaches));
 exports.default = router;
 //# sourceMappingURL=teamRoutes.js.map

@@ -51,6 +51,14 @@ export const teamApi = createApi({
       query: (body) => ({ url: '/teams/set-captain', method: 'POST', body }),
       invalidatesTags: ['Team'],
     }),
+    clearTeamsCache: builder.mutation<{ message: string }, void>({
+      query: () => ({ url: '/teams/clear-cache', method: 'POST' }),
+      invalidatesTags: ['Team'],
+    }),
+    clearAllCaches: builder.mutation<{ message: string }, void>({
+      query: () => ({ url: '/cache/clear-all', method: 'POST' }),
+      invalidatesTags: ['Team'],
+    }),
   }),
 });
 
@@ -61,4 +69,6 @@ export const {
   useAddPlayerToTeamMutation,
   useRemovePlayerFromTeamMutation,
   useSetTeamCaptainMutation,
+  useClearTeamsCacheMutation,
+  useClearAllCachesMutation,
 } = teamApi;
