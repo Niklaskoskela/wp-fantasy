@@ -270,18 +270,7 @@ export async function activateUser(req: Request, res: Response): Promise<void> {
  */
 export async function adminResetPassword(req: Request, res: Response): Promise<void> {
   try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({ 
-        error: 'Validation failed', 
-        details: errors.array() 
-      });
-      return;
-    }
-
     const { userId } = req.params;
-    const { newPassword } = req.body;
 
     // Get user
     const user = await authService.getUserById(userId);
@@ -290,11 +279,17 @@ export async function adminResetPassword(req: Request, res: Response): Promise<v
       return;
     }
 
+    // Generate a temporary password
+    const tempPassword = authService.generateSecureToken().substring(0, 12);
+
     // Create a password reset token and use it immediately
     const token = await authService.createPasswordResetToken(user.email);
-    await authService.resetPasswordWithToken(token, newPassword);
+    await authService.resetPasswordWithToken(token, tempPassword);
     
-    res.json({ message: 'Password reset successfully' });
+    res.json({ 
+      message: 'Password reset successfully',
+      tempPassword: tempPassword
+    });
   } catch (error) {
     console.error('Admin reset password error:', error);
     res.status(500).json({ 

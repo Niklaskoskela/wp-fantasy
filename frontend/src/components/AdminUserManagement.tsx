@@ -46,8 +46,11 @@ export const AdminUserManagement: React.FC = () => {
 
   const handleResetPassword = async (userId: string) => {
     try {
-      await resetPassword(userId).unwrap();
-      setFeedback({ type: 'success', message: 'Password reset successfully' });
+      const result = await resetPassword(userId).unwrap();
+      setFeedback({ 
+        type: 'success', 
+        message: `Password reset successfully. Temporary password: ${result.tempPassword}` 
+      });
       setDialogOpen(false);
     } catch (error: any) {
       setFeedback({ type: 'error', message: error.data?.message || 'Failed to reset password' });
@@ -178,8 +181,8 @@ export const AdminUserManagement: React.FC = () => {
           {dialogType === 'reset' ? (
             <Typography>
               Are you sure you want to reset the password for{' '}
-              <strong>{selectedUser?.username}</strong>? A password reset email will be sent to{' '}
-              <strong>{selectedUser?.email}</strong>.
+              <strong>{selectedUser?.username}</strong>? A temporary password will be generated 
+              and displayed for you to share with the user.
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>

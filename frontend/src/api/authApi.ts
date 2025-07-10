@@ -121,6 +121,7 @@ export const authApi = createApi({
     // Admin endpoints
     getAllUsers: builder.query<AuthUser[], void>({
       query: () => '/users',
+      transformResponse: (response: { users: AuthUser[] }) => response.users,
       providesTags: ['User'],
     }),
 
