@@ -2,6 +2,7 @@ import { MatchDay, Player, Stats, Team } from '../../../shared/dist/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getTeams } from './teamService';
 import { pool } from '../config/database';
+import { pointsConfig } from 'config/points';
 
 export async function createMatchDay(title: string, startTime: Date, endTime: Date): Promise<MatchDay> {
     const result = await pool.query(
@@ -75,16 +76,30 @@ export async function updatePlayerStats(matchDayId: string, playerId: string, st
 
 export async function calculatePoints(matchDayId: string): Promise<{ teamId: string; points: number }[]> {
     const teams = await getTeams();
+    const playerStats = await getPlayerStats(matchDayId);
     const results: { teamId: string; points: number }[] = [];
     
     for (const team of teams) {
         let total = 0;
         
         for (const player of team.players) {
-            const stats = await getPlayerStatsForPlayer(matchDayId, player.id);
+            const stats = playerStats[player.id];
             if (stats) {
                 // Simple scoring: goals*5 + assists*3 + blocks*2 + steals*2
-                const basePoints = stats.goals * 5 + stats.assists * 3 + stats.blocks * 2 + stats.steals * 2;
+                const basePoints = 
+                    stats.goals * pointsConfig.goal + 
+                    stats.assists * pointsConfig.assist + 
+                    stats.blocks * pointsConfig.block + 
+                    stats.steals * pointsConfig.steal + 
+                    stats.pfDrawn * pointsConfig.pfDrawn + 
+                    stats.pf * pointsConfig.pf + 
+                    stats.ballsLost * pointsConfig.ballsLost + 
+                    stats.contraFouls * pointsConfig.contraFoul + 
+                    stats.shots * pointsConfig.shot + 
+                    stats.swimOffs * pointsConfig.swimOff + 
+                    stats.brutality * pointsConfig.brutality + 
+                    stats.saves * pointsConfig.save + 
+                    stats.wins * pointsConfig.win;
                 total += basePoints;
                 // Captain gets double points
                 if (team.teamCaptain && team.teamCaptain.id === player.id) {
