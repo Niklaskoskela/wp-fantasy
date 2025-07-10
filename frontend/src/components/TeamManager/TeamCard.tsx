@@ -68,6 +68,8 @@ export function TeamCard({
     ) {
       return PlayerPosition.GOALKEEPER;
     }
+    // For slots 1-6, we want field players (exclude goalkeepers)
+    // Return undefined to indicate field position filtering
     return undefined;
   };
 

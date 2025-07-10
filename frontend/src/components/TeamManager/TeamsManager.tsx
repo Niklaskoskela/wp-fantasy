@@ -157,7 +157,7 @@ export function TeamsManager() {
     slot: number,
     _position?: PlayerPosition
   ) => {
-    // Slot 0: GK, slots 1-6: outfield
+    // Slot 0: GK, slots 1-6: field players (exclude goalkeepers)
     const requiredPosition = slot === 0 ? PlayerPosition.GOALKEEPER : undefined;
     setPickerSlot({ teamId, slot, position: requiredPosition });
     setPickerOpen(true);
@@ -418,7 +418,7 @@ export function TeamsManager() {
                     .map((p) => (p as Player).id)
                 : []
             }
-            requiredPosition={pickerSlot?.slot === 0 ? PlayerPosition.GOALKEEPER : undefined}
+            requiredPosition={pickerSlot?.position}
           />
         </Box>
       )}

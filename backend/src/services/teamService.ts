@@ -60,8 +60,8 @@ export async function addPlayerToTeam(teamId: string, player: Player, userId: st
         [teamId]
     );
     
-    if (parseInt(playerCountCheck.rows[0].count) >= 6) {
-        throw new Error('Team already has 6 players');
+    if (parseInt(playerCountCheck.rows[0].count) >= 7) {
+        throw new Error('Team already has 7 players');
     }
     
     // Check if team already has a goalkeeper

@@ -70,7 +70,6 @@ router.put('/users/:userId/activate',
 router.post('/admin/reset-password/:userId', 
   authenticateToken,
   requireAdmin,
-  authValidation.validateAdminResetPassword,
   authController.adminResetPassword
 );
 

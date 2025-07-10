@@ -1,170 +1,188 @@
-# Water Polo Fantasy League management SPA react app.
+# Water Polo Fantasy League
 
-Frontend: Vite, Typescript, React, React Router, Material UI
-Backend: Node JS Express backend
-DB: PostgreSQL with proper migrations
+A comprehensive fantasy sports management application for water polo leagues, built with modern web technologies.
 
-First scope is MVP product with ability to manage fantasy team on
-localhost on a single computer for a single person.
-Management means, updating teams, updating player stats and calculating teams points. Stats and score should be calculated on a matchday basis
+## Setup and quickstart
 
-Plan is to use proper best practices for development to create maintainable, updatable and testable code base.
-Avoid using undefined values - try to use checks or default values when necessary, eg. when creating or fetching data
+Look at 
 
-## Testing Plan
+## 🏆 Overview
 
-Create simple tests in the backend to make sure points are calculated correctly
+The Water Polo Fantasy League is a full-stack web application that allows users to create and manage fantasy water polo teams. Users can draft players, track statistics, and compete in leagues with friends and colleagues.
 
-## Development Plan:
+## ✨ Features
 
-### Backend
+### Core Functionality
+- **Team Management**: Create and manage fantasy teams with player drafting
+- **Player Statistics**: Track comprehensive water polo statistics
+- **Match Day Management**: Schedule matches with automatic roster locking
+- **Points Calculation**: Automated scoring based on player performance
+- **League Management**: Multi-user leagues with rankings and history
 
-1. Figure out types for fantasy teams, matchdays
-2. Create types
-3. Create simple DB by initializing the PG data tables. Use the types as basis for the tables.
-4. Setup backend routes and connect it to DB. Create tests for these actions.
-5. Managing content:
-  a. Creating / managing clubs. (post, put and delete request)
-  b. Creating players. (post, put and delete request)
-6. Managing teams: Creating a team. Then being able to pick or change players for the teams and select a captain. Team consists of 6 players, 1 goal keeper, 1 of these is the captain.
-7. Manage match days:
-  a. creating a match day with a title (post request with a title)
-  b. update player stats for a given match day. (post request with match day id and updated stats)
-  c. calculate points for all of the teams for the match day. (get request with match day id)
-8. Seeing the results of the league: get endpoint to get all of the teams of the league. 
-   Create also a solid system wide test that creates teams -> creates two matchdays -> updates stats for match days -> calculates points based on these -> 
+### User Experience
+- **Responsive Design**: Works seamlessly on desktop and mobile
+- **Dark/Light Theme**: Customizable theme with water polo-inspired colors
+- **Real-time Updates**: Live score updates and roster changes
+- **Admin Panel**: Complete content management for administrators
 
+### Security & Performance
+- **JWT Authentication**: Secure user authentication with role-based access
+- **Rate Limiting**: Protection against abuse and spam
+- **Database Migrations**: Robust schema management and versioning
+- **Comprehensive Testing**: Unit, integration, and end-to-end tests
+
+## 🚀 Technology Stack
 
 ### Frontend
+- **React 18** with TypeScript for type safety
+- **Material-UI (MUI)** for consistent, beautiful UI components
+- **React Router** for client-side routing
+- **RTK Query** for efficient state management and API calls
+- **Vite** for lightning-fast development and building
 
-Frontend with react and react-router, RTK query and MUI:
-Use existing backend endpoints and shared types. Create components and divide into sub components based on functionality:
-Setup react-router, RTK query and MUI (with a theme)
-1. Managing content:
-  a. Creating clubs.
-  b. Creating players.
-  c. Viewing list of clubs and a single club
-  d. Viewing list of players and a single player
-2. Managing teams: Creating a fantasy team by setting a title. Browsing players while being able to pick or change players for the teams and select a captain. Team consists of at most 6 players, 1 goal keeper, 1 of these is the captain.
-3. Manage match days:
-  a. creating a match day with a title
-  b. when selecting a match day: update player stats for a given match day in a table view
-  c. when selecting a match day, option to calculate points for all of the teams for the match day. (get request with match day id).
-4. Seeing the results of the league. Get all of the teams, calculate total points and rank the teams 
+### Backend
+- **Node.js** with Express for robust API development
+- **TypeScript** for type safety across the entire stack
+- **PostgreSQL** with proper migrations for reliable data storage
+- **JWT** for secure authentication and authorization
+- **Jest** for comprehensive testing
 
+### Development Tools
+- **ESLint + Prettier** for code quality and consistency
+- **Husky** for git hooks and pre-commit checks
 
+## 📖 Documentation
 
-### Users
+Comprehensive documentation is available in the `/documentation` folder:
 
-Each user has 
-* username, 
-* email, 
-* role, 
-* password and a 
-* team
+- **[Development Setup](documentation/development/setup.md)** - Complete development environment setup
+- **[API Documentation](documentation/api/README.md)** - REST API endpoints and usage
+- **[Database Guide](documentation/database/setup.md)** - Database schema and migrations
+- **[Frontend Guide](documentation/frontend/README.md)** - React components and architecture
+- **[Type Definitions](documentation/types/README.md)** - TypeScript type definitions
 
-You will also need to create a usersession management. 
+## 🛠️ Quick Start
 
-UserSession
-* id
-* User
+### Prerequisites
+- Node.js (v18 or higher)
+- PostgreSQL (v12 or higher)
+- npm 
 
-User can manage only their team's players.
-User has only one team, this needs to be also updated on frontend team creation side. 
+### Installation
 
-Content Management such as creating players, clubs and managing matchdays is done by admin level users
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd wp-fantasy
+   ```
 
-Login screen
+2. **Install dependencies**
+   ```bash
+   make install
+   ```
 
-Possibility for admin to reset password of user
+3. **Set up the database**
+   ```bash
+   # Create database
+   createdb wpfantasy
+   
+   # Run migrations
+   cd backend
+   npm run migrate
+   ```
 
-#### Secure Authentication System ✅
+4. **Configure environment variables**
+   ```bash
+   # Backend
+   cp backend/.env.example backend/.env
+   
+   # Frontend
+   cp frontend/.env.example frontend/.env
+   ```
 
-**Database Schema:**
-- Created `users` table with secure password hashing, role-based access, and account security
-- Created `user_sessions` table for session management
-- Created `password_reset_tokens` table for secure password resets
-- Added proper indexes, constraints, and triggers for data integrity
+5. **Start development servers**
+   ```bash
+   make dev
+   ```
 
-**Security Features:**
-- ✅ Bcrypt password hashing with 12 salt rounds
-- ✅ JWT token-based authentication with secure settings
-- ✅ Session-based authentication as alternative
-- ✅ Rate limiting for auth endpoints (10 attempts/15min)
-- ✅ Account lockout after 5 failed login attempts
-- ✅ Secure password requirements (8+ chars, mixed case, numbers, symbols)
-- ✅ HELMET security headers
-- ✅ CORS configuration
-- ✅ Input validation and sanitization
-- ✅ Role-based authorization (USER/ADMIN)
-- ✅ Team ownership enforcement
+The application will be available at:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:5050`
 
-**Authentication Endpoints:**
-- `POST /api/auth/register` - User registration with validation
-- `POST /api/auth/login` - Secure login with rate limiting
-- `POST /api/auth/logout` - Session cleanup
-- `GET /api/auth/me` - Get current user info
-- `POST /api/auth/change-password` - Change password with current password verification
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password` - Reset password with token
-- `GET /api/auth/users` - Admin: Get all users
-- `PUT /api/auth/users/:id/activate` - Admin: Activate user
-- `PUT /api/auth/users/:id/deactivate` - Admin: Deactivate user
-- `POST /api/auth/admin/reset-password/:id` - Admin: Reset user password
+## 🎯 Key Features Implemented
 
-**Access Control:**
-- Users can only manage their own team (one team per user)
-- Admin users can manage all content (players, clubs, matchdays)
-- Protected routes require authentication
-- Team ownership validation on all team operations
-- Content management requires admin role
+### ✅ Authentication System
+- Secure user registration and login
+- JWT-based authentication with refresh tokens
+- Role-based access control (USER/ADMIN)
+- Password reset functionality
+- Account lockout protection
 
-**Migration:** `1750533847960_add-users-and-sessions.js`
+### ✅ Team Management
+- Create and customize fantasy teams
+- Player drafting with position requirements
+- Captain selection with bonus points
+- Team roster history tracking
 
+### ✅ Match Day System
+- Schedule matches with start/end times
+- Automatic roster locking when matches begin
+- Real-time score calculation
+- Historical match data preservation
 
-### Future development
+### ✅ Player & Club Management
+- Comprehensive player database
+- Club affiliations and transfers
+- Statistical tracking across multiple categories
+- Admin-only content management
 
+### ✅ Roster History
+- Automatic roster snapshotting
+- Historical team compositions
+- Captain tracking per match day
+- Data integrity preservation
 
-Matchdays:
-1. Should have start and ending times. ✅ COMPLETED
-2. Roster history: In database add a roster history to a team. Basically store a roster matching a match day. Do this by properly making migrations. ✅ COMPLETED
-3. In backend: The active roster is added to the team's roster history, when the match day starts, for all the teams. ✅ COMPLETED
-4. In front end: Team selector shows the next upcoming matchday and its start time. (or no upcoming matchdays if none exist). Show also the roster of the last active match day ✅ COMPLETED
+## 📊 Database Schema
 
-#### Roster History Implementation ✅
+The application uses PostgreSQL with a well-designed schema:
 
-**Database Schema:**
-- Created `roster_history` table with migration `1750532266808_add-roster-history.js`
-- Tracks team compositions for each matchday
-- Includes constraints for data integrity (unique team/matchday/player combinations)
-- Ensures only one captain per team per matchday
+```
+users ──┐
+        │
+        └──► teams ──┐
+                     │
+                     └──► roster_history ──┐
+                                           │
+players ──┐                               │
+          │                               │
+          └──► player_stats               │
+          │                               │
+          └──────────────────────────────┘
+          │
+clubs ────┘
 
-**Backend Services:**
-- `rosterHistoryService.ts`: Core service for managing roster histories
-- `rosterHistoryController.ts`: REST API endpoints
-- `rosterHistoryRoutes.ts`: Route definitions
-- Updated `matchDayService.ts` with `startMatchDay()` function to auto-snapshot rosters
+matchdays ──┐
+            │
+            └──► player_stats
+            │
+            └──► roster_history
+```
 
-**API Endpoints:**
-- `POST /api/roster-history/:teamId/:matchDayId` - Create roster history
-- `GET /api/roster-history/:teamId/:matchDayId` - Get specific roster history
-- `GET /api/roster-history/team/:teamId` - Get all roster history for a team
-- `GET /api/roster-history/matchday/:matchDayId` - Get all roster history for a matchday
-- `POST /api/roster-history/snapshot/:matchDayId` - Snapshot all team rosters
-- `POST /api/matchdays/:id/start` - Start matchday (auto-snapshots rosters)
-- `DELETE /api/roster-history/:teamId/:matchDayId` - Remove roster history
+## 🚢 Deployment
 
-**Features:**
-- Automatic roster snapshotting when matchdays start
-- Prevention of duplicate roster entries
-- Captain tracking per matchday
-- Comprehensive test coverage
+### Development
+```bash
+make build
+make dev
+```
 
-----
-Improve importing player data
+### Production
+```bash
+make build
+```
 
-Improve visuals
+## 📞 Support
 
-Player view should show player stats as well as all the matches player has played, as well as future matches.
-
+For support, please:
+1. Check the [documentation](documentation/)
 
