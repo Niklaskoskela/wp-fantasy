@@ -28,7 +28,7 @@
     "test:backend": "cd backend && npm run test",
     "test-all": "npm run lint && npm run typecheck && npm run test",
     "check-all": "npm run lint && npm run typecheck",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   },
   "dependencies": {
     "@mui/icons-material": "^7.1.1",
@@ -37,6 +37,7 @@
   "devDependencies": {
     "concurrently": "^9.2.0",
     "husky": "^8.0.3",
+    "is-ci": "^4.1.0",
     "typescript": "^5.8.3"
   },
   "workspaces": [
