@@ -1,5 +1,5 @@
 // PlayerService split from clubService for player management
-import { PlayerPosition } from 'shared';
+import { PlayerPosition, Player } from 'shared';
 import { pool } from '../config/database';
 
 // Cache interfaces
@@ -9,8 +9,8 @@ interface CacheEntry<T> {
 }
 
 // Cache storage
-let allPlayersCache: CacheEntry<any[]> | null = null;
-let playerByIdCache: Map<string, CacheEntry<any>> = new Map();
+let allPlayersCache: CacheEntry<Player[]> | null = null;
+const playerByIdCache = new Map<string, CacheEntry<Player>>();
 
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 

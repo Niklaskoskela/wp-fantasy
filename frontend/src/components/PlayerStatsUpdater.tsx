@@ -14,7 +14,10 @@ import {
   Alert,
 } from '@mui/material';
 import { useGetPlayersQuery } from '../api/contentApi';
-import { useUpdatePlayerStatsMutation, useGetPlayerStatsQuery } from '../api/matchDayApi';
+import {
+  useUpdatePlayerStatsMutation,
+  useGetPlayerStatsQuery,
+} from '../api/matchDayApi';
 import { Stats } from '../../../shared/dist/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -44,7 +47,8 @@ export function PlayerStatsUpdater({
   matchDayTitle,
 }: PlayerStatsUpdaterProps) {
   const { data: players = [], isLoading, error } = useGetPlayersQuery();
-  const { data: existingStats = {}, isLoading: isLoadingStats } = useGetPlayerStatsQuery(matchDayId);
+  const { data: existingStats = {}, isLoading: isLoadingStats } =
+    useGetPlayerStatsQuery(matchDayId);
   const [updatePlayerStats, { isLoading: isUpdating }] =
     useUpdatePlayerStatsMutation();
   const [playerStats, setPlayerStats] = useState<{ [playerId: string]: Stats }>(
@@ -136,7 +140,8 @@ export function PlayerStatsUpdater({
     }
   };
 
-  if (isLoading || isLoadingStats) return <Typography>Loading players and stats...</Typography>;
+  if (isLoading || isLoadingStats)
+    return <Typography>Loading players and stats...</Typography>;
   if (error) return <Alert severity='error'>Failed to load players</Alert>;
 
   const statsFields: Array<{
@@ -213,63 +218,65 @@ export function PlayerStatsUpdater({
             {players.map((player) => {
               const hasExistingStats = existingStats[player.id] !== undefined;
               return (
-                <TableRow 
+                <TableRow
                   key={player.id}
                   sx={{
-                    backgroundColor: hasExistingStats ? 'action.hover' : 'transparent',
+                    backgroundColor: hasExistingStats
+                      ? 'action.hover'
+                      : 'transparent',
                   }}
                 >
                   <TableCell component='th' scope='row'>
                     {player.name}
                     {hasExistingStats && (
-                      <Typography 
-                        variant='caption' 
-                        color='primary' 
+                      <Typography
+                        variant='caption'
+                        color='primary'
                         sx={{ display: 'block', fontStyle: 'italic' }}
                       >
                         Has saved stats
                       </Typography>
                     )}
                   </TableCell>
-                <TableCell>{player.position}</TableCell>
-                <TableCell>{player.club.name}</TableCell>
-                {statsFields.map((field) => (
-                  <TableCell key={field.key} align='center'>
-                    <TextField
-                      type='number'
+                  <TableCell>{player.position}</TableCell>
+                  <TableCell>{player.club.name}</TableCell>
+                  {statsFields.map((field) => (
+                    <TableCell key={field.key} align='center'>
+                      <TextField
+                        type='number'
+                        size='small'
+                        value={playerStats[player.id]?.[field.key] || 0}
+                        onChange={(e) =>
+                          handleStatChange(
+                            player.id,
+                            field.key,
+                            Math.max(field.min, parseInt(e.target.value) || 0)
+                          )
+                        }
+                        inputProps={{ min: field.min, step: 1 }}
+                        sx={{ width: 70 }}
+                      />
+                    </TableCell>
+                  ))}
+                  <TableCell align='center'>
+                    <Button
                       size='small'
-                      value={playerStats[player.id]?.[field.key] || 0}
-                      onChange={(e) =>
-                        handleStatChange(
-                          player.id,
-                          field.key,
-                          Math.max(field.min, parseInt(e.target.value) || 0)
-                        )
+                      variant='outlined'
+                      onClick={() => handleUpdatePlayerStats(player.id)}
+                      disabled={isUpdating}
+                      color={
+                        updateResults.success.includes(player.id)
+                          ? 'success'
+                          : 'primary'
                       }
-                      inputProps={{ min: field.min, step: 1 }}
-                      sx={{ width: 70 }}
-                    />
+                    >
+                      {updateResults.success.includes(player.id)
+                        ? 'Updated'
+                        : 'Update'}
+                    </Button>
                   </TableCell>
-                ))}
-                <TableCell align='center'>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    onClick={() => handleUpdatePlayerStats(player.id)}
-                    disabled={isUpdating}
-                    color={
-                      updateResults.success.includes(player.id)
-                        ? 'success'
-                        : 'primary'
-                    }
-                  >
-                    {updateResults.success.includes(player.id)
-                      ? 'Updated'
-                      : 'Update'}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
+                </TableRow>
+              );
             })}
           </TableBody>
         </Table>

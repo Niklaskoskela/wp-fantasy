@@ -7,7 +7,7 @@ const getToken = () => localStorage.getItem('authToken');
 
 export const teamApi = createApi({
   reducerPath: 'teamApi',
-  baseQuery: fetchBaseQuery({ 
+  baseQuery: fetchBaseQuery({
     baseUrl: API_URL,
     prepareHeaders: (headers) => {
       const token = getToken();

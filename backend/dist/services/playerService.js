@@ -13,7 +13,7 @@ exports.PlayerService = void 0;
 const database_1 = require("../config/database");
 // Cache storage
 let allPlayersCache = null;
-let playerByIdCache = new Map();
+const playerByIdCache = new Map();
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 class PlayerService {
     // Function to invalidate all player caches

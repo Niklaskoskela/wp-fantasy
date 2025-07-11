@@ -1,5 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { ClubsManager } from './components/ClubsManager';
 import { PlayersManager } from './components/PlayersManager';
 import { ClubsList } from './components/ClubsList';
@@ -25,8 +30,9 @@ function HomePage() {
       </Typography>
       {isAuthenticated ? (
         <Typography variant='body1'>
-          Welcome back, <strong>{user?.username}</strong>! Manage your fantasy water polo league: 
-          create clubs, players, teams, match days, and see league results.
+          Welcome back, <strong>{user?.username}</strong>! Manage your fantasy
+          water polo league: create clubs, players, teams, match days, and see
+          league results.
         </Typography>
       ) : (
         <Typography variant='body1'>
@@ -45,7 +51,7 @@ function App() {
         <NavigationBar />
         <Container sx={{ mt: 4 }}>
           <Routes>
-            <Route path="/auth" element={ <AuthPage />} />
+            <Route path='/auth' element={<AuthPage />} />
             <Route
               path='/clubs'
               element={
@@ -104,21 +110,21 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route 
-              path='/' 
+            <Route
+              path='/'
               element={
                 <ProtectedRoute>
-                  <Navigate to="/teams" replace />
+                  <Navigate to='/teams' replace />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path='*' 
+            <Route
+              path='*'
               element={
                 <ProtectedRoute>
-                  <Navigate to="/teams" replace />
+                  <Navigate to='/teams' replace />
                 </ProtectedRoute>
-              } 
+              }
             />
           </Routes>
         </Container>

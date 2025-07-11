@@ -41,15 +41,17 @@ export function MatchDaysList({
         </Typography>
       ) : (
         <List>
-          <Typography variant='subtitle1' gutterBottom>Select Match Day:</Typography>
+          <Typography variant='subtitle1' gutterBottom>
+            Select Match Day:
+          </Typography>
           {matchDays.map((matchDay) => {
             const now = new Date();
             const startTime = new Date(matchDay.startTime);
             const endTime = new Date(matchDay.endTime);
-            
+
             let status = 'upcoming';
             let statusColor = 'info.main';
-            
+
             if (now >= startTime && now <= endTime) {
               status = 'ongoing';
               statusColor = 'success.main';
@@ -63,23 +65,30 @@ export function MatchDaysList({
                 <ListItemButton
                   selected={selectedMatchDayId === matchDay.id}
                   onClick={() => onSelectMatchDay(matchDay.id, matchDay.title)}
-                  sx={{ 
+                  sx={{
                     borderRadius: 1,
                     mb: 1,
                     border: selectedMatchDayId === matchDay.id ? 2 : 1,
-                    borderColor: selectedMatchDayId === matchDay.id ? 'primary.main' : 'divider'
+                    borderColor:
+                      selectedMatchDayId === matchDay.id
+                        ? 'primary.main'
+                        : 'divider',
                   }}
                 >
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant='subtitle1'>{matchDay.title}</Typography>
-                        <Typography 
-                          variant='caption' 
-                          sx={{ 
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        <Typography variant='subtitle1'>
+                          {matchDay.title}
+                        </Typography>
+                        <Typography
+                          variant='caption'
+                          sx={{
                             color: statusColor,
                             fontWeight: 'bold',
-                            textTransform: 'uppercase'
+                            textTransform: 'uppercase',
                           }}
                         >
                           {status}
@@ -88,10 +97,18 @@ export function MatchDaysList({
                     }
                     secondary={
                       <Box>
-                        <Typography variant='caption' display='block' color='text.secondary'>
+                        <Typography
+                          variant='caption'
+                          display='block'
+                          color='text.secondary'
+                        >
                           Start: {startTime.toLocaleString()}
                         </Typography>
-                        <Typography variant='caption' display='block' color='text.secondary'>
+                        <Typography
+                          variant='caption'
+                          display='block'
+                          color='text.secondary'
+                        >
                           End: {endTime.toLocaleString()}
                         </Typography>
                       </Box>
@@ -118,10 +135,10 @@ export function CreateMatchDayForm() {
     if (!title.trim() || !startTime || !endTime) return;
 
     try {
-      await createMatchDay({ 
+      await createMatchDay({
         title: title.trim(),
         startTime,
-        endTime
+        endTime,
       }).unwrap();
       setTitle('');
       setStartTime('');
@@ -182,7 +199,8 @@ export function CreateMatchDayForm() {
         </Box>
         {error && (
           <Alert severity='error' sx={{ mt: 2 }}>
-            Failed to create match day. Please check all fields are filled correctly.
+            Failed to create match day. Please check all fields are filled
+            correctly.
           </Alert>
         )}
       </form>

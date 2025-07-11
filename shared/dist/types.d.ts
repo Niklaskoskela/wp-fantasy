@@ -54,6 +54,7 @@ export interface Team {
     teamCaptain?: Player;
     scoreHistory: Map<MatchDay, number>;
     rosterHistory?: Map<string, RosterHistory[]>;
+    ownerId?: string;
 }
 export declare enum UserRole {
     USER = "user",

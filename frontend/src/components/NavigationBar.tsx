@@ -18,7 +18,14 @@ import {
   Avatar,
   Chip,
 } from '@mui/material';
-import { Menu as MenuIcon, Close, Brightness4, Brightness7, Person, ExitToApp } from '@mui/icons-material';
+import {
+  Menu as MenuIcon,
+  Close,
+  Brightness4,
+  Brightness7,
+  Person,
+  ExitToApp,
+} from '@mui/icons-material';
 import { useThemeContext, navMaxWidth } from '../theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useLogoutMutation } from '../api/authApi';
@@ -35,23 +42,34 @@ const navItems: NavItem[] = [
   { label: 'Clubs', path: '/clubs', requireAuth: true, requireAdmin: true },
   { label: 'Players', path: '/players', requireAuth: true, requireAdmin: true },
   { label: 'Teams', path: '/teams', requireAuth: true },
-  { label: 'Match Days', path: '/matchdays', requireAuth: true, requireAdmin: true },
-  { label: 'User Management', path: '/admin/users', requireAuth: true, requireAdmin: true },
+  {
+    label: 'Match Days',
+    path: '/matchdays',
+    requireAuth: true,
+    requireAdmin: true,
+  },
+  {
+    label: 'User Management',
+    path: '/admin/users',
+    requireAuth: true,
+    requireAdmin: true,
+  },
 ];
 
 export function NavigationBar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [userMenuAnchor, setUserMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [userMenuAnchor, setUserMenuAnchor] =
+    React.useState<null | HTMLElement>(null);
   const { isDarkMode, toggleTheme } = useThemeContext();
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [logoutMutation] = useLogoutMutation();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
-  
+
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchor(event.currentTarget);
   };
-  
+
   const handleUserMenuClose = () => {
     setUserMenuAnchor(null);
   };
@@ -68,7 +86,7 @@ export function NavigationBar() {
   };
 
   // Filter nav items based on auth and admin status
-  const filteredNavItems = navItems.filter(item => {
+  const filteredNavItems = navItems.filter((item) => {
     if (item.requireAuth && !isAuthenticated) return false;
     if (item.requireAdmin && !isAdmin) return false;
     return true;
@@ -128,10 +146,10 @@ export function NavigationBar() {
             {isAuthenticated ? (
               <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
                 {isAdmin && (
-                  <Chip 
-                    label="Admin" 
-                    color="secondary" 
-                    size="small" 
+                  <Chip
+                    label='Admin'
+                    color='secondary'
+                    size='small'
                     sx={{ mr: 1, display: { xs: 'none', sm: 'inline-flex' } }}
                   />
                 )}
@@ -158,7 +176,7 @@ export function NavigationBar() {
                   }}
                 >
                   <MenuItem disabled>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       {user?.username} ({user?.role})
                     </Typography>
                   </MenuItem>
@@ -168,7 +186,10 @@ export function NavigationBar() {
                 </Menu>
               </Box>
             ) : (
-              <Typography variant="body2" sx={{ ml: 2, display: { xs: 'none', sm: 'block' } }}>
+              <Typography
+                variant='body2'
+                sx={{ ml: 2, display: { xs: 'none', sm: 'block' } }}
+              >
                 Please log in
               </Typography>
             )}
@@ -229,11 +250,13 @@ export function NavigationBar() {
                 <Avatar sx={{ width: 32, height: 32, mr: 2 }}>
                   <Person />
                 </Avatar>
-                <Typography variant="body1">{user?.username}</Typography>
+                <Typography variant='body1'>{user?.username}</Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip label={user?.role} color="primary" size="small" />
-                {isAdmin && <Chip label="Admin" color="secondary" size="small" />}
+                <Chip label={user?.role} color='primary' size='small' />
+                {isAdmin && (
+                  <Chip label='Admin' color='secondary' size='small' />
+                )}
               </Box>
             </Box>
           )}
@@ -299,7 +322,7 @@ export function NavigationBar() {
                   }}
                 >
                   <ListItemText
-                    primary="Logout"
+                    primary='Logout'
                     primaryTypographyProps={{
                       fontSize: '1.1rem',
                       fontWeight: 500,

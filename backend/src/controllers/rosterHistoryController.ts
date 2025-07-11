@@ -1,7 +1,7 @@
 // Controller for roster history endpoints
 import { Request, Response } from 'express';
 import * as rosterHistoryService from '../services/rosterHistoryService';
-import { RosterEntry } from '../../../shared/dist/types';
+import { RosterEntry, RosterHistory } from '../../../shared/dist/types';
 
 /**
  * POST /api/roster-history/:teamId/:matchDayId
@@ -65,7 +65,7 @@ export async function getTeamRosterHistory(req: Request, res: Response): Promise
         const rosterHistory = await rosterHistoryService.getTeamRosterHistory(teamId);
         
         // Convert Map to object for JSON serialization
-        const rosterHistoryObj: { [matchDayId: string]: any[] } = {};
+        const rosterHistoryObj: { [matchDayId: string]: RosterHistory[] } = {};
         rosterHistory.forEach((value, key) => {
             rosterHistoryObj[key] = value;
         });
@@ -87,7 +87,7 @@ export async function getMatchDayRosterHistory(req: Request, res: Response): Pro
         const rosterHistory = await rosterHistoryService.getMatchDayRosterHistory(matchDayId);
         
         // Convert Map to object for JSON serialization
-        const rosterHistoryObj: { [teamId: string]: any[] } = {};
+        const rosterHistoryObj: { [teamId: string]: RosterHistory[] } = {};
         rosterHistory.forEach((value, key) => {
             rosterHistoryObj[key] = value;
         });
@@ -113,10 +113,10 @@ export async function snapshotAllTeamRosters(req: Request, res: Response): Promi
             return;
         }
         
-        const snapshots = await rosterHistoryService.snapshotAllTeamRosters(matchDayId, req.user.id, req.user.role);
+        const snapshots = await rosterHistoryService.snapshotAllTeamRosters(matchDayId);
         
         // Convert Map to object for JSON serialization
-        const snapshotsObj: { [teamId: string]: any[] } = {};
+        const snapshotsObj: { [teamId: string]: RosterHistory[] } = {};
         snapshots.forEach((value, key) => {
             snapshotsObj[key] = value;
         });

@@ -17,7 +17,6 @@ const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables
 dotenv_1.default.config();
-// Database configuration with SSL support for production/cloud databases
 const getDatabaseConfig = () => {
     const config = {
         user: process.env.PGUSER || process.env.DB_USER || 'wpfantasy_user',

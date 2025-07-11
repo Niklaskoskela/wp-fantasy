@@ -32,6 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateToken = authenticateToken;
 exports.authenticateSession = authenticateSession;
@@ -65,23 +74,25 @@ function authenticateToken(req, res, next) {
 }
 // Session-based authentication middleware
 function authenticateSession(req, res, next) {
-    const sessionToken = req.headers['x-session-token'];
-    if (!sessionToken) {
-        res.status(401).json({ error: 'Session token required' });
-        return;
-    }
-    try {
-        const user = authService.validateSession(sessionToken);
-        if (!user) {
-            res.status(403).json({ error: 'Invalid or expired session' });
+    return __awaiter(this, void 0, void 0, function* () {
+        const sessionToken = req.headers['x-session-token'];
+        if (!sessionToken) {
+            res.status(401).json({ error: 'Session token required' });
             return;
         }
-        req.user = user;
-        next();
-    }
-    catch (error) {
-        res.status(403).json({ error: 'Invalid or expired session' });
-    }
+        try {
+            const user = yield authService.validateSession(sessionToken);
+            if (!user) {
+                res.status(403).json({ error: 'Invalid or expired session' });
+                return;
+            }
+            req.user = user;
+            next();
+        }
+        catch (error) {
+            res.status(403).json({ error: 'Invalid or expired session' });
+        }
+    });
 }
 // Authorization middleware - check user role
 function requireRole(role) {

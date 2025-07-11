@@ -16,7 +16,6 @@ import { useGetMatchDaysQuery } from '../../api/matchDayApi';
 import { useGetTeamRosterHistoryQuery } from '../../api/rosterHistoryApi';
 import {
   useGetTeamsQuery,
-  useGetTeamsWithScoresQuery,
   useCreateTeamMutation,
   useAddPlayerToTeamMutation,
   useRemovePlayerFromTeamMutation,
@@ -32,30 +31,32 @@ import { useAuth } from '../../contexts/AuthContext';
 export function TeamsManager() {
   const { data: teams = [], refetch } = useGetTeamsQuery();
   const { data: players = [] } = useGetPlayersQuery();
-  const { data: matchDays = [], isLoading: isLoadingMatchDays } = useGetMatchDaysQuery();
+  const { data: matchDays = [], isLoading: isLoadingMatchDays } =
+    useGetMatchDaysQuery();
   const { user } = useAuth();
-  
+
   // Find the first team to show roster history for (or could be user's selected team)
   const firstTeam = teams[0];
-  
+
   // Get roster history for the first team (in real app, this would be user's selected team)
-  const { data: teamRosterHistory, isLoading: isLoadingRoster } = useGetTeamRosterHistoryQuery(
-    firstTeam?.id || '', 
-    { skip: !firstTeam }
-  );
-  
+  const { data: teamRosterHistory, isLoading: isLoadingRoster } =
+    useGetTeamRosterHistoryQuery(firstTeam?.id || '', { skip: !firstTeam });
+
   // Find the last active matchday roster
   const lastActiveRoster = useMemo(() => {
     if (!teamRosterHistory || !matchDays.length) return null;
-    
+
     const now = new Date();
     const activeMatchDays = matchDays
-      .filter(md => new Date(md.startTime) <= now)
-      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-    
+      .filter((md) => new Date(md.startTime) <= now)
+      .sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      );
+
     const lastActiveMatchDay = activeMatchDays[0];
     if (!lastActiveMatchDay) return null;
-    
+
     return teamRosterHistory[lastActiveMatchDay.id] || null;
   }, [teamRosterHistory, matchDays]);
 
@@ -130,11 +131,13 @@ export function TeamsManager() {
     if (isExpanding && !pendingPlayers[teamId]) {
       const team = teams.find((t) => t.id === teamId);
       // Always 7 slots: 1 GK (slot 0), 6 outfield (slots 1-6)
-      let slots: (Player | null)[] = Array(7).fill(null);
+      const slots: (Player | null)[] = Array(7).fill(null);
       if (team) {
         // Place goalkeeper in slot 0, outfield in slots 1-6
         const gk = team.players.find((p) => p.position === 'goalkeeper');
-        const outfield = team.players.filter((p) => p.position !== 'goalkeeper');
+        const outfield = team.players.filter(
+          (p) => p.position !== 'goalkeeper'
+        );
         slots[0] = gk || null;
         for (let i = 0; i < 6; i++) {
           slots[i + 1] = outfield[i] || null;
@@ -154,8 +157,7 @@ export function TeamsManager() {
   // Open player picker for a slot
   const handleOpenPicker = (
     teamId: string,
-    slot: number,
-    _position?: PlayerPosition
+    slot: number
   ) => {
     // Slot 0: GK, slots 1-6: field players (exclude goalkeepers)
     const requiredPosition = slot === 0 ? PlayerPosition.GOALKEEPER : undefined;
@@ -319,85 +321,130 @@ export function TeamsManager() {
             <Typography variant='h6' gutterBottom>
               Your Team
             </Typography>
-            {user && teams.filter(t => t.ownerId === user.id).length === 0 ? (
+            {user && teams.filter((t) => t.ownerId === user.id).length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 2 }}>
                 <Typography color='text.secondary'>
                   You have not created a team yet. Create your team above!
                 </Typography>
               </Box>
             ) : (
-              <List sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2, mb: 4 }}>
-                {teams.filter(t => t.ownerId === user?.id).map((team) => {
-                  const slots = pendingPlayers[team.id] || (() => {
-                    let arr = Array(7).fill(null);
-                    const gk = team.players.find((p) => p.position === 'goalkeeper');
-                    const outfield = team.players.filter((p) => p.position !== 'goalkeeper');
-                    arr[0] = gk || null;
-                    for (let i = 0; i < 6; i++) arr[i + 1] = outfield[i] || null;
-                    return arr;
-                  })();
-                  const captainId = pendingCaptain[team.id] ?? team.teamCaptain?.id;
-                  const canEdit = user && (user.role === 'admin' || team.ownerId === user.id);
-                  return (
-                    <TeamCard
-                      key={team.id}
-                      team={team}
-                      expanded={expandedTeamId === team.id}
-                      slots={slots}
-                      captainId={captainId}
-                      onToggleExpand={() => handleExpand(team.id)}
-                      onPickPlayer={(slot, position) => handleOpenPicker(team.id, slot, position)}
-                      onRemovePlayer={(slot) => handleRemovePlayer(team.id, slot)}
-                      onSetCaptain={(playerId) => handleSetCaptain(team.id, playerId)}
-                      onSave={() => handleSave(team.id)}
-                      isSaving={savingTeamId === team.id}
-                      canEdit={!!canEdit}
-                    />
-                  );
-                })}
+              <List
+                sx={{
+                  bgcolor: 'background.default',
+                  borderRadius: 2,
+                  p: 2,
+                  mb: 4,
+                }}
+              >
+                {teams
+                  .filter((t) => t.ownerId === user?.id)
+                  .map((team) => {
+                    const slots =
+                      pendingPlayers[team.id] ||
+                      (() => {
+                        const arr = Array(7).fill(null);
+                        const gk = team.players.find(
+                          (p) => p.position === 'goalkeeper'
+                        );
+                        const outfield = team.players.filter(
+                          (p) => p.position !== 'goalkeeper'
+                        );
+                        arr[0] = gk || null;
+                        for (let i = 0; i < 6; i++)
+                          arr[i + 1] = outfield[i] || null;
+                        return arr;
+                      })();
+                    const captainId =
+                      pendingCaptain[team.id] ?? team.teamCaptain?.id;
+                    const canEdit =
+                      user &&
+                      (user.role === 'admin' || team.ownerId === user.id);
+                    return (
+                      <TeamCard
+                        key={team.id}
+                        team={team}
+                        expanded={expandedTeamId === team.id}
+                        slots={slots}
+                        captainId={captainId}
+                        onToggleExpand={() => handleExpand(team.id)}
+                        onPickPlayer={(slot, position) =>
+                          handleOpenPicker(team.id, slot)
+                        }
+                        onRemovePlayer={(slot) =>
+                          handleRemovePlayer(team.id, slot)
+                        }
+                        onSetCaptain={(playerId) =>
+                          handleSetCaptain(team.id, playerId)
+                        }
+                        onSave={() => handleSave(team.id)}
+                        isSaving={savingTeamId === team.id}
+                        canEdit={!!canEdit}
+                      />
+                    );
+                  })}
               </List>
             )}
 
             {/* Other Teams Section */}
             <Typography variant='h6' gutterBottom>
-              Other Teams ({teams.filter(t => t.ownerId !== user?.id).length})
+              Other Teams ({teams.filter((t) => t.ownerId !== user?.id).length})
             </Typography>
-            {teams.filter(t => t.ownerId !== user?.id).length === 0 ? (
+            {teams.filter((t) => t.ownerId !== user?.id).length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 2 }}>
                 <Typography color='text.secondary'>
                   No other teams created yet.
                 </Typography>
               </Box>
             ) : (
-              <List sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}>
-                {teams.filter(t => t.ownerId !== user?.id).map((team) => {
-                  const slots = pendingPlayers[team.id] || (() => {
-                    let arr = Array(7).fill(null);
-                    const gk = team.players.find((p) => p.position === 'goalkeeper');
-                    const outfield = team.players.filter((p) => p.position !== 'goalkeeper');
-                    arr[0] = gk || null;
-                    for (let i = 0; i < 6; i++) arr[i + 1] = outfield[i] || null;
-                    return arr;
-                  })();
-                  const captainId = pendingCaptain[team.id] ?? team.teamCaptain?.id;
-                  const canEdit = user && (user.role === 'admin' || team.ownerId === user.id);
-                  return (
-                    <TeamCard
-                      key={team.id}
-                      team={team}
-                      expanded={expandedTeamId === team.id}
-                      slots={slots}
-                      captainId={captainId}
-                      onToggleExpand={() => handleExpand(team.id)}
-                      onPickPlayer={(slot, position) => handleOpenPicker(team.id, slot, position)}
-                      onRemovePlayer={(slot) => handleRemovePlayer(team.id, slot)}
-                      onSetCaptain={(playerId) => handleSetCaptain(team.id, playerId)}
-                      onSave={() => handleSave(team.id)}
-                      isSaving={savingTeamId === team.id}
-                      canEdit={!!canEdit}
-                    />
-                  );
-                })}
+              <List
+                sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}
+              >
+                {teams
+                  .filter((t) => t.ownerId !== user?.id)
+                  .map((team) => {
+                    const slots =
+                      pendingPlayers[team.id] ||
+                      (() => {
+                        const arr = Array(7).fill(null);
+                        const gk = team.players.find(
+                          (p) => p.position === 'goalkeeper'
+                        );
+                        const outfield = team.players.filter(
+                          (p) => p.position !== 'goalkeeper'
+                        );
+                        arr[0] = gk || null;
+                        for (let i = 0; i < 6; i++)
+                          arr[i + 1] = outfield[i] || null;
+                        return arr;
+                      })();
+                    const captainId =
+                      pendingCaptain[team.id] ?? team.teamCaptain?.id;
+                    const canEdit =
+                      user &&
+                      (user.role === 'admin' || team.ownerId === user.id);
+                    return (
+                      <TeamCard
+                        key={team.id}
+                        team={team}
+                        expanded={expandedTeamId === team.id}
+                        slots={slots}
+                        captainId={captainId}
+                        onToggleExpand={() => handleExpand(team.id)}
+                        onPickPlayer={(slot, position) =>
+                          handleOpenPicker(team.id, slot)
+                        }
+                        onRemovePlayer={(slot) =>
+                          handleRemovePlayer(team.id, slot)
+                        }
+                        onSetCaptain={(playerId) =>
+                          handleSetCaptain(team.id, playerId)
+                        }
+                        onSave={() => handleSave(team.id)}
+                        isSaving={savingTeamId === team.id}
+                        canEdit={!!canEdit}
+                      />
+                    );
+                  })}
               </List>
             )}
           </Box>

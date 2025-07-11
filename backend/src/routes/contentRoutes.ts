@@ -1,12 +1,12 @@
 // Content management routes for clubs and players
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { ClubController, PlayerController } from '../controllers/contentController';
 
 const router = Router();
 
 // Helper to wrap async route handlers and forward errors
-function asyncHandler(fn: any) {
-  return (req: any, res: any, next: any) => {
+function asyncHandler(fn: (req: Request, res: Response, next?: NextFunction) => Promise<void | Response>) {
+  return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }

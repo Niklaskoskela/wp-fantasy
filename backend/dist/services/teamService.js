@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -21,6 +54,7 @@ exports.getTeamsWithScores = getTeamsWithScores;
 const types_1 = require("../../../shared/dist/types");
 const database_1 = require("../config/database");
 const points_1 = require("../config/points");
+const playerService_1 = require("./playerService");
 function createTeam(teamName, ownerId) {
     return __awaiter(this, void 0, void 0, function* () {
         // Check if user already has a team
@@ -74,8 +108,7 @@ function addPlayerToTeam(teamId, player, userId, userRole) {
         invalidateTeamsWithScoresCache();
         // Also invalidate player caches if they exist
         try {
-            const { PlayerService } = require('./playerService');
-            PlayerService.invalidatePlayerCaches();
+            playerService_1.PlayerService.invalidatePlayerCaches();
         }
         catch (e) {
             // Ignore if PlayerService is not available
@@ -105,8 +138,7 @@ function removePlayerFromTeam(teamId, playerId, userId, userRole) {
         invalidateTeamsWithScoresCache();
         // Also invalidate player caches if they exist
         try {
-            const { PlayerService } = require('./playerService');
-            PlayerService.invalidatePlayerCaches();
+            playerService_1.PlayerService.invalidatePlayerCaches();
         }
         catch (e) {
             // Ignore if PlayerService is not available
@@ -198,7 +230,7 @@ function getTeamById(teamId) {
         };
     });
 }
-function getTeams(userId, userRole) {
+function getTeams() {
     return __awaiter(this, void 0, void 0, function* () {
         // Single optimized query to get all teams and their data at once
         const result = yield database_1.pool.query(`SELECT 
@@ -266,13 +298,13 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 function invalidateTeamsWithScoresCache() {
     teamsWithScoresCache = null;
 }
-function getTeamsWithScores(userId, userRole) {
+function getTeamsWithScores() {
     return __awaiter(this, void 0, void 0, function* () {
         // Check cache first
         if (teamsWithScoresCache && Date.now() - teamsWithScoresCache.timestamp < CACHE_DURATION) {
             return teamsWithScoresCache.data;
         }
-        const { getMatchDays } = require('./matchDayService');
+        const { getMatchDays } = yield Promise.resolve().then(() => __importStar(require('./matchDayService')));
         const allMatchDays = yield getMatchDays();
         // Get all teams with their data in one optimized query
         const teamsResult = yield database_1.pool.query(`
@@ -316,9 +348,11 @@ function getTeamsWithScores(userId, userRole) {
     `, [allMatchDays.map((md) => md.id)]);
         // Build stats lookup map
         const statsMap = {};
-        statsResult.rows.forEach(row => {
+        statsResult.rows.forEach((row) => {
+            var _a;
             const key = `${row.player_id}_${row.matchday_id}`;
             statsMap[key] = {
+                id: ((_a = row.id) === null || _a === void 0 ? void 0 : _a.toString()) || '',
                 goals: row.goals,
                 assists: row.assists,
                 blocks: row.blocks,
@@ -346,6 +380,7 @@ function getTeamsWithScores(userId, userRole) {
                     teamCaptain: undefined,
                     scoreHistory: new Map(),
                     ownerId: row.owner_id,
+                    totalScore: 0,
                     totalPoints: 0,
                     matchDayScores: []
                 };

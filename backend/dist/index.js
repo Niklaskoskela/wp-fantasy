@@ -62,7 +62,7 @@ app.use('/api/roster-history', auth_1.authenticateToken, rosterHistoryRoutes_1.d
 // Admin-only routes
 app.use('/api/admin', auth_1.authenticateToken, auth_1.requireAdmin);
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({
         error: 'Internal server error',

@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import * as teamService from '../services/teamService';
+import { PlayerService } from '../services/playerService';
+import { ClubService } from '../services/clubService';
 
 export async function createTeam(req: Request, res: Response): Promise<void> {
     const { teamName } = req.body;
@@ -16,8 +18,9 @@ export async function createTeam(req: Request, res: Response): Promise<void> {
     try {
         const team = await teamService.createTeam(teamName, req.user.id);
         res.status(201).json(team);
-    } catch (e: any) {
-        res.status(400).json({ error: e.message });
+    } catch (e: unknown) {
+        const error = e as Error;
+        res.status(400).json({ error: error.message });
     }
 }
 
@@ -36,18 +39,19 @@ export async function addPlayerToTeam(req: Request, res: Response): Promise<void
     try {
         const team = await teamService.addPlayerToTeam(teamId, player, req.user.id, req.user.role);
         res.json(team);
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const error = e as Error;
         // Use 409 Conflict for business logic errors (e.g., too many goalkeepers)
-        if (e.message && (e.message.includes('goalkeeper') || e.message.includes('6 players'))) {
-            res.status(409).json({ error: e.message });
+        if (error.message && (error.message.includes('goalkeeper') || error.message.includes('6 players'))) {
+            res.status(409).json({ error: error.message });
             return;
         }
         // Use 403 for authorization errors
-        if (e.message && e.message.includes('only modify your own team')) {
-            res.status(403).json({ error: e.message });
+        if (error.message && error.message.includes('only modify your own team')) {
+            res.status(403).json({ error: error.message });
             return;
         }
-        res.status(400).json({ error: e.message });
+        res.status(400).json({ error: error.message });
     }
 }
 
@@ -66,12 +70,13 @@ export async function removePlayerFromTeam(req: Request, res: Response): Promise
     try {
         const team = await teamService.removePlayerFromTeam(teamId, playerId, req.user.id, req.user.role);
         res.json(team);
-    } catch (e: any) {
-        if (e.message && e.message.includes('only modify your own team')) {
-            res.status(403).json({ error: e.message });
+    } catch (e: unknown) {
+        const error = e as Error;
+        if (error.message && error.message.includes('only modify your own team')) {
+            res.status(403).json({ error: error.message });
             return;
         }
-        res.status(400).json({ error: e.message });
+        res.status(400).json({ error: error.message });
     }
 }
 
@@ -90,17 +95,18 @@ export async function setTeamCaptain(req: Request, res: Response): Promise<void>
     try {
         const team = await teamService.setTeamCaptain(teamId, playerId, req.user.id, req.user.role);
         res.json(team);
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const error = e as Error;
         // Use 409 Conflict for business logic errors (e.g., player not in team)
-        if (e.message && e.message.includes('Player not in team')) {
-            res.status(409).json({ error: e.message });
+        if (error.message && error.message.includes('Player not in team')) {
+            res.status(409).json({ error: error.message });
             return;
         }
-        if (e.message && e.message.includes('only modify your own team')) {
-            res.status(403).json({ error: e.message });
+        if (error.message && error.message.includes('only modify your own team')) {
+            res.status(403).json({ error: error.message });
             return;
         }
-        res.status(400).json({ error: e.message });
+        res.status(400).json({ error: error.message });
     }
 }
 
@@ -110,7 +116,7 @@ export async function getTeams(req: Request, res: Response): Promise<void> {
         return;
     }
     
-    const teams = await teamService.getTeams(req.user.id, req.user.role);
+    const teams = await teamService.getTeams();
     res.json(teams);
 }
 
@@ -120,7 +126,7 @@ export async function getTeamsWithScores(req: Request, res: Response): Promise<v
         return;
     }
     
-    const teams = await teamService.getTeamsWithScores(req.user.id, req.user.role);
+    const teams = await teamService.getTeamsWithScores();
     res.json(teams);
 }
 
@@ -156,14 +162,12 @@ export async function clearAllCaches(req: Request, res: Response): Promise<void>
     teamService.invalidateTeamsWithScoresCache();
     
     try {
-        const { PlayerService } = require('../services/playerService');
         PlayerService.invalidatePlayerCaches();
     } catch (e) {
         console.warn('PlayerService cache invalidation failed:', e);
     }
     
     try {
-        const { ClubService } = require('../services/clubService');
         ClubService.invalidateClubCaches();
     } catch (e) {
         console.warn('ClubService cache invalidation failed:', e);

@@ -1,6 +1,6 @@
 // Authentication API using RTK Query
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { User, UserRole } from '../../../shared/src/types';
+import { UserRole } from '../../../shared/src/types';
 import { API_URL } from '../config';
 
 // Authentication types
@@ -88,7 +88,10 @@ export const authApi = createApi({
       }),
     }),
 
-    forgotPassword: builder.mutation<{ message: string }, ForgotPasswordRequest>({
+    forgotPassword: builder.mutation<
+      { message: string },
+      ForgotPasswordRequest
+    >({
       query: (data) => ({
         url: '/forgot-password',
         method: 'POST',
@@ -110,7 +113,10 @@ export const authApi = createApi({
       providesTags: ['User'],
     }),
 
-    changePassword: builder.mutation<{ message: string }, ChangePasswordRequest>({
+    changePassword: builder.mutation<
+      { message: string },
+      ChangePasswordRequest
+    >({
       query: (data) => ({
         url: '/change-password',
         method: 'POST',
@@ -141,14 +147,23 @@ export const authApi = createApi({
       invalidatesTags: ['User'],
     }),
 
-    adminResetPassword: builder.mutation<{ message: string; tempPassword: string }, string>({
+    adminResetPassword: builder.mutation<
+      { message: string; tempPassword: string },
+      string
+    >({
       query: (userId) => ({
         url: `/admin/reset-password/${userId}`,
         method: 'POST',
       }),
     }),
 
-    updateUser: builder.mutation<{ message: string; user: AuthUser }, { userId: string; updates: { username?: string; email?: string; role?: UserRole } }>({
+    updateUser: builder.mutation<
+      { message: string; user: AuthUser },
+      {
+        userId: string;
+        updates: { username?: string; email?: string; role?: UserRole };
+      }
+    >({
       query: ({ userId, updates }) => ({
         url: `/users/${userId}`,
         method: 'PUT',

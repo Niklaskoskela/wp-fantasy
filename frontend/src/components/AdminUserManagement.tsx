@@ -23,8 +23,12 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { useGetAllUsersQuery, useAdminResetPasswordMutation, useUpdateUserMutation } from '../api/authApi';
-import { User, UserRole } from '../../../shared/src/types';
+import {
+  useGetAllUsersQuery,
+  useAdminResetPasswordMutation,
+  useUpdateUserMutation,
+} from '../api/authApi';
+import { UserRole } from '../../../shared/src/types';
 import { AuthUser } from '../api/authApi';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -42,18 +46,24 @@ export const AdminUserManagement: React.FC = () => {
     email: '',
     role: UserRole.USER,
   });
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const handleResetPassword = async (userId: string) => {
     try {
       const result = await resetPassword(userId).unwrap();
-      setFeedback({ 
-        type: 'success', 
-        message: `Password reset successfully. Temporary password: ${result.tempPassword}` 
+      setFeedback({
+        type: 'success',
+        message: `Password reset successfully. Temporary password: ${result.tempPassword}`,
       });
       setDialogOpen(false);
     } catch (error: any) {
-      setFeedback({ type: 'error', message: error.data?.message || 'Failed to reset password' });
+      setFeedback({
+        type: 'error',
+        message: error.data?.message || 'Failed to reset password',
+      });
     }
   };
 
@@ -68,7 +78,10 @@ export const AdminUserManagement: React.FC = () => {
       setFeedback({ type: 'success', message: 'User updated successfully' });
       setDialogOpen(false);
     } catch (error: any) {
-      setFeedback({ type: 'error', message: error.data?.message || 'Failed to update user' });
+      setFeedback({
+        type: 'error',
+        message: error.data?.message || 'Failed to update user',
+      });
     }
   };
 
@@ -91,7 +104,7 @@ export const AdminUserManagement: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" p={4}>
+      <Box display='flex' justifyContent='center' p={4}>
         <CircularProgress />
       </Box>
     );
@@ -99,7 +112,7 @@ export const AdminUserManagement: React.FC = () => {
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert severity='error' sx={{ m: 2 }}>
         Failed to load users
       </Alert>
     );
@@ -107,7 +120,7 @@ export const AdminUserManagement: React.FC = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         User Management
       </Typography>
 
@@ -140,8 +153,10 @@ export const AdminUserManagement: React.FC = () => {
                 <TableCell>
                   <Chip
                     label={user.role}
-                    color={user.role === UserRole.ADMIN ? 'secondary' : 'default'}
-                    size="small"
+                    color={
+                      user.role === UserRole.ADMIN ? 'secondary' : 'default'
+                    }
+                    size='small'
                   />
                 </TableCell>
                 <TableCell>
@@ -150,17 +165,17 @@ export const AdminUserManagement: React.FC = () => {
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
-                      size="small"
-                      variant="outlined"
+                      size='small'
+                      variant='outlined'
                       onClick={() => openEditDialog(user)}
                       disabled={user.id === currentUser?.id}
                     >
                       Edit
                     </Button>
                     <Button
-                      size="small"
-                      variant="outlined"
-                      color="warning"
+                      size='small'
+                      variant='outlined'
+                      color='warning'
                       onClick={() => openResetDialog(user)}
                     >
                       Reset Password
@@ -173,7 +188,12 @@ export const AdminUserManagement: React.FC = () => {
         </Table>
       </TableContainer>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         <DialogTitle>
           {dialogType === 'reset' ? 'Reset Password' : 'Edit User'}
         </DialogTitle>
@@ -181,30 +201,41 @@ export const AdminUserManagement: React.FC = () => {
           {dialogType === 'reset' ? (
             <Typography>
               Are you sure you want to reset the password for{' '}
-              <strong>{selectedUser?.username}</strong>? A temporary password will be generated 
-              and displayed for you to share with the user.
+              <strong>{selectedUser?.username}</strong>? A temporary password
+              will be generated and displayed for you to share with the user.
             </Typography>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}
+            >
               <TextField
-                label="Username"
+                label='Username'
                 value={editForm.username}
-                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, username: e.target.value })
+                }
                 fullWidth
               />
               <TextField
-                label="Email"
-                type="email"
+                label='Email'
+                type='email'
                 value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, email: e.target.value })
+                }
                 fullWidth
               />
               <FormControl fullWidth>
                 <InputLabel>Role</InputLabel>
                 <Select
                   value={editForm.role}
-                  label="Role"
-                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value as UserRole })}
+                  label='Role'
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      role: e.target.value as UserRole,
+                    })
+                  }
                 >
                   <MenuItem value={UserRole.USER}>User</MenuItem>
                   <MenuItem value={UserRole.ADMIN}>Admin</MenuItem>
@@ -221,7 +252,7 @@ export const AdminUserManagement: React.FC = () => {
                 ? () => selectedUser && handleResetPassword(selectedUser.id)
                 : handleUpdateUser
             }
-            variant="contained"
+            variant='contained'
             color={dialogType === 'reset' ? 'warning' : 'primary'}
           >
             {dialogType === 'reset' ? 'Reset Password' : 'Update User'}

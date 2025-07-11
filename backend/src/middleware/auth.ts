@@ -1,14 +1,12 @@
 // Authentication and authorization middleware
 import { Request, Response, NextFunction } from 'express';
-import { UserRole } from '../../../shared/dist/types';
+import { User, UserRole } from '../../../shared/dist/types';
 import * as authService from '../services/authService';
 
 // Extend Express Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: User;
   }
 }
 
@@ -37,7 +35,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 }
 
 // Session-based authentication middleware
-export function authenticateSession(req: Request, res: Response, next: NextFunction): void {
+export async function authenticateSession(req: Request, res: Response, next: NextFunction): Promise<void> {
   const sessionToken = req.headers['x-session-token'] as string;
   
   if (!sessionToken) {
@@ -46,7 +44,7 @@ export function authenticateSession(req: Request, res: Response, next: NextFunct
   }
 
   try {
-    const user = authService.validateSession(sessionToken);
+    const user = await authService.validateSession(sessionToken);
     if (!user) {
       res.status(403).json({ error: 'Invalid or expired session' });
       return;
