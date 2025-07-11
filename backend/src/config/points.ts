@@ -23,7 +23,7 @@ export const pointsConfig = {
     contraFoul: -1,
     shot: -1,
     swimOff: 2,
-    brutality: -3,
+    brutality: -15,
     save: 1,
     win: 2
 }
