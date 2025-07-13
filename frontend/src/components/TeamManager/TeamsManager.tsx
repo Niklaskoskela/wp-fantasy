@@ -384,7 +384,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot, position) =>
+                        onPickPlayer={(slot) =>
                           handleOpenPicker(team.id, slot)
                         }
                         onRemovePlayer={(slot) =>
@@ -447,7 +447,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot, position) =>
+                        onPickPlayer={(slot) =>
                           handleOpenPicker(team.id, slot)
                         }
                         onRemovePlayer={(slot) =>
