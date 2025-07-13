@@ -13,15 +13,20 @@ export async function createRosterHistory(
 ): Promise<RosterHistory[]> {
     // First, remove any existing roster history for this team/matchday combination
     // This allows updating the roster if needed before matchday starts
+    console.log('Removing existing entries...');
     await removeRosterHistory(teamId, matchDayId);
-    
+    console.log('Removed existing entries');
+
     const newRosterEntries: RosterHistory[] = [];
     
     for (const entry of rosterEntries) {
+        console.log('Inserting entry:', entry);
         const result = await pool.query(
             'INSERT INTO roster_history (team_id, matchday_id, player_id, is_captain) VALUES ($1, $2, $3, $4) RETURNING id, team_id, matchday_id, player_id, is_captain, created_at',
             [teamId, matchDayId, entry.playerId, entry.isCaptain]
+            
         );
+        console.log('Insert result:', result.rows[0]);
         
         const row = result.rows[0];
         const rosterHistory: RosterHistory = {

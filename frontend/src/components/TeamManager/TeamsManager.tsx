@@ -13,7 +13,7 @@ import {
 import { Player, PlayerPosition } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
 import { useGetMatchDaysQuery } from '../../api/matchDayApi';
-import { useGetTeamRosterHistoryQuery } from '../../api/rosterHistoryApi';
+import { useCreateRosterHistoryMutation, useGetTeamRosterHistoryQuery } from '../../api/rosterHistoryApi';
 import {
   useGetTeamsQuery,
   useCreateTeamMutation,
@@ -34,6 +34,7 @@ export function TeamsManager() {
   const { data: matchDays = [], isLoading: isLoadingMatchDays } =
     useGetMatchDaysQuery();
   const { user } = useAuth();
+  const [createRosterHistory] = useCreateRosterHistoryMutation();
 
   // Find the first team to show roster history for (or could be user's selected team)
   const firstTeam = teams[0];
@@ -206,6 +207,16 @@ export function TeamsManager() {
   const handleSave = async (teamId: string) => {
     const playersArr = pendingPlayers[teamId] || [];
     const captainId = pendingCaptain[teamId];
+    const now = new Date();
+    const activeMatchDays = matchDays
+      .filter((md) => new Date(md.startTime) <= now)
+      .sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      );
+
+    const lastActiveMatchDay = activeMatchDays[0];
+    if (!lastActiveMatchDay) return null;
 
     // Validation
     const validPlayers = playersArr.filter(Boolean);
@@ -238,6 +249,15 @@ export function TeamsManager() {
       if (captainId) {
         await setTeamCaptain({ teamId, playerId: captainId }).unwrap();
       }
+
+      await createRosterHistory({
+        teamId,
+        matchDayId: lastActiveMatchDay.id,
+        rosterEntries: validPlayers.map((p) => ({
+          playerId: p!.id,
+          isCaptain: p!.id === captainId,
+        })),
+      }).unwrap();
 
       showNotification('Team saved successfully!', 'success');
       refetch();
@@ -364,7 +384,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot) =>
+                        onPickPlayer={(slot, position) =>
                           handleOpenPicker(team.id, slot)
                         }
                         onRemovePlayer={(slot) =>
@@ -427,7 +447,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot) =>
+                        onPickPlayer={(slot, position) =>
                           handleOpenPicker(team.id, slot)
                         }
                         onRemovePlayer={(slot) =>

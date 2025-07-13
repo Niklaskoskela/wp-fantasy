@@ -11,6 +11,8 @@ export async function createRosterHistory(req: Request, res: Response): Promise<
     try {
         const { teamId, matchDayId } = req.params;
         const rosterEntries: RosterEntry[] = req.body;
+        console.log('Calling createRosterHistory with:', { teamId, matchDayId, rosterEntries });
+
 
         if (!Array.isArray(rosterEntries)) {
             res.status(400).json({ error: 'Request body must be an array of roster entries' });
