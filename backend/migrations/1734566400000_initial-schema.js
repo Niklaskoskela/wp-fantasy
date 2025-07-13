@@ -98,6 +98,10 @@ exports.up = pgm => {
       references: 'matchdays(id)',
       onDelete: 'CASCADE',
     },
+    points: {
+      type: 'integer',
+      default: 0,
+    },
     goals: {
       type: 'integer',
       default: 0,

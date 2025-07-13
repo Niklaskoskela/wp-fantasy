@@ -1,12 +1,35 @@
 // Authentication routes
+console.log('🔥 authRoutes.ts loaded');
 import { Router } from 'express';
+import express from 'express';
 import * as authController from '../controllers/authController';
 import * as authValidation from '../validation/auth';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { authLimiter, passwordResetLimiter, registrationLimiter } from '../middleware/rateLimiting';
+import multer from 'multer';
+import db from '../db'
 
 const router = Router();
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Make sure this directory exists!
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+
+    }
+  }
+});
 // Public routes (with rate limiting)
 router.post('/register', 
   registrationLimiter,
@@ -79,5 +102,16 @@ router.put('/users/:userId',
   authValidation.validateUpdateUser,
   authController.updateUser
 );
+
+router.post('/upload-match-data/:matchdayId', (req, res, next) => {
+  next();
+}, upload.single('csvFile'), (req, res, next) => {
+  next();
+}, authController.uploadMatchData);
+
+router.post('/test-upload', (req, res) => {
+  console.log('🧪 Received test upload');
+  res.json({ message: 'Test upload received!' });
+});
 
 export default router;

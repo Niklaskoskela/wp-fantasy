@@ -3,6 +3,10 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import * as authService from '../services/authService';
 import { UserRole } from '../../../shared/dist/types';
+import { PointsCalculationService } from '../services/pointsCalculationService';
+import fs from 'fs';
+import path from 'path';
+import db from '../db'
 
 /**
  * POST /api/auth/register
@@ -368,3 +372,69 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
+export const uploadMatchData = async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+
+  try {
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'CSV file is required.' });
+    }
+
+    const csvFilePath = path.resolve(req.file.path);
+    
+    // Check if file actually exists
+    if (!fs.existsSync(csvFilePath)) {
+      return res.status(400).json({ error: 'Uploaded file not found.' });
+    }
+    
+
+    // Get matchday_id from URL params
+    const matchdayId = parseInt(req.params.matchdayId);
+    
+    if (!matchdayId || isNaN(matchdayId)) {
+      return res.status(400).json({ error: 'Valid matchday_id is required.' });
+    }
+
+    // Log database connection status
+    
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available.' });
+    }
+
+    const pointsService = new PointsCalculationService(db); 
+    
+    const result = await pointsService.processMatchData(csvFilePath, matchdayId);
+
+    // Delete the uploaded file after processing
+    fs.unlinkSync(csvFilePath);
+
+    return res.status(200).json({ 
+      message: 'Match data processed successfully.',
+      data: result,
+      debug: {
+        matchesProcessed: result.matchesProcessed,
+        pointsCalculated: result.pointsCalculated,
+        matchdayId: matchdayId,
+        fileName: req.file.originalname
+      }
+    });
+    
+  } catch (error) {
+    // Clean up the file even if there's an error
+    if (req.file) {
+      try {
+        const filePath = path.resolve(req.file.path);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (unlinkError) {
+        console.error('❌ Error deleting temporary file:', unlinkError);
+      }
+    }
+    
+    return res.status(500).json({ 
+      error: 'Failed to process match data.',
+    });
+  }
+};

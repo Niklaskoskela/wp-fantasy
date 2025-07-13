@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { label: 'Clubs', path: '/clubs', requireAuth: true, requireAdmin: true },
   { label: 'Players', path: '/players', requireAuth: true, requireAdmin: true },
   { label: 'Teams', path: '/teams', requireAuth: true },
+  { label: 'Player Stats', path: '/player-stats', requireAuth: true },
   {
     label: 'Match Days',
     path: '/matchdays',
@@ -51,6 +52,12 @@ const navItems: NavItem[] = [
   {
     label: 'User Management',
     path: '/admin/users',
+    requireAuth: true,
+    requireAdmin: true,
+  },
+  {
+    label: 'Uploads',
+    path: '/admin/uploads',
     requireAuth: true,
     requireAdmin: true,
   },
