@@ -78,17 +78,23 @@ Comprehensive documentation is available in the `/documentation` folder:
 
 2. **Install dependencies**
    ```bash
-   make install
+   npm
+   husky
+   postgres
+   make
    ```
 
 3. **Set up the database**
    ```bash
+   
+   # Start db service
+   
    # Create database
    createdb wpfantasy
    
    # Run migrations
    cd backend
-   npm run migrate
+   npm run migrate:up
    ```
 
 4. **Configure environment variables**
@@ -96,13 +102,17 @@ Comprehensive documentation is available in the `/documentation` folder:
    # Backend
    cp backend/.env.example backend/.env
    
-   # Frontend
-   cp frontend/.env.example frontend/.env
+   # Frontend is configured
    ```
 
 5. **Start development servers**
    ```bash
-   make dev
+   backend & frontend: npm run dev
+   ```
+6. **Build versions**
+   ```bash
+   # this will build the production versions
+   make build
    ```
 
 The application will be available at:
@@ -170,19 +180,8 @@ matchdays ──┐
 
 ## 🚢 Deployment
 
-### Development
+###
 ```bash
 make build
-make dev
+make run to test
 ```
-
-### Production
-```bash
-make build
-```
-
-## 📞 Support
-
-For support, please:
-1. Check the [documentation](documentation/)
-
