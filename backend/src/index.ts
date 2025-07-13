@@ -11,6 +11,8 @@ import rosterHistoryRoutes from './routes/rosterHistoryRoutes';
 import authRoutes from './routes/authRoutes';
 import { generalLimiter } from './middleware/rateLimiting';
 import { authenticateToken, requireAdmin } from './middleware/auth';
+import { createPlayerStatsRoutes } from './routes/playerStatsRoutes';
+import db from './db'
 
 dotenv.config();
 
@@ -60,7 +62,9 @@ app.get('/api/health', (_req, res) => {
 
 // Authentication routes (public)
 app.use('/api/auth', authRoutes);
-
+app.use('/api/admin', authRoutes);
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api/players', createPlayerStatsRoutes(db));
 // Protected routes (require authentication)
 app.use('/api', authenticateToken, router);
 app.use('/api', authenticateToken, teamRoutes);
@@ -79,10 +83,6 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
   });
 });
 
-// 404 handler
-app.all('/{*any}', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
-});
 
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {

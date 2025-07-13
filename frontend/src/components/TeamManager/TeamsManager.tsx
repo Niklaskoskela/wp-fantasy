@@ -155,10 +155,7 @@ export function TeamsManager() {
   };
 
   // Open player picker for a slot
-  const handleOpenPicker = (
-    teamId: string,
-    slot: number
-  ) => {
+  const handleOpenPicker = (teamId: string, slot: number) => {
     // Slot 0: GK, slots 1-6: field players (exclude goalkeepers)
     const requiredPosition = slot === 0 ? PlayerPosition.GOALKEEPER : undefined;
     setPickerSlot({ teamId, slot, position: requiredPosition });
@@ -367,7 +364,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot, position) =>
+                        onPickPlayer={(slot) =>
                           handleOpenPicker(team.id, slot)
                         }
                         onRemovePlayer={(slot) =>
@@ -430,7 +427,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot, position) =>
+                        onPickPlayer={(slot) =>
                           handleOpenPicker(team.id, slot)
                         }
                         onRemovePlayer={(slot) =>
