@@ -2,6 +2,7 @@ import { MatchDay, Stats, Team } from '../../../shared/dist/types';
 import { getTeams } from './teamService';
 import { pool } from '../config/database';
 import { pointsConfig } from '../config/points';
+import { getMatchDayRosterHistory } from './rosterHistoryService';
 
 export async function createMatchDay(title: string, startTime: Date, endTime: Date): Promise<MatchDay> {
     const result = await pool.query(
@@ -78,11 +79,25 @@ export async function calculatePoints(matchDayId: string): Promise<{ teamId: str
     const playerStats = await getPlayerStats(matchDayId);
     const results: { teamId: string; points: number }[] = [];
     
+    // Get roster history for this matchday
+    const { getMatchDayRosterHistory } = await import('./rosterHistoryService');
+    const matchDayRosterHistory = await getMatchDayRosterHistory(matchDayId);
+    
     for (const team of teams) {
         let total = 0;
         
-        for (const player of team.players) {
-            const stats = playerStats[player.id];
+        // Get roster history for this team and matchday
+        const teamRosterHistory = matchDayRosterHistory.get(team.id) || [];
+        
+        // Only calculate points if roster history exists for this matchday
+        if (teamRosterHistory.length > 0) {
+            const playersToScore: Array<{playerId: string, isCaptain: boolean}> = teamRosterHistory.map(entry => ({
+                playerId: entry.playerId,
+                isCaptain: entry.isCaptain
+            }));
+
+            for (const rosterEntry of playersToScore) {
+            const stats = playerStats[rosterEntry.playerId];
             if (stats) {
                 const basePoints = 
                     stats.goals * pointsConfig.goal + 
@@ -100,13 +115,16 @@ export async function calculatePoints(matchDayId: string): Promise<{ teamId: str
                     stats.wins * pointsConfig.win;
                 total += basePoints;
                 // Captain gets double points
-                if (team.teamCaptain && team.teamCaptain.id === player.id) {
+                if (rosterEntry.isCaptain) {
                     total += basePoints;
+                }
                 }
             }
         }
+
         results.push({ teamId: team.id, points: total });
     }
+
     return results;
 }
 
@@ -186,6 +204,32 @@ export async function getMatchDays(): Promise<MatchDay[]> {
     } catch (error) {
         console.error('Error getting matchdays:', error);
         return [];
+    }
+}
+
+/**
+ * Get the next upcoming matchday (start time is in the future)
+ */
+export async function getNextUpcomingMatchday(): Promise<MatchDay | null> {
+    try {
+        const now = new Date();
+        const result = await pool.query(
+            'SELECT id, title, start_time, end_time FROM matchdays WHERE start_time > $1 ORDER BY start_time ASC LIMIT 1',
+            [now]
+        );
+        
+        if (result.rows.length === 0) return null;
+        
+        const row = result.rows[0];
+        return {
+            id: row.id.toString(),
+            title: row.title,
+            startTime: row.start_time,
+            endTime: row.end_time
+        };
+    } catch (error) {
+        console.error('Error getting next matchday:', error);
+        return null;
     }
 }
 

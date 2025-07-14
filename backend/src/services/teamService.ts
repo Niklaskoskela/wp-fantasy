@@ -1,5 +1,5 @@
 // Service for managing teams: create, update players, set captain
-import { Team, Player, MatchDay, UserRole, Stats } from '../../../shared/dist/types';
+import { Team, Player, MatchDay, UserRole, Stats, RosterEntry, RosterHistory } from '../../../shared/dist/types';
 import { pool } from '../config/database';
 import { pointsConfig } from '../config/points';
 import { PlayerService } from './playerService';
@@ -98,6 +98,9 @@ export async function addPlayerToTeam(teamId: string, player: Player, userId: st
         [teamId, player.id]
     );
     
+    // Update roster history for next upcoming matchday
+    await updateRosterHistoryForNextMatchday(teamId);
+    
     // Invalidate caches since team composition changed
     invalidateTeamsWithScoresCache();
     
@@ -140,6 +143,9 @@ export async function removePlayerFromTeam(teamId: string, playerId: string, use
         'UPDATE team_players SET is_captain = FALSE WHERE team_id = $1 AND player_id = $2',
         [teamId, playerId]
     );
+    
+    // Update roster history for next upcoming matchday
+    await updateRosterHistoryForNextMatchday(teamId);
     
     // Invalidate cache since team composition changed
     invalidateTeamsWithScoresCache();
@@ -192,6 +198,9 @@ export async function setTeamCaptain(teamId: string, playerId: string, userId: s
         'UPDATE team_players SET is_captain = TRUE WHERE team_id = $1 AND player_id = $2',
         [teamId, playerId]
     );
+    
+    // Update roster history for next upcoming matchday
+    await updateRosterHistoryForNextMatchday(teamId);
     
     // Invalidate cache since team captain changed
     invalidateTeamsWithScoresCache();
@@ -462,7 +471,16 @@ export async function getTeamsWithScores(): Promise<TeamWithScores[]> {
         }
     });
     
-    // Calculate scores for all teams and match days
+    // Get roster history for all teams and matchdays
+    const { getMatchDayRosterHistory } = await import('./rosterHistoryService');
+    const rosterHistoryMap = new Map<string, Map<string, any[]>>();
+    
+    for (const matchDay of allMatchDays) {
+        const matchDayRosterHistory = await getMatchDayRosterHistory(matchDay.id);
+        rosterHistoryMap.set(matchDay.id, matchDayRosterHistory);
+    }
+
+    // Calculate scores for all teams and match days using roster history
     const teamsWithScores = Object.values(teamsMap).map(team => {
         let totalPoints = 0;
         const matchDayScores: { matchDayId: string; matchDayTitle: string; points: number }[] = [];
@@ -471,8 +489,19 @@ export async function getTeamsWithScores(): Promise<TeamWithScores[]> {
         for (const matchDay of allMatchDays) {
             let matchDayPoints = 0;
             
-            for (const player of team.players) {
-                const statsKey = `${player.id}_${matchDay.id}`;
+            // Get roster history for this team and matchday
+            const matchDayRosterHistory = rosterHistoryMap.get(matchDay.id);
+            const teamRosterHistory = matchDayRosterHistory?.get(team.id) || [];
+            
+            // Only calculate points if roster history exists for this matchday
+            if (teamRosterHistory.length > 0) {
+                const playersToScore: Array<{playerId: string, isCaptain: boolean}> = teamRosterHistory.map(entry => ({
+                    playerId: entry.playerId,
+                    isCaptain: entry.isCaptain
+                }));
+                
+                for (const rosterEntry of playersToScore) {
+                const statsKey = `${rosterEntry.playerId}_${matchDay.id}`;
                 const stats = statsMap[statsKey];
                 
                 if (stats) {
@@ -494,8 +523,9 @@ export async function getTeamsWithScores(): Promise<TeamWithScores[]> {
                     matchDayPoints += basePoints;
                     
                     // Captain gets double points
-                    if (team.teamCaptain && team.teamCaptain.id === player.id) {
+                    if (rosterEntry.isCaptain) {
                         matchDayPoints += basePoints;
+                    }
                     }
                 }
             }
@@ -522,4 +552,42 @@ export async function getTeamsWithScores(): Promise<TeamWithScores[]> {
     };
     
     return teamsWithScores;
+}
+
+/**
+ * Update roster history for the next upcoming matchday
+ * This function snapshots the current team roster for the next matchday
+ */
+async function updateRosterHistoryForNextMatchday(teamId: string): Promise<void> {
+    try {
+        // Get the next upcoming matchday
+        const { getNextUpcomingMatchday } = await import('./matchDayService');
+        const nextMatchday = await getNextUpcomingMatchday();
+        
+        if (!nextMatchday) {
+            // No upcoming matchday, nothing to update
+            return;
+        }
+        
+        // Get current team roster
+        const team = await getTeamById(teamId);
+        if (!team) {
+            return;
+        }
+        
+        // Convert current team roster to roster entries
+        const { createRosterHistory } = await import('./rosterHistoryService');
+        const rosterEntries = team.players.map(player => ({
+            playerId: player.id,
+            isCaptain: team.teamCaptain?.id === player.id
+        }));
+        
+        // Update roster history for next matchday
+        if (rosterEntries.length > 0) {
+            await createRosterHistory(teamId, nextMatchday.id, rosterEntries);
+        }
+    } catch (error) {
+        console.error('Error updating roster history for next matchday:', error);
+        // Don't throw - this shouldn't prevent team operations from completing
+    }
 }

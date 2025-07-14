@@ -47,6 +47,7 @@ exports.updatePlayerStats = updatePlayerStats;
 exports.calculatePoints = calculatePoints;
 exports.startMatchDay = startMatchDay;
 exports.getMatchDays = getMatchDays;
+exports.getNextUpcomingMatchday = getNextUpcomingMatchday;
 exports.getPlayerStats = getPlayerStats;
 const teamService_1 = require("./teamService");
 const database_1 = require("../config/database");
@@ -118,28 +119,40 @@ function calculatePoints(matchDayId) {
         const teams = yield (0, teamService_1.getTeams)();
         const playerStats = yield getPlayerStats(matchDayId);
         const results = [];
+        // Get roster history for this matchday
+        const { getMatchDayRosterHistory } = yield Promise.resolve().then(() => __importStar(require('./rosterHistoryService')));
+        const matchDayRosterHistory = yield getMatchDayRosterHistory(matchDayId);
         for (const team of teams) {
             let total = 0;
-            for (const player of team.players) {
-                const stats = playerStats[player.id];
-                if (stats) {
-                    const basePoints = stats.goals * points_1.pointsConfig.goal +
-                        stats.assists * points_1.pointsConfig.assist +
-                        stats.blocks * points_1.pointsConfig.block +
-                        stats.steals * points_1.pointsConfig.steal +
-                        stats.pfDrawn * points_1.pointsConfig.pfDrawn +
-                        stats.pf * points_1.pointsConfig.pf +
-                        stats.ballsLost * points_1.pointsConfig.ballsLost +
-                        stats.contraFouls * points_1.pointsConfig.contraFoul +
-                        stats.shots * points_1.pointsConfig.shot +
-                        stats.swimOffs * points_1.pointsConfig.swimOff +
-                        stats.brutality * points_1.pointsConfig.brutality +
-                        stats.saves * points_1.pointsConfig.save +
-                        stats.wins * points_1.pointsConfig.win;
-                    total += basePoints;
-                    // Captain gets double points
-                    if (team.teamCaptain && team.teamCaptain.id === player.id) {
+            // Get roster history for this team and matchday
+            const teamRosterHistory = matchDayRosterHistory.get(team.id) || [];
+            // Only calculate points if roster history exists for this matchday
+            if (teamRosterHistory.length > 0) {
+                const playersToScore = teamRosterHistory.map(entry => ({
+                    playerId: entry.playerId,
+                    isCaptain: entry.isCaptain
+                }));
+                for (const rosterEntry of playersToScore) {
+                    const stats = playerStats[rosterEntry.playerId];
+                    if (stats) {
+                        const basePoints = stats.goals * points_1.pointsConfig.goal +
+                            stats.assists * points_1.pointsConfig.assist +
+                            stats.blocks * points_1.pointsConfig.block +
+                            stats.steals * points_1.pointsConfig.steal +
+                            stats.pfDrawn * points_1.pointsConfig.pfDrawn +
+                            stats.pf * points_1.pointsConfig.pf +
+                            stats.ballsLost * points_1.pointsConfig.ballsLost +
+                            stats.contraFouls * points_1.pointsConfig.contraFoul +
+                            stats.shots * points_1.pointsConfig.shot +
+                            stats.swimOffs * points_1.pointsConfig.swimOff +
+                            stats.brutality * points_1.pointsConfig.brutality +
+                            stats.saves * points_1.pointsConfig.save +
+                            stats.wins * points_1.pointsConfig.win;
                         total += basePoints;
+                        // Captain gets double points
+                        if (rosterEntry.isCaptain) {
+                            total += basePoints;
+                        }
                     }
                 }
             }
@@ -216,6 +229,30 @@ function getMatchDays() {
         catch (error) {
             console.error('Error getting matchdays:', error);
             return [];
+        }
+    });
+}
+/**
+ * Get the next upcoming matchday (start time is in the future)
+ */
+function getNextUpcomingMatchday() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const now = new Date();
+            const result = yield database_1.pool.query('SELECT id, title, start_time, end_time FROM matchdays WHERE start_time > $1 ORDER BY start_time ASC LIMIT 1', [now]);
+            if (result.rows.length === 0)
+                return null;
+            const row = result.rows[0];
+            return {
+                id: row.id.toString(),
+                title: row.title,
+                startTime: row.start_time,
+                endTime: row.end_time
+            };
+        }
+        catch (error) {
+            console.error('Error getting next matchday:', error);
+            return null;
         }
     });
 }
