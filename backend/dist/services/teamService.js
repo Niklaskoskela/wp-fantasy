@@ -305,26 +305,56 @@ function getTeamsWithScores() {
             return teamsWithScoresCache.data;
         }
         const { getMatchDays } = yield Promise.resolve().then(() => __importStar(require('./matchDayService')));
+        const { getAllRosterHistories } = yield Promise.resolve().then(() => __importStar(require('./rosterHistoryService')));
         const allMatchDays = yield getMatchDays();
-        // Get all teams with their data in one optimized query
+        // Get all teams with basic info
         const teamsResult = yield database_1.pool.query(`
         SELECT 
             t.id as team_id,
             t.team_name,
-            u.id as owner_id,
+            u.id as owner_id
+        FROM teams t
+        LEFT JOIN users u ON u.team_id = t.id
+        ORDER BY t.team_name
+    `);
+        // Get all roster histories
+        const allRosterHistories = yield getAllRosterHistories();
+        // Group roster histories by team and matchday
+        const rosterHistoryMap = {};
+        allRosterHistories.forEach(roster => {
+            if (!rosterHistoryMap[roster.teamId]) {
+                rosterHistoryMap[roster.teamId] = {};
+            }
+            if (!rosterHistoryMap[roster.teamId][roster.matchDayId]) {
+                rosterHistoryMap[roster.teamId][roster.matchDayId] = [];
+            }
+            rosterHistoryMap[roster.teamId][roster.matchDayId].push(roster);
+        });
+        // Get all players data
+        const playersResult = yield database_1.pool.query(`
+        SELECT 
             p.id as player_id,
             p.name as player_name,
             p.position,
             c.id as club_id,
-            c.name as club_name,
-            tp.is_captain
-        FROM teams t
-        LEFT JOIN users u ON u.team_id = t.id
-        LEFT JOIN team_players tp ON tp.team_id = t.id
-        LEFT JOIN players p ON p.id = tp.player_id
+            c.name as club_name
+        FROM players p
         LEFT JOIN clubs c ON c.id = p.club_id
-        ORDER BY t.team_name, p.name
     `);
+        // Build players lookup map
+        const playersMap = {};
+        playersResult.rows.forEach(row => {
+            playersMap[row.player_id.toString()] = {
+                id: row.player_id.toString(),
+                name: row.player_name,
+                position: row.position,
+                club: {
+                    id: row.club_id.toString(),
+                    name: row.club_name
+                },
+                statsHistory: new Map()
+            };
+        });
         // Get all player stats for all match days in one query
         const statsResult = yield database_1.pool.query(`
         SELECT 
@@ -368,69 +398,73 @@ function getTeamsWithScores() {
                 wins: row.wins
             };
         });
+        // Sort matchdays by start time (earliest first) to determine order for fallback
+        const sortedMatchDays = [...allMatchDays].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+        const currentTime = new Date();
         // Build teams map from the result
         const teamsMap = {};
         teamsResult.rows.forEach(row => {
             const teamId = row.team_id.toString();
-            if (!teamsMap[teamId]) {
-                teamsMap[teamId] = {
-                    id: teamId,
-                    teamName: row.team_name,
-                    players: [],
-                    teamCaptain: undefined,
-                    scoreHistory: new Map(),
-                    ownerId: row.owner_id,
-                    totalScore: 0,
-                    totalPoints: 0,
-                    matchDayScores: []
-                };
-            }
-            if (row.player_id) {
-                const player = {
-                    id: row.player_id.toString(),
-                    name: row.player_name,
-                    position: row.position,
-                    club: {
-                        id: row.club_id.toString(),
-                        name: row.club_name
-                    },
-                    statsHistory: new Map()
-                };
-                teamsMap[teamId].players.push(player);
-                if (row.is_captain) {
-                    teamsMap[teamId].teamCaptain = player;
-                }
-            }
+            teamsMap[teamId] = {
+                id: teamId,
+                teamName: row.team_name,
+                players: [],
+                teamCaptain: undefined,
+                scoreHistory: new Map(),
+                ownerId: row.owner_id,
+                totalScore: 0,
+                totalPoints: 0,
+                matchDayScores: []
+            };
         });
-        // Calculate scores for all teams and match days
+        // Calculate scores for all teams and match days using roster history
         const teamsWithScores = Object.values(teamsMap).map(team => {
+            var _a, _b;
             let totalPoints = 0;
             const matchDayScores = [];
-            // Calculate points for each match day
+            // Calculate points for each match day using roster history
             for (const matchDay of allMatchDays) {
                 let matchDayPoints = 0;
-                for (const player of team.players) {
-                    const statsKey = `${player.id}_${matchDay.id}`;
-                    const stats = statsMap[statsKey];
-                    if (stats) {
-                        // Calculate points using the configuration
-                        const basePoints = stats.goals * points_1.pointsConfig.goal +
-                            stats.assists * points_1.pointsConfig.assist +
-                            stats.blocks * points_1.pointsConfig.block +
-                            stats.steals * points_1.pointsConfig.steal +
-                            stats.pfDrawn * points_1.pointsConfig.pfDrawn +
-                            stats.pf * points_1.pointsConfig.pf +
-                            stats.ballsLost * points_1.pointsConfig.ballsLost +
-                            stats.contraFouls * points_1.pointsConfig.contraFoul +
-                            stats.shots * points_1.pointsConfig.shot +
-                            stats.swimOffs * points_1.pointsConfig.swimOff +
-                            stats.brutality * points_1.pointsConfig.brutality +
-                            stats.saves * points_1.pointsConfig.save +
-                            stats.wins * points_1.pointsConfig.win;
-                        matchDayPoints += basePoints;
-                        // Captain gets double points
-                        if (team.teamCaptain && team.teamCaptain.id === player.id) {
+                let rosterToUse = (_a = rosterHistoryMap[team.id]) === null || _a === void 0 ? void 0 : _a[matchDay.id];
+                // If no roster history exists for this matchday, find the latest past matchday with roster
+                if (!rosterToUse || rosterToUse.length === 0) {
+                    const pastMatchDays = sortedMatchDays.filter(md => new Date(md.startTime) <= currentTime &&
+                        new Date(md.startTime) <= new Date(matchDay.startTime));
+                    // Find the latest past matchday that has roster history for this team
+                    for (let i = pastMatchDays.length - 1; i >= 0; i--) {
+                        const pastMatchDay = pastMatchDays[i];
+                        const pastRoster = (_b = rosterHistoryMap[team.id]) === null || _b === void 0 ? void 0 : _b[pastMatchDay.id];
+                        if (pastRoster && pastRoster.length > 0) {
+                            rosterToUse = pastRoster;
+                            break;
+                        }
+                    }
+                }
+                // Calculate points using the roster
+                if (rosterToUse && rosterToUse.length > 0) {
+                    for (const rosterEntry of rosterToUse) {
+                        const statsKey = `${rosterEntry.playerId}_${matchDay.id}`;
+                        const stats = statsMap[statsKey];
+                        if (stats) {
+                            // Calculate points using the configuration
+                            const basePoints = stats.goals * points_1.pointsConfig.goal +
+                                stats.assists * points_1.pointsConfig.assist +
+                                stats.blocks * points_1.pointsConfig.block +
+                                stats.steals * points_1.pointsConfig.steal +
+                                stats.pfDrawn * points_1.pointsConfig.pfDrawn +
+                                stats.pf * points_1.pointsConfig.pf +
+                                stats.ballsLost * points_1.pointsConfig.ballsLost +
+                                stats.contraFouls * points_1.pointsConfig.contraFoul +
+                                stats.shots * points_1.pointsConfig.shot +
+                                stats.swimOffs * points_1.pointsConfig.swimOff +
+                                stats.brutality * points_1.pointsConfig.brutality +
+                                stats.saves * points_1.pointsConfig.save +
+                                stats.wins * points_1.pointsConfig.win;
                             matchDayPoints += basePoints;
+                            // Captain gets double points
+                            if (rosterEntry.isCaptain) {
+                                matchDayPoints += basePoints;
+                            }
                         }
                     }
                 }
@@ -440,6 +474,21 @@ function getTeamsWithScores() {
                     matchDayTitle: matchDay.title,
                     points: matchDayPoints
                 });
+            }
+            // Get current team roster for display purposes (players and teamCaptain fields)
+            const currentRoster = rosterHistoryMap[team.id];
+            const latestMatchDayWithRoster = sortedMatchDays
+                .reverse()
+                .find(md => (currentRoster === null || currentRoster === void 0 ? void 0 : currentRoster[md.id]) && currentRoster[md.id].length > 0);
+            if (latestMatchDayWithRoster && currentRoster[latestMatchDayWithRoster.id]) {
+                const latestRoster = currentRoster[latestMatchDayWithRoster.id];
+                const players = latestRoster.map(rosterEntry => playersMap[rosterEntry.playerId]).filter(Boolean);
+                const captain = latestRoster.find(entry => entry.isCaptain);
+                const teamCaptain = captain ? playersMap[captain.playerId] : undefined;
+                return Object.assign(Object.assign({}, team), { players,
+                    teamCaptain,
+                    totalPoints,
+                    matchDayScores });
             }
             return Object.assign(Object.assign({}, team), { totalPoints,
                 matchDayScores });
