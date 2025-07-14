@@ -10,10 +10,13 @@ import {
   Tab,
   Paper,
 } from '@mui/material';
-import { Player, PlayerPosition } from 'shared';
+import { Player, PlayerPosition, RosterEntry } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
 import { useGetMatchDaysQuery } from '../../api/matchDayApi';
-import { useGetTeamRosterHistoryQuery } from '../../api/rosterHistoryApi';
+import { 
+  useGetTeamRosterHistoryQuery,
+  useCreateRosterHistoryMutation 
+} from '../../api/rosterHistoryApi';
 import {
   useGetTeamsQuery,
   useCreateTeamMutation,
@@ -60,10 +63,36 @@ export function TeamsManager() {
     return teamRosterHistory[lastActiveMatchDay.id] || null;
   }, [teamRosterHistory, matchDays]);
 
+  // Find the current or next upcoming matchday for roster saving
+  const currentMatchDay = useMemo(() => {
+    if (!matchDays.length) return null;
+
+    const now = new Date();
+    
+    // First, check for ongoing matchdays
+    const ongoingMatchDay = matchDays.find((md) => {
+      const startTime = new Date(md.startTime);
+      const endTime = new Date(md.endTime);
+      return startTime <= now && now <= endTime;
+    });
+
+    if (ongoingMatchDay) return ongoingMatchDay;
+
+    // If no ongoing matchday, find the next upcoming one
+    const upcomingMatchDays = matchDays
+      .filter((md) => new Date(md.startTime) > now)
+      .sort((a, b) => 
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      );
+
+    return upcomingMatchDays[0] || null;
+  }, [matchDays]);
+
   const [createTeam] = useCreateTeamMutation();
   const [addPlayerToTeam] = useAddPlayerToTeamMutation();
   const [removePlayerFromTeam] = useRemovePlayerFromTeamMutation();
   const [setTeamCaptain] = useSetTeamCaptainMutation();
+  const [createRosterHistory] = useCreateRosterHistoryMutation();
 
   const [activeTab, setActiveTab] = useState(0);
   const [newTeamName, setNewTeamName] = useState('');
@@ -217,6 +246,12 @@ export function TeamsManager() {
       return;
     }
 
+    // Check if we have a current match day to save roster for
+    if (!currentMatchDay) {
+      showNotification('No active or upcoming match day found', 'warning');
+      return;
+    }
+
     setSavingTeamId(teamId);
 
     try {
@@ -242,7 +277,20 @@ export function TeamsManager() {
         await setTeamCaptain({ teamId, playerId: captainId }).unwrap();
       }
 
-      showNotification('Team saved successfully!', 'success');
+      // Create roster history entries for the current/next match day
+      const rosterEntries: RosterEntry[] = validPlayers.map((player) => ({
+        playerId: player!.id,
+        isCaptain: player!.id === captainId
+      }));
+
+      // Save roster history
+      await createRosterHistory({
+        teamId,
+        matchDayId: currentMatchDay.id,
+        rosterEntries
+      }).unwrap();
+
+      showNotification('Team roster saved successfully!', 'success');
       refetch();
     } catch (error: any) {
       const message =

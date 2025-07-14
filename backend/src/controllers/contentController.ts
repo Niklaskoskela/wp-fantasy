@@ -94,6 +94,17 @@ export class PlayerController {
     }
   }
 
+  static async getPlayersWithStats(req: Request, res: Response) {
+    try {
+      const { matchDayId } = req.query;
+      const players = await PlayerService.getAllPlayersWithStats(matchDayId as string);
+      res.json(players);
+    } catch (error) {
+      console.error('Error in getPlayersWithStats:', error);
+      res.status(500).json({ error: 'Failed to fetch players with stats' });
+    }
+  }
+
   static async clearPlayersCache(req: Request, res: Response) {
     try {
       if (!req.user || req.user.role !== 'admin') {

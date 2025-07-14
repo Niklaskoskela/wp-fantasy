@@ -49,6 +49,12 @@ export interface Player {
     statsHistory: Map<MatchDay, Stats>; // matchday -> stats
 }
 
+// Player with stats interface - includes current stats and total points
+export interface PlayerWithStats extends Player {
+    stats: Stats;
+    totalPoints: number;
+}
+
 // Roster History interface - tracks team composition for each matchday
 export interface RosterHistory {
     id: string;
