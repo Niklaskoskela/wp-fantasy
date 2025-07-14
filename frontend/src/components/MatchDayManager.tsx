@@ -15,6 +15,7 @@ import {
   useGetMatchDaysQuery,
   useCreateMatchDayMutation,
 } from '../api/matchDayApi';
+import { useSnapshotAllTeamRostersMutation } from '../api/rosterHistoryApi';
 
 interface MatchDaysListProps {
   onSelectMatchDay: (matchDayId: string, title: string) => void;
@@ -217,6 +218,18 @@ export function MatchDayManager({
   onSelectMatchDay,
   selectedMatchDayId,
 }: MatchDayManagerProps) {
+  const [snapshotAllTeamRosters, { isLoading: isSnapshotting, error: snapshotError }] = useSnapshotAllTeamRostersMutation();
+  
+  const handleSnapshotRosters = async () => {
+    if (!selectedMatchDayId) return;
+    
+    try {
+      await snapshotAllTeamRosters(selectedMatchDayId).unwrap();
+    } catch (err) {
+      console.error('Failed to snapshot team rosters:', err);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <CreateMatchDayForm />
@@ -224,6 +237,28 @@ export function MatchDayManager({
         onSelectMatchDay={onSelectMatchDay}
         selectedMatchDayId={selectedMatchDayId}
       />
+      
+      {selectedMatchDayId && (
+        <Paper sx={{ p: 2 }}>
+          <Typography variant='h6' gutterBottom>
+            Match Day Actions
+          </Typography>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={handleSnapshotRosters}
+            disabled={isSnapshotting}
+            fullWidth
+          >
+            {isSnapshotting ? 'Snapshotting Rosters...' : 'Snapshot All Team Rosters'}
+          </Button>
+          {snapshotError && (
+            <Alert severity='error' sx={{ mt: 2 }}>
+              Failed to snapshot team rosters. Please try again.
+            </Alert>
+          )}
+        </Paper>
+      )}
     </Box>
   );
 }
