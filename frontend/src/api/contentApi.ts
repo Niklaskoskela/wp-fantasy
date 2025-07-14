@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { Club, Player } from '../../../shared/src/types';
+import { Club, Player, PlayerWithStats } from '../../../shared/src/types';
 import { API_URL } from '../config';
 
 // Get token from localStorage
@@ -17,7 +17,7 @@ export const contentApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Club', 'Player'],
+  tagTypes: ['Club', 'Player', 'PlayerStats'],
   endpoints: (builder) => ({
     getClubs: builder.query<Club[], void>({
       query: () => '/clubs',
@@ -46,6 +46,13 @@ export const contentApi = createApi({
       query: (body) => ({ url: '/players', method: 'POST', body }),
       invalidatesTags: ['Player'],
     }),
+    getPlayersWithStats: builder.query<PlayerWithStats[], { matchDayId?: string }>({
+      query: ({ matchDayId }) => ({
+        url: '/players/with-stats',
+        params: matchDayId ? { matchDayId } : {},
+      }),
+      providesTags: ['PlayerStats'],
+    }),
   }),
 });
 
@@ -56,4 +63,5 @@ export const {
   useGetPlayersQuery,
   useGetPlayerQuery,
   useCreatePlayerMutation,
+  useGetPlayersWithStatsQuery,
 } = contentApi;

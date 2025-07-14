@@ -121,6 +121,19 @@ class PlayerController {
             }
         });
     }
+    static getPlayersWithStats(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { matchDayId } = req.query;
+                const players = yield playerService_1.PlayerService.getAllPlayersWithStats(matchDayId);
+                res.json(players);
+            }
+            catch (error) {
+                console.error('Error in getPlayersWithStats:', error);
+                res.status(500).json({ error: 'Failed to fetch players with stats' });
+            }
+        });
+    }
     static clearPlayersCache(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

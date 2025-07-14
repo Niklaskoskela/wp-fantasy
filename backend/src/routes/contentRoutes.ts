@@ -20,6 +20,7 @@ router.post('/clubs/clear-cache', asyncHandler(ClubController.clearClubsCache));
 // Player routes
 router.post('/players', asyncHandler(PlayerController.createPlayer));
 router.get('/players', asyncHandler(PlayerController.getAllPlayers));
+router.get('/players/with-stats', asyncHandler(PlayerController.getPlayersWithStats));
 router.get('/players/:id', asyncHandler(PlayerController.getPlayer));
 router.post('/players/clear-cache', asyncHandler(PlayerController.clearPlayersCache));
 

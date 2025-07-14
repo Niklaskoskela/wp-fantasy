@@ -9,6 +9,7 @@ import { ClubsManager } from './components/ClubsManager';
 import { PlayersManager } from './components/PlayersManager';
 import { ClubsList } from './components/ClubsList';
 import { PlayersList } from './components/PlayersList';
+import { PlayerStatsPage } from './components/PlayerStatsPage';
 import { TeamsManager } from './components/TeamManager/TeamsManager';
 import { MatchDaysManager } from './components/MatchDaysManager';
 import { NavigationBar } from './components/NavigationBar';
@@ -107,6 +108,14 @@ function App() {
               element={
                 <ProtectedRoute requiresAdmin={true}>
                   <AdminUserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/player-stats'
+              element={
+                <ProtectedRoute>
+                  <PlayerStatsPage />
                 </ProtectedRoute>
               }
             />

@@ -35,6 +35,10 @@ export interface Player {
     club: Club;
     statsHistory: Map<MatchDay, Stats>;
 }
+export interface PlayerWithStats extends Player {
+    stats: Stats;
+    totalPoints: number;
+}
 export interface RosterHistory {
     id: string;
     teamId: string;
