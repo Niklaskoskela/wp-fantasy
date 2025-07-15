@@ -21,6 +21,7 @@ import { useGetPlayersWithStatsQuery } from '../api/contentApi';
 import { useGetTeamRosterHistoryQuery } from '../api/rosterHistoryApi';
 import { useGetTeamsQuery } from '../api/teamApi';
 import { PlayerWithStats, RosterHistory } from '../../../shared/src/types';
+import { useAuth } from '../contexts/AuthContext';
 
 export function PlayerStatsPage() {
   const [selectedMatchDayId, setSelectedMatchDayId] = useState<string>('total');
@@ -28,9 +29,10 @@ export function PlayerStatsPage() {
   
   const { data: matchDays = [], isLoading: isLoadingMatchDays } = useGetMatchDaysQuery();
   const { data: teams = [] } = useGetTeamsQuery();
+  const { user } = useAuth();
   
   // For simplicity, use the first team as "my team" (in real app, this would be user's team)
-  const myTeam = teams[0];
+  const myTeam = teams.find(team => team.ownerId === user?.id);
   
   const { 
     data: playersWithStats = [], 
