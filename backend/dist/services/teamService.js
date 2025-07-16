@@ -66,13 +66,16 @@ function createTeam(teamName, ownerId) {
         const teamResult = yield database_1.pool.query('INSERT INTO teams (team_name) VALUES ($1) RETURNING id, team_name', [teamName]);
         const teamRow = teamResult.rows[0];
         // Update user's team_id
-        yield database_1.pool.query('UPDATE users SET team_id = $1 WHERE id = $2', [teamRow.id, ownerId]);
+        yield database_1.pool.query('UPDATE users SET team_id = $1 WHERE id = $2', [
+            teamRow.id,
+            ownerId,
+        ]);
         return {
             id: teamRow.id.toString(),
             teamName: teamRow.team_name,
             players: [],
             scoreHistory: new Map(),
-            ownerId
+            ownerId,
         };
     });
 }
@@ -199,34 +202,36 @@ function getTeamById(teamId) {
         const ownerId = firstRow.owner_id ? firstRow.owner_id.toString() : undefined;
         // Process the result to build players array and identify captain
         const players = result.rows
-            .filter(row => row.player_id) // Only include rows with players
-            .map(row => ({
+            .filter((row) => row.player_id) // Only include rows with players
+            .map((row) => ({
             id: row.player_id.toString(),
             name: row.player_name,
             position: row.position,
             club: {
                 id: row.club_id.toString(),
-                name: row.club_name
+                name: row.club_name,
             },
-            statsHistory: new Map()
+            statsHistory: new Map(),
         }));
-        const captain = result.rows.find(row => row.is_captain && row.player_id);
+        const captain = result.rows.find((row) => row.is_captain && row.player_id);
         return {
             id: firstRow.team_id.toString(),
             teamName: firstRow.team_name,
             players,
-            teamCaptain: captain ? {
-                id: captain.player_id.toString(),
-                name: captain.player_name,
-                position: captain.position,
-                club: {
-                    id: captain.club_id.toString(),
-                    name: captain.club_name
-                },
-                statsHistory: new Map()
-            } : undefined,
+            teamCaptain: captain
+                ? {
+                    id: captain.player_id.toString(),
+                    name: captain.player_name,
+                    position: captain.position,
+                    club: {
+                        id: captain.club_id.toString(),
+                        name: captain.club_name,
+                    },
+                    statsHistory: new Map(),
+                }
+                : undefined,
             scoreHistory: new Map(),
-            ownerId
+            ownerId,
         };
     });
 }
@@ -251,7 +256,7 @@ function getTeams() {
          ORDER BY t.team_name, p.name`);
         // Build teams map from the result
         const teamsMap = {};
-        result.rows.forEach(row => {
+        result.rows.forEach((row) => {
             const teamId = row.team_id.toString();
             if (!teamsMap[teamId]) {
                 teamsMap[teamId] = {
@@ -260,7 +265,7 @@ function getTeams() {
                     players: [],
                     teamCaptain: undefined,
                     scoreHistory: new Map(),
-                    ownerId: row.owner_id ? row.owner_id.toString() : undefined
+                    ownerId: row.owner_id ? row.owner_id.toString() : undefined,
                 };
             }
             if (row.player_id) {
@@ -270,9 +275,9 @@ function getTeams() {
                     position: row.position,
                     club: {
                         id: row.club_id.toString(),
-                        name: row.club_name
+                        name: row.club_name,
                     },
-                    statsHistory: new Map()
+                    statsHistory: new Map(),
                 };
                 teamsMap[teamId].players.push(player);
                 if (row.is_captain) {
@@ -285,7 +290,9 @@ function getTeams() {
 }
 function getUserTeam(userId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = yield database_1.pool.query('SELECT team_id FROM users WHERE id = $1', [userId]);
+        const result = yield database_1.pool.query('SELECT team_id FROM users WHERE id = $1', [
+            userId,
+        ]);
         if (result.rows.length === 0 || !result.rows[0].team_id) {
             return null;
         }
@@ -301,7 +308,8 @@ function invalidateTeamsWithScoresCache() {
 function getTeamsWithScores() {
     return __awaiter(this, void 0, void 0, function* () {
         // Check cache first
-        if (teamsWithScoresCache && Date.now() - teamsWithScoresCache.timestamp < CACHE_DURATION) {
+        if (teamsWithScoresCache &&
+            Date.now() - teamsWithScoresCache.timestamp < CACHE_DURATION) {
             return teamsWithScoresCache.data;
         }
         const { getMatchDays } = yield Promise.resolve().then(() => __importStar(require('./matchDayService')));
@@ -321,7 +329,7 @@ function getTeamsWithScores() {
         const allRosterHistories = yield getAllRosterHistories();
         // Group roster histories by team and matchday
         const rosterHistoryMap = {};
-        allRosterHistories.forEach(roster => {
+        allRosterHistories.forEach((roster) => {
             if (!rosterHistoryMap[roster.teamId]) {
                 rosterHistoryMap[roster.teamId] = {};
             }
@@ -343,16 +351,16 @@ function getTeamsWithScores() {
     `);
         // Build players lookup map
         const playersMap = {};
-        playersResult.rows.forEach(row => {
+        playersResult.rows.forEach((row) => {
             playersMap[row.player_id.toString()] = {
                 id: row.player_id.toString(),
                 name: row.player_name,
                 position: row.position,
                 club: {
                     id: row.club_id.toString(),
-                    name: row.club_name
+                    name: row.club_name,
                 },
-                statsHistory: new Map()
+                statsHistory: new Map(),
             };
         });
         // Get all player stats for all match days in one query
@@ -395,7 +403,7 @@ function getTeamsWithScores() {
                 swimOffs: row.swim_offs,
                 brutality: row.brutality,
                 saves: row.saves,
-                wins: row.wins
+                wins: row.wins,
             };
         });
         // Sort matchdays by start time (earliest first) to determine order for fallback
@@ -403,7 +411,7 @@ function getTeamsWithScores() {
         const currentTime = new Date();
         // Build teams map from the result
         const teamsMap = {};
-        teamsResult.rows.forEach(row => {
+        teamsResult.rows.forEach((row) => {
             const teamId = row.team_id.toString();
             teamsMap[teamId] = {
                 id: teamId,
@@ -414,11 +422,11 @@ function getTeamsWithScores() {
                 ownerId: row.owner_id,
                 totalScore: 0,
                 totalPoints: 0,
-                matchDayScores: []
+                matchDayScores: [],
             };
         });
         // Calculate scores for all teams and match days using roster history
-        const teamsWithScores = Object.values(teamsMap).map(team => {
+        const teamsWithScores = Object.values(teamsMap).map((team) => {
             var _a, _b;
             let totalPoints = 0;
             const matchDayScores = [];
@@ -428,7 +436,7 @@ function getTeamsWithScores() {
                 let rosterToUse = (_a = rosterHistoryMap[team.id]) === null || _a === void 0 ? void 0 : _a[matchDay.id];
                 // If no roster history exists for this matchday, find the latest past matchday with roster
                 if (!rosterToUse || rosterToUse.length === 0) {
-                    const pastMatchDays = sortedMatchDays.filter(md => new Date(md.startTime) <= currentTime &&
+                    const pastMatchDays = sortedMatchDays.filter((md) => new Date(md.startTime) <= currentTime &&
                         new Date(md.startTime) <= new Date(matchDay.startTime));
                     // Find the latest past matchday that has roster history for this team
                     for (let i = pastMatchDays.length - 1; i >= 0; i--) {
@@ -472,18 +480,21 @@ function getTeamsWithScores() {
                 matchDayScores.push({
                     matchDayId: matchDay.id,
                     matchDayTitle: matchDay.title,
-                    points: matchDayPoints
+                    points: matchDayPoints,
                 });
             }
             // Get current team roster for display purposes (players and teamCaptain fields)
             const currentRoster = rosterHistoryMap[team.id];
             const latestMatchDayWithRoster = sortedMatchDays
                 .reverse()
-                .find(md => (currentRoster === null || currentRoster === void 0 ? void 0 : currentRoster[md.id]) && currentRoster[md.id].length > 0);
-            if (latestMatchDayWithRoster && currentRoster[latestMatchDayWithRoster.id]) {
+                .find((md) => (currentRoster === null || currentRoster === void 0 ? void 0 : currentRoster[md.id]) && currentRoster[md.id].length > 0);
+            if (latestMatchDayWithRoster &&
+                currentRoster[latestMatchDayWithRoster.id]) {
                 const latestRoster = currentRoster[latestMatchDayWithRoster.id];
-                const players = latestRoster.map(rosterEntry => playersMap[rosterEntry.playerId]).filter(Boolean);
-                const captain = latestRoster.find(entry => entry.isCaptain);
+                const players = latestRoster
+                    .map((rosterEntry) => playersMap[rosterEntry.playerId])
+                    .filter(Boolean);
+                const captain = latestRoster.find((entry) => entry.isCaptain);
                 const teamCaptain = captain ? playersMap[captain.playerId] : undefined;
                 return Object.assign(Object.assign({}, team), { players,
                     teamCaptain,
@@ -496,7 +507,7 @@ function getTeamsWithScores() {
         // Cache the result
         teamsWithScoresCache = {
             data: teamsWithScores,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         };
         return teamsWithScores;
     });

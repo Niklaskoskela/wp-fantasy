@@ -70,7 +70,7 @@ function createRosterHistory(teamId, matchDayId, rosterEntries) {
                 matchDayId: row.matchday_id.toString(),
                 playerId: row.player_id.toString(),
                 isCaptain: row.is_captain,
-                createdAt: row.created_at
+                createdAt: row.created_at,
             };
             newRosterEntries.push(rosterHistory);
         }
@@ -83,13 +83,13 @@ function createRosterHistory(teamId, matchDayId, rosterEntries) {
 function getRosterHistory(teamId, matchDayId) {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield database_1.pool.query('SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history WHERE team_id = $1 AND matchday_id = $2', [teamId, matchDayId]);
-        return result.rows.map(row => ({
+        return result.rows.map((row) => ({
             id: row.id.toString(),
             teamId: row.team_id.toString(),
             matchDayId: row.matchday_id.toString(),
             playerId: row.player_id.toString(),
             isCaptain: row.is_captain,
-            createdAt: row.created_at
+            createdAt: row.created_at,
         }));
     });
 }
@@ -107,7 +107,7 @@ function getTeamRosterHistory(teamId) {
                 matchDayId: row.matchday_id.toString(),
                 playerId: row.player_id.toString(),
                 isCaptain: row.is_captain,
-                createdAt: row.created_at
+                createdAt: row.created_at,
             };
             if (!historyMap.has(rosterHistory.matchDayId)) {
                 historyMap.set(rosterHistory.matchDayId, []);
@@ -134,7 +134,7 @@ function getMatchDayRosterHistory(matchDayId) {
                 matchDayId: row.matchday_id.toString(),
                 playerId: row.player_id.toString(),
                 isCaptain: row.is_captain,
-                createdAt: row.created_at
+                createdAt: row.created_at,
             };
             if (!historyMap.has(rosterHistory.teamId)) {
                 historyMap.set(rosterHistory.teamId, []);
@@ -181,7 +181,7 @@ function snapshotAllTeamRosters(matchDayId) {
                 var _a;
                 return ({
                     playerId: player.id,
-                    isCaptain: ((_a = team.teamCaptain) === null || _a === void 0 ? void 0 : _a.id) === player.id
+                    isCaptain: ((_a = team.teamCaptain) === null || _a === void 0 ? void 0 : _a.id) === player.id,
                 });
             });
             if (rosterEntries.length > 0) {
@@ -198,13 +198,13 @@ function snapshotAllTeamRosters(matchDayId) {
 function getAllRosterHistories() {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield database_1.pool.query('SELECT id, team_id, matchday_id, player_id, is_captain, created_at FROM roster_history ORDER BY created_at DESC');
-        return result.rows.map(row => ({
+        return result.rows.map((row) => ({
             id: row.id.toString(),
             teamId: row.team_id.toString(),
             matchDayId: row.matchday_id.toString(),
             playerId: row.player_id.toString(),
             isCaptain: row.is_captain,
-            createdAt: row.created_at
+            createdAt: row.created_at,
         }));
     });
 }

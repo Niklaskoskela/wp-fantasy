@@ -26,28 +26,34 @@ export class ClubService {
       'INSERT INTO clubs (name) VALUES ($1) RETURNING id, name',
       [name]
     );
-    
+
     // Invalidate caches since new club was created
     ClubService.invalidateClubCaches();
-    
+
     return { id: result.rows[0].id.toString(), name: result.rows[0].name };
   }
 
   static async getAllClubs(): Promise<Club[]> {
     // Check cache first
-    if (allClubsCache && Date.now() - allClubsCache.timestamp < CACHE_DURATION) {
+    if (
+      allClubsCache &&
+      Date.now() - allClubsCache.timestamp < CACHE_DURATION
+    ) {
       return allClubsCache.data;
     }
 
     const result = await pool.query('SELECT id, name FROM clubs ORDER BY name');
-    const clubs = result.rows.map((row) => ({ id: row.id.toString(), name: row.name }));
-    
+    const clubs = result.rows.map((row) => ({
+      id: row.id.toString(),
+      name: row.name,
+    }));
+
     // Cache the result
     allClubsCache = {
       data: clubs,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     return clubs;
   }
 
@@ -58,15 +64,21 @@ export class ClubService {
       return cached.data;
     }
 
-    const result = await pool.query('SELECT id, name FROM clubs WHERE id = $1', [id]);
-    const club = result.rows.length === 0 ? null : { id: result.rows[0].id.toString(), name: result.rows[0].name };
-    
+    const result = await pool.query(
+      'SELECT id, name FROM clubs WHERE id = $1',
+      [id]
+    );
+    const club =
+      result.rows.length === 0
+        ? null
+        : { id: result.rows[0].id.toString(), name: result.rows[0].name };
+
     // Cache the result
     clubByIdCache.set(id, {
       data: club,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return club;
   }
 }

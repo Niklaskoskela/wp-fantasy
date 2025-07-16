@@ -1,10 +1,25 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createTeam, addPlayerToTeam, removePlayerFromTeam, setTeamCaptain, getTeams, getTeamsWithScores, clearTeamsCache, clearAllCaches } from '../controllers/teamController';
+import {
+  createTeam,
+  addPlayerToTeam,
+  removePlayerFromTeam,
+  setTeamCaptain,
+  getTeams,
+  getTeamsWithScores,
+  clearTeamsCache,
+  clearAllCaches,
+} from '../controllers/teamController';
 
 const router = Router();
 
 // Helper to wrap async route handlers and forward errors
-function asyncHandler(fn: (req: Request, res: Response, next?: NextFunction) => Promise<void | Response>) {
+function asyncHandler(
+  fn: (
+    req: Request,
+    res: Response,
+    next?: NextFunction
+  ) => Promise<void | Response>
+) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

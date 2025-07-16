@@ -53,7 +53,9 @@ function createMatchDay(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { title, startTime, endTime } = req.body;
         if (!title || !startTime || !endTime) {
-            res.status(400).json({ error: 'title, startTime, and endTime are required' });
+            res
+                .status(400)
+                .json({ error: 'title, startTime, and endTime are required' });
             return;
         }
         const matchDay = yield matchDayService.createMatchDay(title, new Date(startTime), new Date(endTime));

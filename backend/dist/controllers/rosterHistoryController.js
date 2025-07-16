@@ -60,18 +60,24 @@ function createRosterHistory(req, res) {
             const { teamId, matchDayId } = req.params;
             const rosterEntries = req.body;
             if (!Array.isArray(rosterEntries)) {
-                res.status(400).json({ error: 'Request body must be an array of roster entries' });
+                res
+                    .status(400)
+                    .json({ error: 'Request body must be an array of roster entries' });
                 return;
             }
             // Validate roster entries
             for (const entry of rosterEntries) {
                 if (!entry.playerId || typeof entry.isCaptain !== 'boolean') {
-                    res.status(400).json({ error: 'Each roster entry must have playerId and isCaptain properties' });
+                    res
+                        .status(400)
+                        .json({
+                        error: 'Each roster entry must have playerId and isCaptain properties',
+                    });
                     return;
                 }
             }
             // Ensure only one captain per team
-            const captains = rosterEntries.filter(entry => entry.isCaptain);
+            const captains = rosterEntries.filter((entry) => entry.isCaptain);
             if (captains.length > 1) {
                 res.status(400).json({ error: 'Only one captain allowed per team' });
                 return;

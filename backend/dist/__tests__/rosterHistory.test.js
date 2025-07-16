@@ -65,7 +65,7 @@ const types_1 = require("../../../shared/dist/types");
         testPlayers = [
             { id: 'player1', name: 'Player 1', position: 'field' },
             { id: 'player2', name: 'Player 2', position: 'goalkeeper' },
-            { id: 'player3', name: 'Player 3', position: 'field' }
+            { id: 'player3', name: 'Player 3', position: 'field' },
         ];
         // Add players to team (as the team owner)
         for (const player of testPlayers) {
@@ -78,7 +78,7 @@ const types_1 = require("../../../shared/dist/types");
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
             { playerId: 'player2', isCaptain: false },
-            { playerId: 'player3', isCaptain: false }
+            { playerId: 'player3', isCaptain: false },
         ];
         const rosterHistory = yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         (0, globals_1.expect)(rosterHistory).toHaveLength(3);
@@ -91,12 +91,12 @@ const types_1 = require("../../../shared/dist/types");
         var _a;
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
-            { playerId: 'player2', isCaptain: false }
+            { playerId: 'player2', isCaptain: false },
         ];
         yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         const retrieved = yield rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
         (0, globals_1.expect)(retrieved).toHaveLength(2);
-        (0, globals_1.expect)((_a = retrieved.find(r => r.playerId === 'player1')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
+        (0, globals_1.expect)((_a = retrieved.find((r) => r.playerId === 'player1')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
     }));
     globals_1.test.skip('should snapshot all team rosters for a matchday (REQUIRES DATABASE SETUP)', () => __awaiter(void 0, void 0, void 0, function* () {
         const snapshots = yield rosterHistoryService.snapshotAllTeamRosters(testMatchDay.id);
@@ -104,27 +104,27 @@ const types_1 = require("../../../shared/dist/types");
         const teamSnapshot = snapshots.get(testTeam.id);
         (0, globals_1.expect)(teamSnapshot).toHaveLength(3); // 3 players in the team
         // Captain should be correctly identified
-        const captainEntry = teamSnapshot === null || teamSnapshot === void 0 ? void 0 : teamSnapshot.find(entry => entry.isCaptain);
+        const captainEntry = teamSnapshot === null || teamSnapshot === void 0 ? void 0 : teamSnapshot.find((entry) => entry.isCaptain);
         (0, globals_1.expect)(captainEntry === null || captainEntry === void 0 ? void 0 : captainEntry.playerId).toBe(testPlayers[0].id);
     }));
     globals_1.test.skip('should prevent duplicate roster entries (REQUIRES DATABASE SETUP)', () => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         const rosterEntries = [
             { playerId: 'player1', isCaptain: true },
-            { playerId: 'player2', isCaptain: false }
+            { playerId: 'player2', isCaptain: false },
         ];
         // Create initial roster
         yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, rosterEntries);
         // Try to create again - should replace the previous one
         const newRosterEntries = [
             { playerId: 'player1', isCaptain: false },
-            { playerId: 'player3', isCaptain: true }
+            { playerId: 'player3', isCaptain: true },
         ];
         yield rosterHistoryService.createRosterHistory(testTeam.id, testMatchDay.id, newRosterEntries);
         const finalRoster = yield rosterHistoryService.getRosterHistory(testTeam.id, testMatchDay.id);
         (0, globals_1.expect)(finalRoster).toHaveLength(2);
-        (0, globals_1.expect)((_a = finalRoster.find(r => r.playerId === 'player3')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
-        (0, globals_1.expect)(finalRoster.find(r => r.playerId === 'player2')).toBeUndefined();
+        (0, globals_1.expect)((_a = finalRoster.find((r) => r.playerId === 'player3')) === null || _a === void 0 ? void 0 : _a.isCaptain).toBe(true);
+        (0, globals_1.expect)(finalRoster.find((r) => r.playerId === 'player2')).toBeUndefined();
     }));
     globals_1.test.skip('should check if roster history exists (REQUIRES DATABASE SETUP)', () => __awaiter(void 0, void 0, void 0, function* () {
         (0, globals_1.expect)(yield rosterHistoryService.hasRosterHistory(testTeam.id, testMatchDay.id)).toBe(false);

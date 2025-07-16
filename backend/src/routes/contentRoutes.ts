@@ -1,11 +1,20 @@
 // Content management routes for clubs and players
 import { Router, Request, Response, NextFunction } from 'express';
-import { ClubController, PlayerController } from '../controllers/contentController';
+import {
+  ClubController,
+  PlayerController,
+} from '../controllers/contentController';
 
 const router = Router();
 
 // Helper to wrap async route handlers and forward errors
-function asyncHandler(fn: (req: Request, res: Response, next?: NextFunction) => Promise<void | Response>) {
+function asyncHandler(
+  fn: (
+    req: Request,
+    res: Response,
+    next?: NextFunction
+  ) => Promise<void | Response>
+) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
@@ -20,8 +29,14 @@ router.post('/clubs/clear-cache', asyncHandler(ClubController.clearClubsCache));
 // Player routes
 router.post('/players', asyncHandler(PlayerController.createPlayer));
 router.get('/players', asyncHandler(PlayerController.getAllPlayers));
-router.get('/players/with-stats', asyncHandler(PlayerController.getPlayersWithStats));
+router.get(
+  '/players/with-stats',
+  asyncHandler(PlayerController.getPlayersWithStats)
+);
 router.get('/players/:id', asyncHandler(PlayerController.getPlayer));
-router.post('/players/clear-cache', asyncHandler(PlayerController.clearPlayersCache));
+router.post(
+  '/players/clear-cache',
+  asyncHandler(PlayerController.clearPlayersCache)
+);
 
 export default router;

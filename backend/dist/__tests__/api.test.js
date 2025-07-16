@@ -38,9 +38,7 @@ app.use('/api', auth_1.authenticateToken, matchDayRoutes_1.default);
 app.use('/api', auth_1.authenticateToken, teamRoutes_1.default);
 describe('API Tests', () => {
     test('GET /api/health should return status ok', () => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield (0, supertest_1.default)(app)
-            .get('/api/health')
-            .expect(200);
+        const response = yield (0, supertest_1.default)(app).get('/api/health').expect(200);
         expect(response.body).toEqual({ status: 'ok' });
     }));
 });
@@ -50,7 +48,7 @@ describe('Content API', () => {
         // Admin functionality should be tested separately with proper admin setup
     }));
     test.skip('POST /api/players creates a player and GET /api/players returns it (REQUIRES ADMIN)', () => __awaiter(void 0, void 0, void 0, function* () {
-        // This test requires admin privileges - skipped in current implementation  
+        // This test requires admin privileges - skipped in current implementation
         // Admin functionality should be tested separately with proper admin setup
     }));
 });
@@ -78,19 +76,15 @@ describe('System-wide League Flow', () => {
         const userEmail = `test${Date.now()}@example.com`;
         const username = `testuser${Date.now()}`;
         const userPassword = 'TestPassword123!';
-        const userRes = yield (0, supertest_1.default)(app)
-            .post('/api/auth/register')
-            .send({
+        const userRes = yield (0, supertest_1.default)(app).post('/api/auth/register').send({
             username: username,
             email: userEmail,
-            password: userPassword
+            password: userPassword,
         });
         expect(userRes.status).toBe(201);
-        const loginRes = yield (0, supertest_1.default)(app)
-            .post('/api/auth/login')
-            .send({
+        const loginRes = yield (0, supertest_1.default)(app).post('/api/auth/login').send({
             username: userEmail,
-            password: userPassword
+            password: userPassword,
         });
         expect(loginRes.status).toBe(200);
         const token = loginRes.body.token; // Use 'token' field, not 'sessionToken'
@@ -104,8 +98,18 @@ describe('System-wide League Flow', () => {
         const teamId = teamRes.body.id;
         // 2. For clubs and players, we'll use mock data since admin is required for creation
         // This tests the team management flow which is the core user functionality
-        const mockPlayer1 = { id: 'player1', name: 'Alice', position: 'field', clubId: 'club1' };
-        const mockPlayer2 = { id: 'player2', name: 'Bob', position: 'goalkeeper', clubId: 'club1' };
+        const mockPlayer1 = {
+            id: 'player1',
+            name: 'Alice',
+            position: 'field',
+            clubId: 'club1',
+        };
+        const mockPlayer2 = {
+            id: 'player2',
+            name: 'Bob',
+            position: 'goalkeeper',
+            clubId: 'club1',
+        };
         // 3. Add players to team (with auth)
         const addPlayerRes = yield (0, supertest_1.default)(app)
             .post('/api/teams/add-player')

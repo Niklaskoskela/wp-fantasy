@@ -46,7 +46,7 @@ export class ClubController {
       if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
       }
-      
+
       ClubService.invalidateClubCaches();
       res.json({ message: 'Clubs cache cleared successfully' });
     } catch (error) {
@@ -97,7 +97,9 @@ export class PlayerController {
   static async getPlayersWithStats(req: Request, res: Response) {
     try {
       const { matchDayId } = req.query;
-      const players = await PlayerService.getAllPlayersWithStats(matchDayId as string);
+      const players = await PlayerService.getAllPlayersWithStats(
+        matchDayId as string
+      );
       res.json(players);
     } catch (error) {
       console.error('Error in getPlayersWithStats:', error);
@@ -110,7 +112,7 @@ export class PlayerController {
       if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
       }
-      
+
       PlayerService.invalidatePlayerCaches();
       res.json({ message: 'Players cache cleared successfully' });
     } catch (error) {

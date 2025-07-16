@@ -26,7 +26,7 @@ const getDatabaseConfig = (): DatabaseConfig => {
   };
 
   // Default SSL is enabled for production environments
-  const requireSsl = config.env != 'dev' && !(config.host.includes('localhost'));
+  const requireSsl = config.env != 'dev' && !config.host.includes('localhost');
 
   console.log('Database configuration:');
   console.log(`  - User: ${config.user}`);
@@ -39,14 +39,14 @@ const getDatabaseConfig = (): DatabaseConfig => {
   // Configure SSL based on database type, not environment
   if (requireSsl) {
     config.ssl = {
-      rejectUnauthorized: false // Required for Neon and other cloud databases
+      rejectUnauthorized: false, // Required for Neon and other cloud databases
     };
     console.log('  - SSL enabled with rejectUnauthorized: false');
   } else {
     // Explicitly disable SSL for local databases
     config.ssl = false;
     console.log('  - SSL disabled for local database');
-  } 
+  }
   return config;
 };
 
