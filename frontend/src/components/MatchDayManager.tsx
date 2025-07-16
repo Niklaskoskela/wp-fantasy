@@ -218,11 +218,14 @@ export function MatchDayManager({
   onSelectMatchDay,
   selectedMatchDayId,
 }: MatchDayManagerProps) {
-  const [snapshotAllTeamRosters, { isLoading: isSnapshotting, error: snapshotError }] = useSnapshotAllTeamRostersMutation();
-  
+  const [
+    snapshotAllTeamRosters,
+    { isLoading: isSnapshotting, error: snapshotError },
+  ] = useSnapshotAllTeamRostersMutation();
+
   const handleSnapshotRosters = async () => {
     if (!selectedMatchDayId) return;
-    
+
     try {
       await snapshotAllTeamRosters(selectedMatchDayId).unwrap();
     } catch (err) {
@@ -237,7 +240,7 @@ export function MatchDayManager({
         onSelectMatchDay={onSelectMatchDay}
         selectedMatchDayId={selectedMatchDayId}
       />
-      
+
       {selectedMatchDayId && (
         <Paper sx={{ p: 2 }}>
           <Typography variant='h6' gutterBottom>
@@ -250,7 +253,9 @@ export function MatchDayManager({
             disabled={isSnapshotting}
             fullWidth
           >
-            {isSnapshotting ? 'Snapshotting Rosters...' : 'Snapshot All Team Rosters'}
+            {isSnapshotting
+              ? 'Snapshotting Rosters...'
+              : 'Snapshot All Team Rosters'}
           </Button>
           {snapshotError && (
             <Alert severity='error' sx={{ mt: 2 }}>

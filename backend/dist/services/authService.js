@@ -93,7 +93,7 @@ function generateJWT(user) {
     return jsonwebtoken_1.default.sign(payload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN,
         issuer: 'wp-fantasy',
-        audience: 'wp-fantasy-users'
+        audience: 'wp-fantasy-users',
     });
 }
 // Verify JWT token
@@ -101,7 +101,7 @@ function verifyJWT(token) {
     try {
         const payload = jsonwebtoken_1.default.verify(token, JWT_SECRET, {
             issuer: 'wp-fantasy',
-            audience: 'wp-fantasy-users'
+            audience: 'wp-fantasy-users',
         });
         return {
             id: payload.id,
@@ -111,7 +111,7 @@ function verifyJWT(token) {
             teamId: payload.teamId,
             createdAt: new Date(),
             updatedAt: new Date(),
-            isActive: true
+            isActive: true,
         };
     }
     catch (error) {
@@ -155,7 +155,7 @@ function registerUser(username_1, email_1, password_1) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: userRow.last_login
+            lastLogin: userRow.last_login,
         };
         // Generate session and JWT for new user
         const sessionToken = generateSecureToken();
@@ -172,7 +172,7 @@ function registerUser(username_1, email_1, password_1) {
             createdAt: sessionRow.created_at,
             ipAddress: undefined,
             userAgent: undefined,
-            isActive: sessionRow.is_active
+            isActive: sessionRow.is_active,
         };
         const token = generateJWT(user);
         return { user, token, session };
@@ -188,7 +188,8 @@ function loginUser(username, password, ipAddress, userAgent) {
         }
         const userRow = userResult.rows[0];
         // Check if account is locked
-        if (userRow.account_locked_until && new Date(userRow.account_locked_until) > new Date()) {
+        if (userRow.account_locked_until &&
+            new Date(userRow.account_locked_until) > new Date()) {
             const remainingTime = Math.ceil((new Date(userRow.account_locked_until).getTime() - Date.now()) / 60000);
             throw new Error(`Account is locked. Try again in ${remainingTime} minutes.`);
         }
@@ -222,7 +223,7 @@ function loginUser(username, password, ipAddress, userAgent) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: new Date()
+            lastLogin: new Date(),
         };
         // Generate session
         const sessionToken = generateSecureToken();
@@ -239,7 +240,7 @@ function loginUser(username, password, ipAddress, userAgent) {
             createdAt: sessionRow.created_at,
             ipAddress,
             userAgent,
-            isActive: sessionRow.is_active
+            isActive: sessionRow.is_active,
         };
         const token = generateJWT(user);
         return { user, token, session };
@@ -266,7 +267,7 @@ function getUserById(id) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: userRow.last_login
+            lastLogin: userRow.last_login,
         };
     });
 }
@@ -285,7 +286,7 @@ function getUserByUsername(username) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: userRow.last_login
+            lastLogin: userRow.last_login,
         };
     });
 }
@@ -304,7 +305,7 @@ function getUserByEmail(email) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: userRow.last_login
+            lastLogin: userRow.last_login,
         };
     });
 }
@@ -346,7 +347,7 @@ function updateUser(id, updates) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: userRow.last_login
+            lastLogin: userRow.last_login,
         };
     });
 }
@@ -378,7 +379,9 @@ function changePassword(userId, currentPassword, newPassword) {
 // Create password reset token
 function createPasswordResetToken(email) {
     return __awaiter(this, void 0, void 0, function* () {
-        const userResult = yield database_1.pool.query('SELECT id FROM users WHERE email = $1', [email]);
+        const userResult = yield database_1.pool.query('SELECT id FROM users WHERE email = $1', [
+            email,
+        ]);
         if (userResult.rows.length === 0) {
             // Don't reveal if email exists or not for security
             throw new Error('If this email is registered, you will receive a password reset email');
@@ -430,7 +433,7 @@ function validateSession(sessionToken) {
             createdAt: userRow.created_at,
             updatedAt: userRow.updated_at,
             isActive: userRow.is_active,
-            lastLogin: userRow.last_login
+            lastLogin: userRow.last_login,
         };
     });
 }
@@ -438,7 +441,7 @@ function validateSession(sessionToken) {
 function getAllUsers() {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield database_1.pool.query('SELECT id, username, email, role, created_at, updated_at, is_active, last_login FROM users ORDER BY created_at DESC');
-        return result.rows.map(row => ({
+        return result.rows.map((row) => ({
             id: row.id.toString(),
             username: row.username,
             email: row.email,
@@ -446,7 +449,7 @@ function getAllUsers() {
             createdAt: row.created_at,
             updatedAt: row.updated_at,
             isActive: row.is_active,
-            lastLogin: row.last_login
+            lastLogin: row.last_login,
         }));
     });
 }

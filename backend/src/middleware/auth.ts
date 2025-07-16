@@ -11,7 +11,11 @@ declare module 'express-serve-static-core' {
 }
 
 // Authentication middleware - verify JWT token
-export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
+export function authenticateToken(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -35,9 +39,13 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 }
 
 // Session-based authentication middleware
-export async function authenticateSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function authenticateSession(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   const sessionToken = req.headers['x-session-token'] as string;
-  
+
   if (!sessionToken) {
     res.status(401).json({ error: 'Session token required' });
     return;
@@ -75,7 +83,11 @@ export function requireRole(role: UserRole) {
 }
 
 // Admin-only middleware
-export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+export function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -90,14 +102,18 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
 }
 
 // Team ownership middleware - ensure user can only access their own team
-export function requireTeamOwnership(req: Request, res: Response, next: NextFunction): void {
+export function requireTeamOwnership(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
   }
 
   const teamId = req.params.teamId || req.body.teamId;
-  
+
   // Admin can access any team
   if (req.user.role === UserRole.ADMIN) {
     next();
@@ -114,7 +130,11 @@ export function requireTeamOwnership(req: Request, res: Response, next: NextFunc
 }
 
 // Middleware: allow any authenticated user (any role)
-export function requireAuthenticatedUser(req: Request, res: Response, next: NextFunction): void {
+export function requireAuthenticatedUser(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -123,7 +143,11 @@ export function requireAuthenticatedUser(req: Request, res: Response, next: Next
 }
 
 // Optional authentication middleware - sets user if token is valid, but doesn't require it
-export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
+export function optionalAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 

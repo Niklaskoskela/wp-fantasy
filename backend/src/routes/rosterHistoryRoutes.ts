@@ -9,22 +9,37 @@ const router = Router();
 router.get('/team/:teamId', rosterHistoryController.getTeamRosterHistory);
 
 // Get all roster history for a specific matchday across all teams
-router.get('/matchday/:matchDayId', rosterHistoryController.getMatchDayRosterHistory);
+router.get(
+  '/matchday/:matchDayId',
+  rosterHistoryController.getMatchDayRosterHistory
+);
 
 // Snapshot all current team rosters for a matchday
-router.post('/snapshot/:matchDayId', rosterHistoryController.snapshotAllTeamRosters);
+router.post(
+  '/snapshot/:matchDayId',
+  rosterHistoryController.snapshotAllTeamRosters
+);
 
 // Check if roster history exists for a team and matchday
-router.get('/check/:teamId/:matchDayId', rosterHistoryController.checkRosterHistory);
+router.get(
+  '/check/:teamId/:matchDayId',
+  rosterHistoryController.checkRosterHistory
+);
 
 // Generic routes with parameters last
 // Create roster history for a team on a specific matchday
-router.post('/:teamId/:matchDayId', rosterHistoryController.createRosterHistory);
+router.post(
+  '/:teamId/:matchDayId',
+  rosterHistoryController.createRosterHistory
+);
 
 // Get roster history for a specific team and matchday
 router.get('/:teamId/:matchDayId', rosterHistoryController.getRosterHistory);
 
 // Remove roster history for a specific team and matchday
-router.delete('/:teamId/:matchDayId', rosterHistoryController.removeRosterHistory);
+router.delete(
+  '/:teamId/:matchDayId',
+  rosterHistoryController.removeRosterHistory
+);
 
 export default router;

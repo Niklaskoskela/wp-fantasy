@@ -1,9 +1,22 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createMatchDay, updatePlayerStats, calculatePoints, getMatchDays, getPlayerStats, startMatchDay } from '../controllers/matchDayController';
+import {
+  createMatchDay,
+  updatePlayerStats,
+  calculatePoints,
+  getMatchDays,
+  getPlayerStats,
+  startMatchDay,
+} from '../controllers/matchDayController';
 
 const router = Router();
 
-function asyncHandler(fn: (req: Request, res: Response, next?: NextFunction) => Promise<void | Response>) {
+function asyncHandler(
+  fn: (
+    req: Request,
+    res: Response,
+    next?: NextFunction
+  ) => Promise<void | Response>
+) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

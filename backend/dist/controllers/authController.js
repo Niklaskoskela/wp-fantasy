@@ -70,7 +70,7 @@ function register(req, res) {
             if (!errors.isEmpty()) {
                 res.status(400).json({
                     error: 'Validation failed',
-                    details: errors.array()
+                    details: errors.array(),
                 });
                 return;
             }
@@ -82,13 +82,13 @@ function register(req, res) {
                 message: 'User registered successfully',
                 user: result.user,
                 token: result.token,
-                expiresAt: (_a = result.session) === null || _a === void 0 ? void 0 : _a.expiresAt
+                expiresAt: (_a = result.session) === null || _a === void 0 ? void 0 : _a.expiresAt,
             });
         }
         catch (error) {
             console.error('Registration error:', error);
             res.status(400).json({
-                error: error instanceof Error ? error.message : 'Registration failed'
+                error: error instanceof Error ? error.message : 'Registration failed',
             });
         }
     });
@@ -105,7 +105,7 @@ function login(req, res) {
             if (!errors.isEmpty()) {
                 res.status(400).json({
                     error: 'Validation failed',
-                    details: errors.array()
+                    details: errors.array(),
                 });
                 return;
             }
@@ -118,13 +118,13 @@ function login(req, res) {
                 message: 'Login successful',
                 user: result.user,
                 token: result.token,
-                expiresAt: result.session.expiresAt
+                expiresAt: result.session.expiresAt,
             });
         }
         catch (error) {
             console.error('Login error:', error);
             res.status(401).json({
-                error: error instanceof Error ? error.message : 'Login failed'
+                error: error instanceof Error ? error.message : 'Login failed',
             });
         }
     });
@@ -179,7 +179,7 @@ function changePassword(req, res) {
             if (!errors.isEmpty()) {
                 res.status(400).json({
                     error: 'Validation failed',
-                    details: errors.array()
+                    details: errors.array(),
                 });
                 return;
             }
@@ -194,7 +194,7 @@ function changePassword(req, res) {
         catch (error) {
             console.error('Change password error:', error);
             res.status(400).json({
-                error: error instanceof Error ? error.message : 'Failed to change password'
+                error: error instanceof Error ? error.message : 'Failed to change password',
             });
         }
     });
@@ -211,7 +211,7 @@ function forgotPassword(req, res) {
             if (!errors.isEmpty()) {
                 res.status(400).json({
                     error: 'Validation failed',
-                    details: errors.array()
+                    details: errors.array(),
                 });
                 return;
             }
@@ -223,13 +223,13 @@ function forgotPassword(req, res) {
                 res.json({
                     message: 'If this email is registered, you will receive a password reset email',
                     // Remove this token field in production
-                    token: process.env.NODE_ENV === 'development' ? token : undefined
+                    token: process.env.NODE_ENV === 'development' ? token : undefined,
                 });
             }
             catch (error) {
                 // Always return success message to prevent email enumeration
                 res.json({
-                    message: 'If this email is registered, you will receive a password reset email'
+                    message: 'If this email is registered, you will receive a password reset email',
                 });
             }
         }
@@ -251,7 +251,7 @@ function resetPassword(req, res) {
             if (!errors.isEmpty()) {
                 res.status(400).json({
                     error: 'Validation failed',
-                    details: errors.array()
+                    details: errors.array(),
                 });
                 return;
             }
@@ -262,7 +262,7 @@ function resetPassword(req, res) {
         catch (error) {
             console.error('Reset password error:', error);
             res.status(400).json({
-                error: error instanceof Error ? error.message : 'Failed to reset password'
+                error: error instanceof Error ? error.message : 'Failed to reset password',
             });
         }
     });
@@ -338,13 +338,13 @@ function adminResetPassword(req, res) {
             yield authService.resetPasswordWithToken(token, tempPassword);
             res.json({
                 message: 'Password reset successfully',
-                tempPassword: tempPassword
+                tempPassword: tempPassword,
             });
         }
         catch (error) {
             console.error('Admin reset password error:', error);
             res.status(500).json({
-                error: error instanceof Error ? error.message : 'Failed to reset password'
+                error: error instanceof Error ? error.message : 'Failed to reset password',
             });
         }
     });
@@ -361,7 +361,7 @@ function updateUser(req, res) {
             if (!errors.isEmpty()) {
                 res.status(400).json({
                     error: 'Validation failed',
-                    details: errors.array()
+                    details: errors.array(),
                 });
                 return;
             }
@@ -389,7 +389,11 @@ function updateUser(req, res) {
                 }
             }
             // Update user
-            const updatedUser = yield authService.updateUser(userId, { username, email, role });
+            const updatedUser = yield authService.updateUser(userId, {
+                username,
+                email,
+                role,
+            });
             if (!updatedUser) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -404,14 +408,14 @@ function updateUser(req, res) {
                     isActive: updatedUser.isActive,
                     createdAt: updatedUser.createdAt,
                     updatedAt: updatedUser.updatedAt,
-                    lastLogin: updatedUser.lastLogin
-                }
+                    lastLogin: updatedUser.lastLogin,
+                },
             });
         }
         catch (error) {
             console.error('Update user error:', error);
             res.status(500).json({
-                error: error instanceof Error ? error.message : 'Failed to update user'
+                error: error instanceof Error ? error.message : 'Failed to update user',
             });
         }
     });

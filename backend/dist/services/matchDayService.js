@@ -59,7 +59,7 @@ function createMatchDay(title, startTime, endTime) {
             id: row.id.toString(),
             title: row.title,
             startTime: row.start_time,
-            endTime: row.end_time
+            endTime: row.end_time,
         };
     });
 }
@@ -84,9 +84,23 @@ function updatePlayerStats(matchDayId, playerId, stats) {
                 brutality = EXCLUDED.brutality,
                 saves = EXCLUDED.saves,
                 wins = EXCLUDED.wins
-             RETURNING *`, [playerId, matchDayId, stats.goals, stats.assists, stats.blocks, stats.steals,
-                stats.pfDrawn, stats.pf, stats.ballsLost, stats.contraFouls, stats.shots,
-                stats.swimOffs, stats.brutality, stats.saves, stats.wins]);
+             RETURNING *`, [
+                playerId,
+                matchDayId,
+                stats.goals,
+                stats.assists,
+                stats.blocks,
+                stats.steals,
+                stats.pfDrawn,
+                stats.pf,
+                stats.ballsLost,
+                stats.contraFouls,
+                stats.shots,
+                stats.swimOffs,
+                stats.brutality,
+                stats.saves,
+                stats.wins,
+            ]);
             const row = result.rows[0];
             // Invalidate cache since player stats changed
             invalidateTeamsWithScoresCache();
@@ -104,7 +118,7 @@ function updatePlayerStats(matchDayId, playerId, stats) {
                 swimOffs: row.swim_offs,
                 brutality: row.brutality,
                 saves: row.saves,
-                wins: row.wins
+                wins: row.wins,
             };
         }
         catch (error) {
@@ -167,7 +181,7 @@ function startMatchDay(matchDayId) {
         const { getTeams } = yield Promise.resolve().then(() => __importStar(require('./teamService')));
         const teams = yield getTeams();
         // If any team already has roster history for this matchday, don't snapshot again
-        const alreadySnapshotted = yield Promise.all(teams.map((team) => __awaiter(this, void 0, void 0, function* () { return yield hasRosterHistory(team.id, matchDayId); }))).then(results => results.some(result => result));
+        const alreadySnapshotted = yield Promise.all(teams.map((team) => __awaiter(this, void 0, void 0, function* () { return yield hasRosterHistory(team.id, matchDayId); }))).then((results) => results.some((result) => result));
         if (!alreadySnapshotted) {
             // Snapshot all team rosters for this matchday
             yield snapshotAllTeamRosters(matchDayId);
@@ -193,7 +207,7 @@ function getMatchDayById(matchDayId) {
                 id: row.id.toString(),
                 title: row.title,
                 startTime: row.start_time,
-                endTime: row.end_time
+                endTime: row.end_time,
             };
         }
         catch (error) {
@@ -206,11 +220,11 @@ function getMatchDays() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const result = yield database_1.pool.query('SELECT id, title, start_time, end_time FROM matchdays ORDER BY start_time DESC');
-            return result.rows.map(row => ({
+            return result.rows.map((row) => ({
                 id: row.id.toString(),
                 title: row.title,
                 startTime: row.start_time,
-                endTime: row.end_time
+                endTime: row.end_time,
             }));
         }
         catch (error) {
@@ -239,7 +253,7 @@ function getPlayerStats(matchDayId) {
                     swimOffs: row.swim_offs,
                     brutality: row.brutality,
                     saves: row.saves,
-                    wins: row.wins
+                    wins: row.wins,
                 };
             }
             return statsMap;

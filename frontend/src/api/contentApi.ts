@@ -46,7 +46,10 @@ export const contentApi = createApi({
       query: (body) => ({ url: '/players', method: 'POST', body }),
       invalidatesTags: ['Player'],
     }),
-    getPlayersWithStats: builder.query<PlayerWithStats[], { matchDayId?: string }>({
+    getPlayersWithStats: builder.query<
+      PlayerWithStats[],
+      { matchDayId?: string }
+    >({
       query: ({ matchDayId }) => ({
         url: '/players/with-stats',
         params: matchDayId ? { matchDayId } : {},

@@ -13,18 +13,17 @@
     wins: number; */
 
 export const pointsConfig = {
-    goal: 5,
-    assist: 3,
-    block: 2,
-    steal: 2,
-    pfDrawn: 2, // PF drawn
-    pf: -1, // PF
-    ballsLost: -1,
-    contraFoul: -1,
-    shot: -1,
-    swimOff: 2,
-    brutality: -15,
-    save: 1,
-    win: 2
-}
-
+  goal: 5,
+  assist: 3,
+  block: 2,
+  steal: 2,
+  pfDrawn: 2, // PF drawn
+  pf: -1, // PF
+  ballsLost: -1,
+  contraFoul: -1,
+  shot: -1,
+  swimOff: 2,
+  brutality: -15,
+  save: 1,
+  win: 2,
+};

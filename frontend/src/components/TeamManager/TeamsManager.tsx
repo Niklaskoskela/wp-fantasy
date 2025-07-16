@@ -13,9 +13,9 @@ import {
 import { Player, PlayerPosition, RosterEntry } from 'shared';
 import { useGetPlayersQuery } from '../../api/contentApi';
 import { useGetMatchDaysQuery } from '../../api/matchDayApi';
-import { 
+import {
   useGetTeamRosterHistoryQuery,
-  useCreateRosterHistoryMutation 
+  useCreateRosterHistoryMutation,
 } from '../../api/rosterHistoryApi';
 import {
   useGetTeamsQuery,
@@ -68,7 +68,7 @@ export function TeamsManager() {
     if (!matchDays.length) return null;
 
     const now = new Date();
-    
+
     // First, check for ongoing matchdays
     const ongoingMatchDay = matchDays.find((md) => {
       const startTime = new Date(md.startTime);
@@ -81,8 +81,9 @@ export function TeamsManager() {
     // If no ongoing matchday, find the next upcoming one
     const upcomingMatchDays = matchDays
       .filter((md) => new Date(md.startTime) > now)
-      .sort((a, b) => 
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
       );
 
     return upcomingMatchDays[0] || null;
@@ -184,10 +185,7 @@ export function TeamsManager() {
   };
 
   // Open player picker for a slot
-  const handleOpenPicker = (
-    teamId: string,
-    slot: number
-  ) => {
+  const handleOpenPicker = (teamId: string, slot: number) => {
     // Slot 0: GK, slots 1-6: field players (exclude goalkeepers)
     const requiredPosition = slot === 0 ? PlayerPosition.GOALKEEPER : undefined;
     setPickerSlot({ teamId, slot, position: requiredPosition });
@@ -280,14 +278,14 @@ export function TeamsManager() {
       // Create roster history entries for the current/next match day
       const rosterEntries: RosterEntry[] = validPlayers.map((player) => ({
         playerId: player!.id,
-        isCaptain: player!.id === captainId
+        isCaptain: player!.id === captainId,
       }));
 
       // Save roster history
       await createRosterHistory({
         teamId,
         matchDayId: currentMatchDay.id,
-        rosterEntries
+        rosterEntries,
       }).unwrap();
 
       showNotification('Team roster saved successfully!', 'success');

@@ -92,7 +92,9 @@ function addPlayerToTeam(req, res) {
         catch (e) {
             const error = e;
             // Use 409 Conflict for business logic errors (e.g., too many goalkeepers)
-            if (error.message && (error.message.includes('goalkeeper') || error.message.includes('6 players'))) {
+            if (error.message &&
+                (error.message.includes('goalkeeper') ||
+                    error.message.includes('6 players'))) {
                 res.status(409).json({ error: error.message });
                 return;
             }

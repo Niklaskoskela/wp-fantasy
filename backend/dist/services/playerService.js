@@ -39,14 +39,15 @@ class PlayerService {
                 name: result.rows[0].name,
                 position: result.rows[0].position,
                 club: { id: result.rows[0].club_id.toString(), name: clubName },
-                statsHistory: new Map()
+                statsHistory: new Map(),
             };
         });
     }
     static getAllPlayers() {
         return __awaiter(this, void 0, void 0, function* () {
             // Check cache first
-            if (allPlayersCache && Date.now() - allPlayersCache.timestamp < CACHE_DURATION) {
+            if (allPlayersCache &&
+                Date.now() - allPlayersCache.timestamp < CACHE_DURATION) {
                 return allPlayersCache.data;
             }
             const result = yield database_1.pool.query('SELECT p.id, p.name, p.position, p.club_id, c.name as club_name FROM players p JOIN clubs c ON p.club_id = c.id ORDER BY p.name');
@@ -55,12 +56,12 @@ class PlayerService {
                 name: row.name,
                 position: row.position,
                 club: { id: row.club_id.toString(), name: row.club_name },
-                statsHistory: new Map()
+                statsHistory: new Map(),
             }));
             // Cache the result
             allPlayersCache = {
                 data: players,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
             return players;
         });
@@ -79,13 +80,16 @@ class PlayerService {
                 id: result.rows[0].id.toString(),
                 name: result.rows[0].name,
                 position: result.rows[0].position,
-                club: { id: result.rows[0].club_id.toString(), name: result.rows[0].club_name },
-                statsHistory: new Map()
+                club: {
+                    id: result.rows[0].club_id.toString(),
+                    name: result.rows[0].club_name,
+                },
+                statsHistory: new Map(),
             };
             // Cache the result
             playerByIdCache.set(id, {
                 data: player,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             });
             return player;
         });
@@ -189,13 +193,13 @@ class PlayerService {
                         wins: row.wins,
                     },
                     totalPoints: totalPoints,
-                    statsHistory: new Map()
+                    statsHistory: new Map(),
                 };
             });
             // Cache the result
             playersWithStatsCache.set(cacheKey, {
                 data: players,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             });
             return players;
         });
