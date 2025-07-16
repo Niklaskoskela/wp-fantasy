@@ -339,7 +339,9 @@ export function PlayerStatsPage() {
             position: playerStatsForMatchDay.position,
             clubName: playerStatsForMatchDay.club.name,
             isCaptain: rosterEntry.isCaptain,
-            totalPoints: playerStatsForMatchDay.totalPoints || 0,
+            totalPoints: rosterEntry.isCaptain
+                          ? (playerStatsForMatchDay.totalPoints || 0) * 2
+                          : playerStatsForMatchDay.totalPoints || 0,
             goals: playerStatsForMatchDay.stats?.goals || 0,
             assists: playerStatsForMatchDay.stats?.assists || 0,
             blocks: playerStatsForMatchDay.stats?.blocks || 0,
@@ -421,7 +423,7 @@ export function PlayerStatsPage() {
   // Transform data for DataGrid
   const rows = useMemo(() => {
     const sortedPlayers = [...playersWithStats].sort((a, b) => b.totalPoints - a.totalPoints);
-    
+
     return sortedPlayers.map((player, index) => ({
       id: player.id,
       rank: index + 1,
