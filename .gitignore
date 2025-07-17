@@ -2,3 +2,7 @@ node_modules
 backend/.env
 frontend/.env
 .vscode
+
+*/node_modules
+tsconfig.tsbuildinfo
+*/uploads
