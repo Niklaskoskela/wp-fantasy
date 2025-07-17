@@ -51,26 +51,46 @@ exports.requireAuthenticatedUser = requireAuthenticatedUser;
 exports.optionalAuth = optionalAuth;
 const types_1 = require("../../../shared/dist/types");
 const authService = __importStar(require("../services/authService"));
-// Authentication middleware - verify JWT token
+// Authentication middleware - verify JWT token and session
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-    if (!token) {
-        res.status(401).json({ error: 'Access token required' });
-        return;
-    }
-    try {
-        const user = authService.verifyJWT(token);
-        if (!user) {
-            res.status(403).json({ error: 'Invalid or expired token' });
+    return __awaiter(this, void 0, void 0, function* () {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+        if (!token) {
+            res.status(401).json({ error: 'Access token required' });
             return;
         }
-        req.user = user;
-        next();
-    }
-    catch (error) {
-        res.status(403).json({ error: 'Invalid or expired token' });
-    }
+        try {
+            const jwtResult = authService.verifyJWT(token);
+            if (!jwtResult) {
+                res.status(401).json({ error: 'Invalid or expired token' });
+                return;
+            }
+            const { user, sessionToken } = jwtResult;
+            // If there's a session token, validate it against the database
+            if (sessionToken) {
+                const sessionUser = yield authService.validateSession(sessionToken);
+                if (!sessionUser) {
+                    res.status(401).json({ error: 'Session expired or invalid' });
+                    return;
+                }
+                req.user = sessionUser;
+            }
+            else {
+                // Fallback: just verify the user exists and is active
+                const currentUser = yield authService.getUserById(user.id);
+                if (!currentUser || !currentUser.isActive) {
+                    res.status(401).json({ error: 'User account is not active' });
+                    return;
+                }
+                req.user = currentUser;
+            }
+            next();
+        }
+        catch (error) {
+            res.status(401).json({ error: 'Invalid or expired token' });
+        }
+    });
 }
 // Session-based authentication middleware
 function authenticateSession(req, res, next) {
@@ -153,9 +173,9 @@ function optionalAuth(req, res, next) {
     const token = authHeader && authHeader.split(' ')[1];
     if (token) {
         try {
-            const user = authService.verifyJWT(token);
-            if (user) {
-                req.user = user;
+            const jwtResult = authService.verifyJWT(token);
+            if (jwtResult) {
+                req.user = jwtResult.user;
             }
         }
         catch (error) {

@@ -6,13 +6,32 @@ import { User, UserRole, UserSession } from '../../../shared/dist/types';
 import { pool } from '../config/database';
 
 // Security configuration
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'; // Changed to 5 minutes for testing
 const SALT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 const PASSWORD_RESET_EXPIRES = 60 * 60 * 1000; // 1 hour
+
+// Helper function to convert JWT expiration string to milliseconds
+function parseJwtExpirationToMs(expiresIn: string): number {
+  const unit = expiresIn.slice(-1);
+  const value = parseInt(expiresIn.slice(0, -1));
+  
+  switch (unit) {
+    case 's': return value * 1000;
+    case 'm': return value * 60 * 1000;
+    case 'h': return value * 60 * 60 * 1000;
+    case 'd': return value * 24 * 60 * 60 * 1000;
+    default: return value * 1000; // assume seconds if no unit
+  }
+}
+
+// Get session expiration time based on JWT_EXPIRES_IN
+function getSessionExpirationTime(): Date {
+  const expirationMs = parseJwtExpirationToMs(JWT_EXPIRES_IN);
+  return new Date(Date.now() + expirationMs);
+}
 
 // Password strength validation
 export function validatePassword(password: string): {
@@ -62,14 +81,15 @@ export function generateSecureToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// Generate JWT token
-export function generateJWT(user: User): string {
+// Generate JWT token with session reference
+export function generateJWT(user: User, sessionToken?: string): string {
   const payload = {
     id: user.id,
     username: user.username,
     email: user.email,
     role: user.role,
     teamId: user.teamId,
+    sessionToken: sessionToken, // Include session token for validation
   };
 
   return jwt.sign(payload, JWT_SECRET, {
@@ -80,19 +100,20 @@ export function generateJWT(user: User): string {
 }
 
 // Verify JWT token
-export function verifyJWT(token: string): User | null {
+export function verifyJWT(token: string): { user: User; sessionToken?: string } | null {
   try {
     const payload = jwt.verify(token, JWT_SECRET, {
       issuer: 'wp-fantasy',
-      audience: 'wp-fantasy-users',
-    }) as jwt.JwtPayload & {
-      id: string;
-      username: string;
-      email: string;
-      role: UserRole;
+      audience: 'wp-fantasy-users'
+    }) as jwt.JwtPayload & { 
+      id: string; 
+      username: string; 
+      email: string; 
+      role: UserRole; 
+      sessionToken?: string; 
     };
-
-    return {
+    
+    const user: User = {
       id: payload.id,
       username: payload.username,
       email: payload.email,
@@ -101,6 +122,16 @@ export function verifyJWT(token: string): User | null {
       createdAt: new Date(),
       updatedAt: new Date(),
       isActive: true,
+    };
+    
+    return {
+      user,
+      sessionToken: payload.sessionToken
+    };
+    
+    return {
+      user,
+      sessionToken: payload.sessionToken
     };
   } catch (error) {
     return null;
@@ -168,8 +199,8 @@ export async function registerUser(
 
   // Generate session and JWT for new user
   const sessionToken = generateSecureToken();
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
+  const expiresAt = getSessionExpirationTime(); // Use JWT expiration time
+  
   const sessionResult = await pool.query(
     `INSERT INTO user_sessions (session_token, user_id, expires_at) 
      VALUES ($1, $2, $3) 
@@ -188,9 +219,9 @@ export async function registerUser(
     userAgent: undefined,
     isActive: sessionRow.is_active,
   };
-
-  const token = generateJWT(user);
-
+  
+  const token = generateJWT(user, sessionToken);
+  
   return { user, token, session };
 }
 
@@ -277,8 +308,8 @@ export async function loginUser(
 
   // Generate session
   const sessionToken = generateSecureToken();
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
+  const expiresAt = getSessionExpirationTime(); // Use JWT expiration time
+  
   const sessionResult = await pool.query(
     `INSERT INTO user_sessions (session_token, user_id, expires_at, ip_address, user_agent) 
      VALUES ($1, $2, $3, $4, $5) 
@@ -297,9 +328,9 @@ export async function loginUser(
     userAgent,
     isActive: sessionRow.is_active,
   };
-
-  const token = generateJWT(user);
-
+  
+  const token = generateJWT(user, sessionToken);
+  
   return { user, token, session };
 }
 
