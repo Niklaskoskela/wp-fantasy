@@ -39,7 +39,7 @@ export function TeamsManager() {
   const { user } = useAuth();
 
   // Find the first team to show roster history for (or could be user's selected team)
-  const firstTeam = teams[0];
+  const firstTeam = teams.find((team) => team.ownerId === user?.id);
 
   // Get roster history for the first team (in real app, this would be user's selected team)
   const { data: teamRosterHistory, isLoading: isLoadingRoster } =
@@ -413,9 +413,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot, position) =>
-                          handleOpenPicker(team.id, slot)
-                        }
+                        onPickPlayer={(slot) => handleOpenPicker(team.id, slot)}
                         onRemovePlayer={(slot) =>
                           handleRemovePlayer(team.id, slot)
                         }
@@ -476,9 +474,7 @@ export function TeamsManager() {
                         slots={slots}
                         captainId={captainId}
                         onToggleExpand={() => handleExpand(team.id)}
-                        onPickPlayer={(slot, position) =>
-                          handleOpenPicker(team.id, slot)
-                        }
+                        onPickPlayer={(slot) => handleOpenPicker(team.id, slot)}
                         onRemovePlayer={(slot) =>
                           handleRemovePlayer(team.id, slot)
                         }
