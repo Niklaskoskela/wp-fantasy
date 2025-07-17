@@ -10,12 +10,8 @@ declare module 'express-serve-static-core' {
   }
 }
 
-// Authentication middleware - verify JWT token
-export function authenticateToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
+// Authentication middleware - verify JWT token and session
+export async function authenticateToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -25,16 +21,35 @@ export function authenticateToken(
   }
 
   try {
-    const user = authService.verifyJWT(token);
-    if (!user) {
-      res.status(403).json({ error: 'Invalid or expired token' });
+    const jwtResult = authService.verifyJWT(token);
+    if (!jwtResult) {
+      res.status(401).json({ error: 'Invalid or expired token' });
       return;
     }
 
-    req.user = user;
+    const { user, sessionToken } = jwtResult;
+
+    // If there's a session token, validate it against the database
+    if (sessionToken) {
+      const sessionUser = await authService.validateSession(sessionToken);
+      if (!sessionUser) {
+        res.status(401).json({ error: 'Session expired or invalid' });
+        return;
+      }
+      req.user = sessionUser;
+    } else {
+      // Fallback: just verify the user exists and is active
+      const currentUser = await authService.getUserById(user.id);
+      if (!currentUser || !currentUser.isActive) {
+        res.status(401).json({ error: 'User account is not active' });
+        return;
+      }
+      req.user = currentUser;
+    }
+
     next();
   } catch (error) {
-    res.status(403).json({ error: 'Invalid or expired token' });
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
@@ -153,9 +168,9 @@ export function optionalAuth(
 
   if (token) {
     try {
-      const user = authService.verifyJWT(token);
-      if (user) {
-        req.user = user;
+      const jwtResult = authService.verifyJWT(token);
+      if (jwtResult) {
+        req.user = jwtResult.user;
       }
     } catch (error) {
       // Ignore invalid tokens for optional auth

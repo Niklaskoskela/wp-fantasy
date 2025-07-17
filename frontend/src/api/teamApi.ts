@@ -1,22 +1,10 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { Team, Player, TeamWithScores } from '../../../shared/src/types';
-import { API_URL } from '../config';
-
-// Get token from localStorage
-const getToken = () => localStorage.getItem('authToken');
+import { baseQueryWithReauth } from './baseQuery';
 
 export const teamApi = createApi({
   reducerPath: 'teamApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_URL,
-    prepareHeaders: (headers) => {
-      const token = getToken();
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Team'],
   endpoints: (builder) => ({
     getTeams: builder.query<Team[], void>({

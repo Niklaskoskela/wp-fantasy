@@ -1,7 +1,7 @@
 // Authentication API using RTK Query
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { UserRole } from '../../../shared/src/types';
-import { API_URL } from '../config';
+import { authBaseQuery } from './baseQuery';
 
 // Authentication types
 export interface LoginRequest {
@@ -47,21 +47,9 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-// Get token from localStorage
-const getToken = () => localStorage.getItem('authToken');
-
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_URL}/auth`,
-    prepareHeaders: (headers) => {
-      const token = getToken();
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: authBaseQuery,
   tagTypes: ['User'],
   endpoints: (builder) => ({
     // Public endpoints

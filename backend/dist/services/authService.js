@@ -40,11 +40,28 @@ const types_1 = require("../../../shared/dist/types");
 const database_1 = require("../config/database");
 // Security configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'; // Changed to 5 minutes for testing
 const SALT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 const PASSWORD_RESET_EXPIRES = 60 * 60 * 1000; // 1 hour
+// Helper function to convert JWT expiration string to milliseconds
+function parseJwtExpirationToMs(expiresIn) {
+    const unit = expiresIn.slice(-1);
+    const value = parseInt(expiresIn.slice(0, -1));
+    switch (unit) {
+        case 's': return value * 1000;
+        case 'm': return value * 60 * 1000;
+        case 'h': return value * 60 * 60 * 1000;
+        case 'd': return value * 24 * 60 * 60 * 1000;
+        default: return value * 1000; // assume seconds if no unit
+    }
+}
+// Get session expiration time based on JWT_EXPIRES_IN
+function getSessionExpirationTime() {
+    const expirationMs = parseJwtExpirationToMs(JWT_EXPIRES_IN);
+    return new Date(Date.now() + expirationMs);
+}
 // Password strength validation
 function validatePassword(password) {
     const errors = [];
@@ -81,14 +98,15 @@ function verifyPassword(password, hash) {
 function generateSecureToken() {
     return crypto_1.default.randomBytes(32).toString('hex');
 }
-// Generate JWT token
-function generateJWT(user) {
+// Generate JWT token with session reference
+function generateJWT(user, sessionToken) {
     const payload = {
         id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         teamId: user.teamId,
+        sessionToken: sessionToken, // Include session token for validation
     };
     return jsonwebtoken_1.default.sign(payload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN,
@@ -103,7 +121,7 @@ function verifyJWT(token) {
             issuer: 'wp-fantasy',
             audience: 'wp-fantasy-users',
         });
-        return {
+        const user = {
             id: payload.id,
             username: payload.username,
             email: payload.email,
@@ -112,6 +130,10 @@ function verifyJWT(token) {
             createdAt: new Date(),
             updatedAt: new Date(),
             isActive: true,
+        };
+        return {
+            user,
+            sessionToken: payload.sessionToken
         };
     }
     catch (error) {
@@ -159,7 +181,7 @@ function registerUser(username_1, email_1, password_1) {
         };
         // Generate session and JWT for new user
         const sessionToken = generateSecureToken();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        const expiresAt = getSessionExpirationTime(); // Use JWT expiration time
         const sessionResult = yield database_1.pool.query(`INSERT INTO user_sessions (session_token, user_id, expires_at) 
      VALUES ($1, $2, $3) 
      RETURNING id, session_token, user_id, expires_at, created_at, is_active`, [sessionToken, user.id, expiresAt]);
@@ -174,7 +196,7 @@ function registerUser(username_1, email_1, password_1) {
             userAgent: undefined,
             isActive: sessionRow.is_active,
         };
-        const token = generateJWT(user);
+        const token = generateJWT(user, sessionToken);
         return { user, token, session };
     });
 }
@@ -227,7 +249,7 @@ function loginUser(username, password, ipAddress, userAgent) {
         };
         // Generate session
         const sessionToken = generateSecureToken();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        const expiresAt = getSessionExpirationTime(); // Use JWT expiration time
         const sessionResult = yield database_1.pool.query(`INSERT INTO user_sessions (session_token, user_id, expires_at, ip_address, user_agent) 
      VALUES ($1, $2, $3, $4, $5) 
      RETURNING id, session_token, user_id, expires_at, created_at, is_active`, [sessionToken, user.id, expiresAt, ipAddress, userAgent]);
@@ -242,7 +264,7 @@ function loginUser(username, password, ipAddress, userAgent) {
             userAgent,
             isActive: sessionRow.is_active,
         };
-        const token = generateJWT(user);
+        const token = generateJWT(user, sessionToken);
         return { user, token, session };
     });
 }

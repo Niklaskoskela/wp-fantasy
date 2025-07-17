@@ -5,9 +5,11 @@ import React, {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from 'react';
 import { AuthUser } from '../api/authApi';
 import { UserRole } from 'shared';
+import { setLogoutHandler } from '../api/baseQuery';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -30,6 +32,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+  }, []);
+
+  // Register the logout handler with the baseQuery
+  useEffect(() => {
+    setLogoutHandler(logout);
+  }, [logout]);
 
   // Initialize auth state from localStorage on app start
   useEffect(() => {
@@ -56,13 +70,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setToken(authToken);
     localStorage.setItem('authToken', authToken);
     localStorage.setItem('authUser', JSON.stringify(userData));
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
   };
 
   const updateUser = (userData: AuthUser) => {

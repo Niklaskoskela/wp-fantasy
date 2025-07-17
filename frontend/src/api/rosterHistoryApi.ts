@@ -1,22 +1,10 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { RosterHistory, RosterEntry } from '../../../shared/dist/types';
-import { API_URL } from '../config';
-
-// Get token from localStorage
-const getToken = () => localStorage.getItem('authToken');
+import { baseQueryWithReauth } from './baseQuery';
 
 export const rosterHistoryApi = createApi({
   reducerPath: 'rosterHistoryApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_URL,
-    prepareHeaders: (headers) => {
-      const token = getToken();
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['RosterHistory'],
   endpoints: (builder) => ({
     // Create roster history for a team on a specific matchday
