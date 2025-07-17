@@ -119,7 +119,7 @@ function verifyJWT(token) {
     try {
         const payload = jsonwebtoken_1.default.verify(token, JWT_SECRET, {
             issuer: 'wp-fantasy',
-            audience: 'wp-fantasy-users',
+            audience: 'wp-fantasy-users'
         });
         const user = {
             id: payload.id,
@@ -130,6 +130,10 @@ function verifyJWT(token) {
             createdAt: new Date(),
             updatedAt: new Date(),
             isActive: true,
+        };
+        return {
+            user,
+            sessionToken: payload.sessionToken
         };
         return {
             user,
