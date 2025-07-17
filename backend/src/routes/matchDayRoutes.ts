@@ -14,7 +14,7 @@ import {
 import { pool } from '../config/database';
 
 const router = Router();
-const upload = multer({ dest: path.join(__dirname, '../../uploads') });
+const upload = multer({ dest: path.join(__dirname, '/uploads/') });
 
 const pointsService = new PointsCalculationService(pool);
 
