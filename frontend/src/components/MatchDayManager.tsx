@@ -56,7 +56,7 @@ function MatchDaysList(props: MatchDaysListProps) {
         formData.append('csvFiles', file);
       });
       const response = await fetch(
-        `http://localhost:5050/api/admin/upload-match-data/${matchDayId}`,
+        `/api/admin/upload-match-data/${matchDayId}`,
         {
           method: 'POST',
           headers: {
