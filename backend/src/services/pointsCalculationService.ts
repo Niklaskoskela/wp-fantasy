@@ -133,7 +133,7 @@ export class PointsCalculationService {
 
       const playerId = result.rows[0].id;
 
-      const wins = data.team === winningTeam ? 1 : 0;
+      const wins = data.team === winningTeam ? 5 : 0;
 
       const playerDataWithWins = { ...data, wins, player_id: playerId };
       const points = this.calculatePlayerPoints(playerDataWithWins, winPoints);
@@ -209,7 +209,7 @@ export class PointsCalculationService {
         playerData.shots -
         playerData.contra_fouls -
         playerData.balls_lost - 
-        playerData.brutality * 30;
+        playerData.brutality * 15;
     }
 
     return points;
