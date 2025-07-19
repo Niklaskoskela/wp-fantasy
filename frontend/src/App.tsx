@@ -1,3 +1,5 @@
+import BudgetTestTab from './components/BudgetTestTab';
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -90,6 +92,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/admin/budget-test'
+              element={
+                <ProtectedRoute>
+                  <PageLayout>
+                    <BudgetTestTab />
+                  </PageLayout>
                 </ProtectedRoute>
               }
             />

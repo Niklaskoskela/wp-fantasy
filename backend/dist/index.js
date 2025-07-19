@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const budgetPlayersRoutes_1 = __importDefault(require("./routes/budgetPlayersRoutes"));
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
@@ -59,6 +60,8 @@ app.use('/api', auth_1.authenticateToken, contentRoutes_1.default);
 app.use('/api', auth_1.authenticateToken, teamRoutes_1.default);
 app.use('/api', auth_1.authenticateToken, matchDayRoutes_1.default);
 app.use('/api/roster-history', auth_1.authenticateToken, rosterHistoryRoutes_1.default);
+// Authenticated users only
+app.use('/api/budgetplayers', auth_1.authenticateToken, budgetPlayersRoutes_1.default);
 // Admin-only routes
 app.use('/api/admin', auth_1.authenticateToken, auth_1.requireAdmin);
 // Error handling middleware

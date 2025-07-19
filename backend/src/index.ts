@@ -1,3 +1,4 @@
+import budgetPlayersRoutes from './routes/budgetPlayersRoutes';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -67,6 +68,8 @@ app.use('/api', authenticateToken, teamRoutes);
 app.use('/api', authenticateToken, matchDayRoutes);
 app.use('/api/roster-history', authenticateToken, rosterHistoryRoutes);
 
+// Authenticated users only
+app.use('/api/budgetplayers', authenticateToken, budgetPlayersRoutes);
 // Admin-only routes
 app.use('/api/admin', authenticateToken, requireAdmin);
 

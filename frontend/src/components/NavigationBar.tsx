@@ -50,6 +50,12 @@ const navItems: NavItem[] = [
     requireAdmin: true,
   },
   {
+    label: 'Budget Test',
+    path: '/admin/budget-test',
+    requireAuth: true,
+    requireAdmin: true,
+  },
+  {
     label: 'User Management',
     path: '/admin/users',
     requireAuth: true,
