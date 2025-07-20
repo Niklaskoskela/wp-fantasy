@@ -133,7 +133,7 @@ export class PointsCalculationService {
 
       const playerId = result.rows[0].id;
 
-      const wins = data.team === winningTeam ? 1 : 0;
+      const wins = data.team === winningTeam ? 5 : 0;
 
       const playerDataWithWins = { ...data, wins, player_id: playerId };
       const points = this.calculatePlayerPoints(playerDataWithWins, winPoints);

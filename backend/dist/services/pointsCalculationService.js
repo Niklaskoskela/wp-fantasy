@@ -110,7 +110,7 @@ class PointsCalculationService {
                         continue;
                     }
                     const playerId = result.rows[0].id;
-                    const wins = data.team === winningTeam ? 1 : 0;
+                    const wins = data.team === winningTeam ? 5 : 0;
                     const playerDataWithWins = Object.assign(Object.assign({}, data), { wins, player_id: playerId });
                     const points = this.calculatePlayerPoints(playerDataWithWins, winPoints);
                     const insertQuery = `

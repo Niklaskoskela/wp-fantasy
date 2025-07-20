@@ -27,6 +27,6 @@ exports.pointsConfig = {
     swimOff: 2,
     brutality: -15,
     save: 1,
-    win: 2,
+    win: 1,
 };
 //# sourceMappingURL=points.js.map

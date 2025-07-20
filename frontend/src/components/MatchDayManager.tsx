@@ -14,6 +14,7 @@ import {
   useCreateMatchDayMutation,
 } from '../api/matchDayApi';
 import { useSnapshotAllTeamRostersMutation } from '../api/rosterHistoryApi';
+import { API_URL } from '../config';
 
 interface MatchDaysListProps {
   onSelectMatchDay: (matchDayId: string, title: string) => void;
@@ -56,7 +57,7 @@ function MatchDaysList(props: MatchDaysListProps) {
         formData.append('csvFiles', file);
       });
       const response = await fetch(
-        `http://localhost:5050/api/admin/upload-match-data/${matchDayId}`,
+        `${API_URL}/admin/upload-match-data/${matchDayId}`,
         {
           method: 'POST',
           headers: {
