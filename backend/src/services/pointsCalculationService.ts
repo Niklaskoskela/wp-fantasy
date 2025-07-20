@@ -209,7 +209,7 @@ export class PointsCalculationService {
         playerData.shots -
         playerData.contra_fouls -
         playerData.balls_lost - 
-        playerData.brutality * 15;
+        playerData.brutality * 30;
     }
 
     return points;
